@@ -1,0 +1,9 @@
+<h4>Подключение нового устройства</h4>
+<form method="post" action="{{ Url }}">
+  {% csrf_token %}
+
+  <input type="text" name="code" placeholder="введите код сюда" />
+  <input type="hidden" name="contract_id" value="{{ contract_id }}" />
+  <input type="submit" value="Подтвердить" />
+</form>
+</form>
