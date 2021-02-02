@@ -26,7 +26,9 @@ SECRET_KEY = 'dp9)ss*07b=7fq%agd459-+j$k^18#eg@#m6eg22jglz6(q3x)'
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '127.0.0.1'
+    '127.0.0.1',
+    '10.0.1.3',
+    'tikhonsystems.ddns.net',
 ]
 
 
@@ -126,4 +128,4 @@ STATIC_URL = '/static/'
 
 APP_KEY = "asd"
 MAIN_HOST = "http://medsenger.ru"
-DOMEN = "http://127.0.0.1:8000"
+DOMEN = "http://tikhonsystems.ddns.net"

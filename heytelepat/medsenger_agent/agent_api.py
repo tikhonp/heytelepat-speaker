@@ -53,7 +53,8 @@ def send_message(contract_id, text, action_link=None, action_name=None, action_o
     }
 
     try:
-        answer = requests.post(settings.MAIN_HOST + '/api/agents/message', json=data)
-        print(answer)
+        url = settings.MAIN_HOST + '/api/agents/message'
+        answer = requests.post(url, json=data)
+        print(answer, answer.text, url)
     except Exception as e:
         print('connection error', e)

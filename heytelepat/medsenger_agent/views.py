@@ -77,7 +77,6 @@ def message(request):
 def action(request):
     return HttpResponseServerError()
 
-# @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def newdevice(request):
     if request.method == "GET":

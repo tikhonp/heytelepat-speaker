@@ -7,6 +7,7 @@ from rest_framework import generics
 from speakerapi import serializers
 from django.core import exceptions
 from rest_framework.exceptions import ValidationError
+from medsenger_agent import agent_api
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -54,3 +55,19 @@ class TaskApiView(generics.ListAPIView):
             return HttpResponse("ok")
         except:
             raise ValidationError(detail='Invalid ID')
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def send_message(request):
+    token = request.POST.get('token', '')
+    try:
+        speaker = Speaker.objects.get(token=token)
+    except exceptions.ObjectDoesNotExist:
+        response = HttpResponse("INVALID TOKEN")
+        response.status_code = 400
+        return response
+
+    message = request.POST.get('message', '')
+    agent_api.send_message(speaker.contract.contract_id, message)
+    return HttpResponse("ok")
