@@ -126,8 +126,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-APP_KEY = "asd"
-MAIN_HOST = "http://medsenger.ru"
+APP_KEY = ""
+MAIN_HOST = "https://medsenger.ru"
 DOMEN = "http://tikhonsystems.ddns.net"
 
 APPEND_SLASH=False

@@ -2,7 +2,7 @@ import requests
 from django.conf import settings
 
 
-def send_message(contract_id, text, action_link=None, action_name=None, action_onetime=True, action_big=False, only_doctor=False,
+def send_message(contract_id, text, action_link=None, action_name=None, action_onetime=False, action_big=False, only_doctor=False,
                  only_patient=False, action_deadline=None, is_urgent=False, need_answer=False,
                  attachments=None):
     message = {
@@ -55,6 +55,6 @@ def send_message(contract_id, text, action_link=None, action_name=None, action_o
     try:
         url = settings.MAIN_HOST + '/api/agents/message'
         answer = requests.post(url, json=data)
-        print(answer, answer.text, url)
+        print(answer, answer.text, url, data)
     except Exception as e:
         print('connection error', e)
