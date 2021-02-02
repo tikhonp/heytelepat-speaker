@@ -129,3 +129,5 @@ STATIC_URL = '/static/'
 APP_KEY = "asd"
 MAIN_HOST = "http://medsenger.ru"
 DOMEN = "http://tikhonsystems.ddns.net"
+
+APPEND_SLASH=False
