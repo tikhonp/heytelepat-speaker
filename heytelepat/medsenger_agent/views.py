@@ -37,7 +37,7 @@ def init(request):
     agent_api.send_message(
         contract.contract_id,
         "Зарегистрируйте новое устройство",
-        "/newdevice", "Добавить", only_patient=True, action_big=True)
+        "newdevice", "Добавить", only_patient=True, action_big=True)
 
     return HttpResponse("ok")
 
@@ -102,7 +102,7 @@ def newdevice(request):
 
         return render(request, "newdevice.html", {
             "contract_id": request.GET.get('contract_id', ''),
-            "Url": DOMEN+'/medsenger/newdevice/'})
+        })
 
     else:
         code = int(request.POST.get('code', 0))
