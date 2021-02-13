@@ -3,7 +3,7 @@ from django.views.decorators.http import require_http_methods
 import json
 from django.conf import settings
 from medsenger_agent.models import Contract, Speaker
-from medsenger_agent import agent_api
+from medsenger_agent import agent_api, send_order
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.core import exceptions
@@ -38,6 +38,7 @@ def init(request):
         contract.contract_id,
         "Зарегистрируйте новое устройство",
         "newdevice", "Добавить", only_patient=True, action_big=True)
+    send_order(contract.contract_id, 'get_settings',  12)
 
     return HttpResponse("ok")
 
@@ -135,3 +136,12 @@ def newdevice(request):
         return HttpResponse("ok")
 
     return HttpResponseServerError()
+
+
+
+
+@require_http_methods(["POST"])
+def order(request):
+    data = json.loads(request.body)
+    print(data)
+    return HttpResponse("ok")

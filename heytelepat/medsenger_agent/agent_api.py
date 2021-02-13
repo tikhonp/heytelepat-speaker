@@ -2,9 +2,11 @@ import requests
 from django.conf import settings
 
 
-def send_message(contract_id, text, action_link=None, action_name=None, action_onetime=False, action_big=False, only_doctor=False,
-                 only_patient=False, action_deadline=None, is_urgent=False, need_answer=False,
-                 attachments=None):
+def send_message(contract_id, text, action_link=None, action_name=None,
+                 action_onetime=False, action_big=False, only_doctor=False,
+                 only_patient=False, action_deadline=None, is_urgent=False,
+                 need_answer=False, attachments=None):
+
     message = {
         "text": text
     }
@@ -58,3 +60,28 @@ def send_message(contract_id, text, action_link=None, action_name=None, action_o
         print(answer, answer.text, url, data)
     except Exception as e:
         print('connection error', e)
+
+
+def send_order(contract_id, order, receiver_id=None, params=None):
+    data = {
+        "contract_id": contract_id,
+        "api_key": settings.APP_KEY,
+        "order": order,
+    }
+
+    if receiver_id:
+        data['receiver_id'] = receiver_id
+
+    if params:
+        data['params'] = params
+
+    try:
+        print(data)
+        response = requests.post(
+            settings.DOMEN + '/api/agents/order', json=data)
+        print(response)
+        answer = response.json()
+        return int(answer['delivered']) / int(answer['receivers'])
+    except Exception as e:
+        print('connection error', e)
+        return 0
