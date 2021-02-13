@@ -15,8 +15,8 @@ with open("speaker.config", "r") as f:
 
 apiKey = "AgAAAAAsHJhgAATuwZCvoKKoLUKfrwvw8kgAFv8"
 catalog = "b1gedt47d0j9tltvtjaq"
-filename =  "speech.ogg"
-filenamev =  "speech.wav"
+filename = "speech.ogg"
+filenamev = "speech.wav"
 
 synthesizeAudio = speechkit.synthesizeAudio(apiKey, catalog)
 recognizeShortAudio = speechkit.recognizeShortAudio(apiKey)
@@ -30,6 +30,7 @@ special = None
 
 domen = "http://tikhonsystems.ddns.net"
 
+
 def speak(text):
     synthesizeAudio.synthesize(text, filename)
 
@@ -38,6 +39,7 @@ def speak(text):
 
     playsound(filenamev)
     speechkit.removefile(filenamev)
+
 
 def init():
     global data
@@ -59,35 +61,40 @@ def init():
 def checkPreasure():
     return "please check presure!"
 
+
 def sayTime():
     now = datetime.now()
     return now.strftime("%A, %-H %-M")
 
+
 def pills():
     return "pills processing"
 
+
 def send_message():
+    global data
     speak("Какое сообщение вы хотите отправить?")
 
     with sr.Microphone() as source:
         data = recognizer.listen(source)
         data_sound = data.get_raw_data(convert_rate=48000)
-        recognize_text = recognizeShortAudio.recognize(data_sound, catalog) # распознавание ответа
-
+        recognize_text = recognizeShortAudio.recognize(data_sound, catalog)
     print(recognize_text)
 
     answer = requests.post(domen+"/speakerapi/sendmessage/", data=json.dumps({
         'token': data['token'],
         'message': recognize_text,
     }))
+    print(answer, answer.text)
+
 
 motions = {
     "таблет": pills,
     "сообщение": send_message,
 }
 
-
-init()
+if data['token'] is None:
+    init()
 
 while True:
     input("Press enter and tell something!")
@@ -95,16 +102,15 @@ while True:
     with sr.Microphone() as source:
         data = recognizer.listen(source)
         data_sound = data.get_raw_data(convert_rate=48000)
-        recognize_text = recognizeShortAudio.recognize(data_sound, catalog) # распознавание ответа
-
+        recognize_text = recognizeShortAudio.recognize(data_sound, catalog)
     print(recognize_text)
 
-    if recognize_text.lower() == "хватит": break
+    if recognize_text.lower() == "хватит":
+        break
 
     for i in motions:
         if i in recognize_text.lower():
             motions[i]()
-
 
     # synthesizeAudio.synthesize(say, filename)
 
