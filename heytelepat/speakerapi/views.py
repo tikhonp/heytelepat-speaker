@@ -60,14 +60,15 @@ class TaskApiView(generics.ListAPIView):
 @csrf_exempt
 @require_http_methods(["POST"])
 def send_message(request):
-    token = json.loads(request.body)['token']
+    data = json.loads(request.body)
+
     try:
-        speaker = Speaker.objects.get(token=token)
+        speaker = Speaker.objects.get(token=data['token'])
     except exceptions.ObjectDoesNotExist:
         response = HttpResponse("INVALID TOKEN")
         response.status_code = 400
         return response
 
-    message = request.POST.get('message', '')
+    message = data['message']
     agent_api.send_message(speaker.contract.contract_id, message)
     return HttpResponse("ok")
