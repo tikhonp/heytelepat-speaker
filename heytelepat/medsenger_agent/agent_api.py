@@ -57,9 +57,9 @@ def send_message(contract_id, text, action_link=None, action_name=None,
     try:
         url = settings.MAIN_HOST + '/api/agents/message'
         answer = requests.post(url, json=data)
-        print(answer, answer.text, url, data)
+        # print(answer, answer.text, url, data)
     except Exception as e:
-        print('connection error', e)
+        print('Sendmessage connection error', e)
 
 
 def send_order(contract_id, order, receiver_id=None, params=None):
@@ -76,12 +76,12 @@ def send_order(contract_id, order, receiver_id=None, params=None):
         data['params'] = params
 
     try:
-        print(data)
+        print("req data:\n", data)
         response = requests.post(
             settings.DOMEN + '/api/agents/order', json=data)
         print(response)
         answer = response.json()
         return int(answer['delivered']) / int(answer['receivers'])
     except Exception as e:
-        print('connection error', e)
+        print('Send_order connection error', e)
         return 0
