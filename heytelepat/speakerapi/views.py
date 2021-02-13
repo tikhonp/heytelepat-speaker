@@ -60,7 +60,7 @@ class TaskApiView(generics.ListAPIView):
 @csrf_exempt
 @require_http_methods(["POST"])
 def send_message(request):
-    token = request.POST.get('token', '')
+    token = json.loads(request.body)['token']
     try:
         speaker = Speaker.objects.get(token=token)
     except exceptions.ObjectDoesNotExist:

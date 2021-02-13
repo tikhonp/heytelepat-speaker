@@ -11,7 +11,7 @@ import threading
 
 
 with open("speaker.config", "r") as f:
-    data = json.load(f)
+    config = json.load(f)
 
 apiKey = "AgAAAAAsHJhgAATuwZCvoKKoLUKfrwvw8kgAFv8"
 catalog = "b1gedt47d0j9tltvtjaq"
@@ -42,15 +42,15 @@ def speak(text):
 
 
 def init():
-    global data
+    global config
     speack_t = threading.Thread(target=speak, args=(
        "Привет! Это колонка Telepat Medsenger. Я помогу тебе следить за своим здоровьем. Сейчас я скажу тебе код из 6 цифр, его надо ввести в окне подключения колонки в medsenger.  Именно так я смогу подключиться.",))
     speack_t.start()
     answer = requests.post(domen+"/speakerapi/init/")
     answer = answer.json()
-    data["token"] = answer["token"]
+    config["token"] = answer["token"]
     with open("speaker.config", "w") as f:
-        f.write(json.dumps(data))
+        f.write(json.dumps(config))
 
     speack_t.join()
 
@@ -72,7 +72,7 @@ def pills():
 
 
 def send_message():
-    global data
+    global config
     speak("Какое сообщение вы хотите отправить?")
 
     with sr.Microphone() as source:
@@ -82,7 +82,7 @@ def send_message():
     print(recognize_text)
 
     answer = requests.post(domen+"/speakerapi/sendmessage/", data=json.dumps({
-        'token': data['token'],
+        'token': config['token'],
         'message': recognize_text,
     }))
     print(answer, answer.text)
@@ -93,7 +93,7 @@ motions = {
     "сообщение": send_message,
 }
 
-if data['token'] is None:
+if config['token'] is None:
     init()
 
 while True:
