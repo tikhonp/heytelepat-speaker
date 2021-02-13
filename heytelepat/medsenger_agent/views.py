@@ -31,7 +31,8 @@ def init(request):
         contract = Contract.objects.get(contract_id=data['contract_id'])
     except exceptions.ObjectDoesNotExist:
         contract = Contract.objects.create(
-            contract_id=data['contract_id']).save()
+            contract_id=data['contract_id'])
+        contract.save()
 
     agent_api.send_message(
         contract.contract_id,
