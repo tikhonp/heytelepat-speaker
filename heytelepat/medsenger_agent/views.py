@@ -141,6 +141,7 @@ def newdevice(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def order(request):
+    print("order resive: \n", request.POST, request.body)
     data = json.loads(request.body)
     print(data)
     return HttpResponse("ok")
