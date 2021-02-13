@@ -15,11 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from medsenger_agent import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('medsenger/', include('medsenger_agent.urls')),
     path('speakerapi/', include('speakerapi.urls')),
-    path('api/agents/order', views.order),
 ]

@@ -78,7 +78,7 @@ def send_order(contract_id, order, receiver_id=None, params=None):
     try:
         print("req data:\n", data)
         response = requests.post(
-            settings.DOMEN + '/api/agents/order', json=data)
+            settings.MAIN_HOST + '/api/agents/order', json=data)
         print(response)
         answer = response.json()
         return int(answer['delivered']) / int(answer['receivers'])

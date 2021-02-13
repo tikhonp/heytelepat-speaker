@@ -9,4 +9,5 @@ urlpatterns = [
     path('message', views.message),
     path('action', views.action),
     path('newdevice', views.newdevice),
+    path('order', views.order),
 ]
