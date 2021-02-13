@@ -138,8 +138,7 @@ def newdevice(request):
     return HttpResponseServerError()
 
 
-
-
+@csrf_exempt
 @require_http_methods(["POST"])
 def order(request):
     data = json.loads(request.body)
