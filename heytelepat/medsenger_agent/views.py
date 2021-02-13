@@ -29,7 +29,7 @@ def init(request):
 
     try:
         contract = Contract.objects.get(contract_id=data['contract_id'])
-    except exceptions.objectdoesnotexist:
+    except exceptions.ObjectDoesNotExist:
         contract = Contract.objects.create(
             contract_id=data['contract_id']).save()
 
@@ -51,7 +51,7 @@ def remove(request):
 
     try:
         print(data['contract_id'])
-        contract = Contract.objects.get(contract_id=int(data['contract_id']))
+        contract = Contract.objects.get(contract_id=data['contract_id'])
     except exceptions.ObjectDoesNotExist:
         response = HttpResponse(json.dumps({
             'status': 400, 'reason': 'there is no such object'
