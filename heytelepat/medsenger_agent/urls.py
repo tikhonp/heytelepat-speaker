@@ -8,5 +8,5 @@ urlpatterns = [
     path('settings', views.settings),
     path('message', views.message),
     path('action', views.action),
-    path('newdevice/', views.newdevice),
+    path('newdevice', views.newdevice),
 ]

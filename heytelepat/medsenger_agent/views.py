@@ -14,8 +14,10 @@ DOMEN = settings.DOMEN
 context = {
     'status': '400', 'reason': 'invalid key'
 }
-invalid_key_response = HttpResponse(json.dumps(context), content_type='application/json')
+invalid_key_response = HttpResponse(
+    json.dumps(context), content_type='application/json')
 invalid_key_response.status_code = 400
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -27,12 +29,17 @@ def init(request):
 
     try:
         contract = Contract.objects.get(contract_id=data['contract_id'])
-    except:
-        contract = Contract.objects.create(contract_id=data['contract_id']).save()
+    except exceptions.objectdoesnotexist:
+        contract = Contract.objects.create(
+            contract_id=data['contract_id']).save()
 
-    agent_api.send_message(data['contract_id'], "Зарегистрируйте новое устройство", "/newdevice", "Добавить", only_patient=True, action_big=True)
+    agent_api.send_message(
+        contract.contract_id,
+        "Зарегистрируйте новое устройство",
+        "/newdevice", "Добавить", only_patient=True, action_big=True)
 
     return HttpResponse("ok")
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -43,15 +50,19 @@ def remove(request):
         return invalid_key_response
 
     try:
+        print(data['contract_id'])
         contract = Contract.objects.get(contract_id=data['contract_id'])
-    except:
-        response = HttpResponse(json.dumps({'status': 400, 'reason': 'there is no such object'}), content_type='application/json')
+    except exceptions.objectdoesnotexist:
+        response = HttpResponse(json.dumps({
+            'status': 400, 'reason': 'there is no such object'
+        }), content_type='application/json')
         response.status_code = 400
         return response
 
     contract.delete()
 
     return HttpResponse("ok")
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -68,14 +79,18 @@ def status(request):
     }), content_type="application/json")
     return response
 
+
 def settings(request):
     return HttpResponseServerError()
+
 
 def message(request):
     return HttpResponseServerError()
 
+
 def action(request):
     return HttpResponseServerError()
+
 
 @require_http_methods(["GET", "POST"])
 def newdevice(request):
@@ -83,7 +98,9 @@ def newdevice(request):
         if request.GET.get('api_key', '') != APP_KEY:
             return invalid_key_response
 
-        return render(request, "newdevice.html", {"contract_id": request.GET.get('contract_id', ''), "Url": DOMEN+'/medsenger/newdevice/'})
+        return render(request, "newdevice.html", {
+            "contract_id": request.GET.get('contract_id', ''),
+            "Url": DOMEN+'/medsenger/newdevice/'})
 
     else:
         code = int(request.POST.get('code', 0))
@@ -103,6 +120,6 @@ def newdevice(request):
                 'reason': 'Invalid code'
             }), content_type='application/json')
             response.status = 500
-            return reponse
+            return response
 
     return HttpResponseServerError()

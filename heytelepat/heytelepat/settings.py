@@ -131,3 +131,6 @@ MAIN_HOST = "https://medsenger.ru"
 DOMEN = "http://tikhonsystems.ddns.net"
 
 APPEND_SLASH=False
+
+X_FRAME_OPTIONS = 'ALLOWALL'
+XS_SHARING_ALLOWED_METHODS = ['POST','GET','OPTIONS', 'PUT', 'DELETE']
