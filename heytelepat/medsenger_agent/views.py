@@ -113,9 +113,10 @@ def newdevice(request):
         except exceptions.ObjectDoesNotExist:
             response = HttpResponse(json.dumps({
                 'status': 400,
-                'reason': 'Invalid code'
+                'reason': 'Invalid code',
+                'was_geven': code
             }), content_type='application/json')
-            response.status = 500
+            response.status = 400
             return response
 
         try:
