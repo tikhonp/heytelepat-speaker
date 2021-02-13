@@ -109,12 +109,6 @@ def newdevice(request):
 
         try:
             speaker = Speaker.objects.get(code=code)
-            contract = Contract.objects.get(contract_id=contract_id)
-
-            speaker.contract = contract
-            speaker.save()
-
-            return HttpResponse("ok")
         except exceptions.ObjectDoesNotExist:
             response = HttpResponse(json.dumps({
                 'status': 400,
@@ -122,5 +116,20 @@ def newdevice(request):
             }), content_type='application/json')
             response.status = 500
             return response
+
+        try:
+            contract = Contract.objects.get(contract_id=contract_id)
+        except exceptions.ObjectDoesNotExist:
+            response = HttpResponse(json.dumps({
+                'status': 500,
+                'reason': 'Contract doesnot exist please reconnect agent',
+            }), content_type='application/json')
+            response.status_code = 500
+            return response
+
+        speaker.contract = contract
+        speaker.save()
+
+        return HttpResponse("ok")
 
     return HttpResponseServerError()
