@@ -141,7 +141,40 @@ def newdevice(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def order(request):
-    print("order resive: \n", request.POST, request.body)
     data = json.loads(request.body)
     print(data)
+
+    if data['api_key'] != APP_KEY:
+        return invalid_key_response
+
+    try:
+        contract = Contract.objects.get(contract_id=data['contract_id'])
+    except exceptions.ObjectDoesNotExist:
+        response = HttpResponse(json.dumps({
+            'status': 400,
+            'reason': 'COntract_id does not exist, add agent to this chat'
+        }), content_type='application/json')
+        response.status_code = 400
+        return response
+
+    for measurement in data['params']['measurements']:
+        time = None
+        if measurement['mode'] == 'daily':
+            time = measurement['timetable'][0]['hours']
+        elif measurement['mode'] == 'weekly':
+            time = measurement['timetable'][0]['days_week']
+        else:
+            time = measurement['timetable'][0]['days_month']
+
+        for t in time:
+            instance = agent_api.get_instance(
+                contract,
+                measurement['name'],
+                measurement['mode'],
+                t
+            )
+            instance = agent_api.check_insatce_task_measurement(
+                instance, measurement)
+            instance.save()
+
     return HttpResponse("ok")

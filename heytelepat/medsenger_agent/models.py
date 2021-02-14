@@ -14,7 +14,8 @@ class Contract(models.Model):
 class Speaker(models.Model):
     code = models.IntegerField(unique=True)
     token = models.CharField(max_length=255, unique=True)
-    contract = models.ForeignKey(Contract, null=True, default=None, on_delete=models.CASCADE)
+    contract = models.ForeignKey(
+        Contract, null=True, default=None, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         if not self.pk:
@@ -26,13 +27,35 @@ class Speaker(models.Model):
 
 
 class Task(models.Model):
-    speaker = models.ForeignKey(Speaker, on_delete=models.CASCADE)
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE, null=True, default=None)
 
-    PREASURE_CHECK = 'PC'
-    TASK_TYPE_CHOICES = [
-        (PREASURE_CHECK, 'PC'),
+    name = models.CharField(max_length=255, unique=True)
+    alias = models.CharField(max_length=255, null=True, default=None)
+    unit = models.CharField(max_length=255, null=True, default=None)
+
+    DAILY = 'daily'
+    WEEKLY = 'weekly'
+    MONTHLY = 'monthly'
+    MODE_CHOICES = [
+        (DAILY, 'DY'),
+        (WEEKLY, 'WY'),
+        (MONTHLY, 'MY'),
     ]
+    mode = models.CharField(max_length=7, choices=MODE_CHOICES)
+    last_push = models.DateTimeField(null=True, default=None)
+    days_week_day = models.IntegerField(null=True, default=None)
+    days_week_hour = models.IntegerField(null=True, default=None)
+    hours = models.IntegerField(null=True, default=None)
+    days_month_day = models.IntegerField(null=True, default=None)
+    days_month_hour = models.IntegerField(null=True, default=None)
+    show = models.BooleanField(null=True, default=None)
 
-    task_type = models.CharField(max_length=2, choices=TASK_TYPE_CHOICES)
-    datetime = models.DateTimeField(null=True, default=None)
-    is_done = models.BooleanField(default=False)
+    max_value = models.FloatField(null=True, default=None)
+    min_value = models.FloatField(null=True, default=None)
+    # json format {'max_systolic': 160, 'min_systolic': 80,
+    # 'max_diastolic': 120, 'min_diastolic': 50, 'max_pulse': 120,
+    # 'min_pulse': 40}
+    for_pressure_field = models.TextField(null=True, default=None)
+
+    def __str__(self):
+        return "{} - {}".format(self.alias, self.contract.contract_id)
