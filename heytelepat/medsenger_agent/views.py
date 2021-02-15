@@ -114,7 +114,8 @@ def newdevice(request):
         except exceptions.ObjectDoesNotExist:
             return render(request, "newdevice.html", {
                 "contract_id": contract_id,
-                "invalid_code": True
+                "invalid_code": True,
+                "value": code,
             })
 
         try:
@@ -130,9 +131,7 @@ def newdevice(request):
         speaker.contract = contract
         speaker.save()
 
-        return HttpResponse("ok")
-
-    return HttpResponseServerError()
+        return render(request, 'done_add_device.html')
 
 
 @csrf_exempt

@@ -1,44 +1,28 @@
-<!DOCTYPE html>
-<html lang="ru">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+{% extends 'iframe_base.html' %}
 
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl"
-      crossorigin="anonymous"
-    />
+{% block body %}
+<div class="d-grid gap-2 col-6 mx-auto">
+  <h4 class="mb-3 mt-3">Подключение нового устройства</h4>
+  <form method="post">
+    {% csrf_token %}
 
-    <title>Hello, world!</title>
-  </head>
-  <body>
-    <div class="container">
-      <h4 class="mb-3 mt-3">Подключение нового устройства</h4>
-      <form method="post">
-        {% csrf_token %}
-
-        <div class="form-floating mb-3">
-          <input
-            id="floatingInput"
-            name="code"
-            type="number"
-            class="form-control{% if invalid_code %} is-invalid{% endif %}"
-            placeholder="123456"
-          />
-          <label for="floatingInput"
-            >{% if invalid_code %}Неверный код{% else %}Введите код сюда{% endif %}</label
-          >
-        </div>
-        <input type="hidden" name="contract_id" value="{{ contract_id }}" />
-        <button type="submit" class="btn btn-primary">Готово</button>
-      </form>
+    <div class="form-floating mb-3">
+      <input
+        id="floatingInput"
+        name="code"
+        type="number"
+        class="form-control{% if invalid_code %} is-invalid{% endif %}"
+        placeholder="123456"
+        {% if invalid_code %}value="{{ value }}"{% endif %}
+      />
+      <label for="floatingInput"
+        >{% if invalid_code %}Неверный код{% else %}Введите код сюда{% endif %}</label
+      >
     </div>
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
-      crossorigin="anonymous"
-    ></script>
-  </body>
-</html>
+    <input type="hidden" name="contract_id" value="{{ contract_id }}" />
+    <div class="d-grid gap-2 col-6 mx-auto">
+      <input class="btn btn-outline-secondary" type="submit" value="Готово"/>
+    </div>
+  </form>
+</div>
+{% endblock %}
