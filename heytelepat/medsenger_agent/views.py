@@ -112,13 +112,10 @@ def newdevice(request):
         try:
             speaker = Speaker.objects.get(code=code)
         except exceptions.ObjectDoesNotExist:
-            response = HttpResponse(json.dumps({
-                'status': 400,
-                'reason': 'Invalid code',
-                'was_geven': code
-            }), content_type='application/json')
-            response.status = 400
-            return response
+            return render(request, "newdevice.html", {
+                "contract_id": contract_id,
+                "invalid_code": True
+            })
 
         try:
             contract = Contract.objects.get(contract_id=contract_id)

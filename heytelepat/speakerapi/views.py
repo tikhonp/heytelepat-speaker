@@ -1,35 +1,37 @@
 from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
 from medsenger_agent.models import Speaker, Task
-import json
 from rest_framework import generics
 from speakerapi import serializers
 from django.core import exceptions
 from rest_framework.exceptions import ValidationError
 from medsenger_agent import agent_api
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def init(request):
-    speaker = Speaker.objects.create()
-    speaker.save()
-    context = {
-        'code': speaker.code,
-        'token': speaker.token
-    }
-    response = HttpResponse(
-        json.dumps(context), content_type='application/json')
-
-    return response
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 
 
-@csrf_exempt
-@require_http_methods(["POST"])
-def remove(request):
-    speaker = Speaker.objects.get(id=request.POST.get('id', ''))
-    speaker.delete()
-    return HttpResponse('ok')
+class SpeakerInitApiView(APIView):
+    def post(self, request, format=None):
+        speaker = Speaker.objects.create()
+        speaker.save()
+
+        context = {
+            'code': speaker.code,
+            'token': speaker.token
+        }
+
+        return Response(context)
+
+
+class SpeakerDeleteApiView(APIView):
+    def delete(self, request, format=None):
+        token = self.request.data.get('token', '')
+        try:
+            s = Speaker.objects.get(token=token)
+        except exceptions.ObjectDoesNotExist:
+            raise ValidationError(detail='Invalid Token')
+        s.delete()
+        return HttpResponse('OK')
 
 
 class TaskApiView(generics.ListAPIView):
@@ -38,13 +40,11 @@ class TaskApiView(generics.ListAPIView):
     def get_queryset(self):
         token = self.request.data.get('token', '')
         try:
-            queryset = Task.objects.filter(
-                speaker=Speaker.objects.get(token=token),
-                is_done=False
-            )
+            s = Speaker.objects.get(token=token)
+            queryset = Task.objects.filter(contract=s.contract)
             return queryset
         except exceptions.ObjectDoesNotExist:
-            raise ValidationError(detail='Invalid Params')
+            raise ValidationError(detail='Invalid Token')
 
     def patch(self, request):
         task_id = self.request.data.get('task_id', '')
@@ -53,22 +53,25 @@ class TaskApiView(generics.ListAPIView):
             task.is_done = True
             task.save()
             return HttpResponse("ok")
-        except:
+        except exceptions.ObjectDoesNotExist:
             raise ValidationError(detail='Invalid ID')
 
 
-@csrf_exempt
-@require_http_methods(["POST"])
-def send_message(request):
-    data = json.loads(request.body)
+class SendMessageApiView(APIView):
+    serializer_class = serializers.CommentSerializer
 
-    try:
-        speaker = Speaker.objects.get(token=data['token'])
-    except exceptions.ObjectDoesNotExist:
-        response = HttpResponse("INVALID TOKEN")
-        response.status_code = 400
-        return response
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            message = serializer.data['message']
+            token = serializer.data['token']
 
-    message = data['message']
-    agent_api.send_message(speaker.contract.contract_id, message)
-    return HttpResponse("ok")
+            try:
+                s = Speaker.objects.get(token=token)
+            except exceptions.ObjectDoesNotExist:
+                raise ValidationError(detail='Invalid Token')
+
+            agent_api.send_message(s.contract.contract_id, message)
+            return HttpResponse('OK')
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

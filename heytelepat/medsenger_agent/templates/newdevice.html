@@ -15,13 +15,21 @@
   </head>
   <body>
     <div class="container">
-      <h4>Подключение нового устройства</h4>
+      <h4 class="mb-3 mt-3">Подключение нового устройства</h4>
       <form method="post">
         {% csrf_token %}
 
         <div class="form-floating mb-3">
-          <input name="code" type="number" class="form-control" placeholder="123456" />
-          <label for="floatingInput">Введите код сюда</label>
+          <input
+            id="floatingInput"
+            name="code"
+            type="number"
+            class="form-control{% if invalid_code %} is_invalid{% endif %}"
+            placeholder="123456"
+          />
+          <label for="floatingInput"
+            >{% if invalid_code %}Неверный код{% else %}Введите код сюда{% endif %}</label
+          >
         </div>
         <input type="hidden" name="contract_id" value="{{ contract_id }}" />
         <button type="submit" class="btn btn-primary">Готово</button>

@@ -27,7 +27,8 @@ class Speaker(models.Model):
 
 
 class Task(models.Model):
-    contract = models.ForeignKey(Contract, on_delete=models.CASCADE, null=True, default=None)
+    contract = models.ForeignKey(
+        Contract, on_delete=models.CASCADE, null=True, default=None)
 
     name = models.CharField(max_length=255, unique=True)
     alias = models.CharField(max_length=255, null=True, default=None)
