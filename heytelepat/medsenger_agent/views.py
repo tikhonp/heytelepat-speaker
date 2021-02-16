@@ -82,15 +82,33 @@ def status(request):
     return response
 
 
+@require_http_methods(["GET", "POST"])
 def settings(request):
-    return HttpResponseServerError()
+    if request.method == "GET":
+        if request.GET.get('api_key', '') != APP_KEY:
+            return invalid_key_response
+
+        contract_id = request.GET.get('contract_id', '')
+
+    else:
+        s_id = request.POST.get('speaker_id', '')
+        contract_id = request.POST.get('contract_id', '')
+
+        speaker = Speaker.objects.get(pk=s_id)
+        speaker.delete()
+
+    speakers = Speaker.objects.filter(contract=Contract.objects.get(
+            contract_id=contract_id))
+
+    return render(request, "settings.html", {
+            "contract_id": contract_id,
+            "speakers": speakers,
+            "api_key": request.GET.get('api_key', ''),
+            "len_speakers": len(speakers),
+        })
 
 
 def message(request):
-    return HttpResponseServerError()
-
-
-def action(request):
     return HttpResponseServerError()
 
 

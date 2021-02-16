@@ -8,6 +8,103 @@ from pydub import AudioSegment
 from speechkit import speechkit
 import speech_recognition as sr
 from playsound import playsound
+import pickle
+from secrets import token_hex
+
+
+def load_db(filename='data.pickle'):
+    """load data from binary database as python object"""
+
+    with open(filename, 'r') as f:
+        try:
+            data = pickle.load(f)
+        except pickle.UnpicklingError:
+            return 0
+
+    return data
+
+
+def write_db(data, filename='data.pickle'):
+    """write data as python object to the binary database"""
+
+    with open(filename, 'rb') as f:
+        try:
+            pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
+        except pickle.PicklingError:
+            return 0
+
+
+class NotificationsAgent:
+    """
+    Agent for managering notifications
+    It loads from server and save to local data
+    with specified user notification settings.
+    It creates tametabele agent and sends voice notifications.
+    """
+    def __init__(
+        self,
+        token: str,
+        host="http://tikhonsystems.ddns.net",
+    ):
+        self.token = token
+        self.host = host
+        self.data = load_db()
+        if self.data == 0:
+            print("ERROR WITH LOADING DATA")
+            self.data = self.__get_data__()
+
+            if write_db(self.data) == 0:
+                print("ERROR WITH SAVING DATA")
+
+        self.tasks = {}  # All tasks that speaker need to ask for
+
+    def __get_data__(self):
+        answer = requests.get(
+            self.host+'/speakerapi/tasks/',
+            json={"token": self.token},
+        )
+        if answer.status_code != 200:
+            print(
+                "ERROR WITH GETTING DATA FROM SERVER!\nStatus code: {}\nAnswer: {}".format(
+                    answer.status_code, answer.text))
+            return 0
+
+        return answer.json()
+
+    def __add_task__(self, task):
+        while True:
+            key = token_hex(20)
+            try:
+                self.data[key]
+            except KeyError:
+                break
+
+        self.data[key] = task
+
+    def __notifications_loop__(self):
+        for i in self.data:
+            now = datetime.now()
+            if not i['show']:
+                continue
+
+            if i['mode'] == 'daily' and now.hour == i['hours']:
+                self.__add_task__(i)
+            elif i['mode'] == 'monthly' and now.day == i[
+                'days_month_day'
+            ] and now.hour == i['days_month_hour']:
+                self.__add_task__(i)
+            elif i['mode'] == 'weekly' and now.weekday() == i[
+                'days_week_day'
+            ] and i['days_week_hour'] == now.hour:
+                self.__add_task__(i)
+
+    def execute_task(self, task_id):
+        task = self.data[task_id]
+
+
+
+
+
 
 
 class Speech:
