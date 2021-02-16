@@ -135,8 +135,10 @@ def init():
     with open("speaker_config.json", "r") as f:
         config = json.load(f)
 
+    speech = Speech(config)
+
     if config['token'] is None:
-        speack_t = threading.Thread(target=speak, args=(
+        speack_t = threading.Thread(target=speech.speak, args=(
         "Привет! Это колонка Telepat Medsenger. Я помогу тебе следить за своим здоровьем. Сейчас я скажу тебе код из 6 цифр, его надо ввести в окне подключения колонки в medsenger.  Именно так я смогу подключиться.",))
         speack_t.start()
         answer = requests.post(config['domen']+"/speakerapi/init/")
@@ -147,10 +149,8 @@ def init():
 
         speack_t.join()
 
-        speak(
+        speech.speak(
             "Итак, твой код: {}".format(", ".join(list(str(answer["code"])))))
-
-    speech = Speech(config)
 
     return speech, config
 
