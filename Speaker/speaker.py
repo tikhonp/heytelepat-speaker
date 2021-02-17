@@ -10,6 +10,8 @@ import speech_recognition as sr
 from playsound import playsound
 import pickle
 from secrets import token_hex
+import pygame
+from os import system
 
 
 def load_db(filename='data.pickle'):
@@ -57,9 +59,19 @@ class Speech:
         AudioSegment.from_file(self.filename).export(
             self.filenamev, format="wav")
         speechkit.removefile(self.filename)
+        
+        cmd = "ffmpeg -i '{}' -ar 44100 -ac 1 out.wav".format(self.filenamev)
+        out = system(cmd)
 
-        playsound(self.filenamev)
+        pygame.mixer.pre_init(48000, 32, 2, 4096)
+        pygame.mixer.init()
+        pygame.mixer.music.load("out.wav")
+        pygame.mixer.music.play()
+        while pygame.mixer.music.get_busy() == True:
+            continue
+
         speechkit.removefile(self.filenamev)
+        speechkit.removefile("out.wav")
 
 
 class NotificationsAgent:
