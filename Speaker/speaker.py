@@ -15,11 +15,13 @@ from secrets import token_hex
 def load_db(filename='data.pickle'):
     """load data from binary database as python object"""
 
-    with open(filename, 'r') as f:
-        try:
+    try:
+        with open(filename, 'r') as f:
             data = pickle.load(f)
-        except pickle.UnpicklingError:
-            return 0
+    except pickle.UnpicklingError:
+        return 0
+    except FileNotFoundError:
+        return 0
 
     return data
 
@@ -27,11 +29,37 @@ def load_db(filename='data.pickle'):
 def write_db(data, filename='data.pickle'):
     """write data as python object to the binary database"""
 
-    with open(filename, 'rb') as f:
-        try:
+    try:
+        with open(filename, 'rb') as f:
             pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
-        except pickle.PicklingError:
-            return 0
+    except pickle.PicklingError:
+        return 0
+    except FileNotFoundError:
+        return 0
+
+
+class Speech:
+    def __init__(self, config):
+        self.filename = config['filename']
+        self.filenamev = config['filenamev']
+
+        self.synthesizeAudio = speechkit.synthesizeAudio(
+            config['api_key'], config['catalog'])
+        self.recognizeShortAudio = speechkit.recognizeShortAudio(
+            config['api_key'])
+        self.recognizer = sr.Recognizer()
+
+        # self.scheduler = sched.scheduler(time.time, time.sleep)
+
+    def speak(self, text):
+        self.synthesizeAudio.synthesize(text, self.filename)
+
+        AudioSegment.from_file(self.filename).export(
+            self.filenamev, format="wav")
+        speechkit.removefile(self.filename)
+
+        playsound(self.filenamev)
+        speechkit.removefile(self.filenamev)
 
 
 class NotificationsAgent:
@@ -44,8 +72,11 @@ class NotificationsAgent:
     def __init__(
         self,
         token: str,
+        speech: Speech,
         host="http://tikhonsystems.ddns.net",
     ):
+        self.config = config
+        self.speach = speech
         self.token = token
         self.host = host
         self.data = load_db()
@@ -98,37 +129,72 @@ class NotificationsAgent:
             ] and i['days_week_hour'] == now.hour:
                 self.__add_task__(i)
 
-    def execute_task(self, task_id):
+    def __execute_task__(self, task_id):
         task = self.data[task_id]
 
+        speech.speak("Привет! Вам необходимо произвести измермерение и отправить врачу. Сможете это сделать сейчас?")
 
+        status = None
 
+        with sr.Microphone() as source:
+            data = speech.recognizer.listen(source)
+            data_sound = data.get_raw_data(convert_rate=48000)
+            recognize_text = speech.recognizeShortAudio.recognize(
+                data_sound, config['catalog'])
+            print(recognize_text)
 
+        if "да" in recognize_text.lower():
+            speech.speak("Пожалуйста, произведите измерение {}. {}".format(
+                task['alias'],
+                "Укажите значение в "+task['unit'] if task['unit'] != "" else ""
+            ))
+            status = True
+        else:
+            speech.speak("Напоминание отложено на час")
 
+        if status:
+            input("Нажмите для того, чтобы проговорить значение")
 
+            with sr.Microphone() as source:
+                data = speech.recognizer.listen(source)
+                data_sound = data.get_raw_data(convert_rate=48000)
+                recognize_text = speech.recognizeShortAudio.recognize(
+                    data_sound, config['catalog'])
+                print(recognize_text)
 
-class Speech:
-    def __init__(self, config):
-        self.filename = config['filename']
-        self.filenamev = config['filenamev']
+            value = float(recognize_text.replace(" ", ""))
 
-        self.synthesizeAudio = speechkit.synthesizeAudio(
-            config['api_key'], config['catalog'])
-        self.recognizeShortAudio = speechkit.recognizeShortAudio(
-            config['api_key'])
-        self.recognizer = sr.Recognizer()
+            answer = requests.post(self.host+'speakerapi/pushvalue/', json={
+                "token": self.token,
+                "data": [(task['name'], value)],
+            })
+            if answer.status_code == 200:
+                speech.speak("Значение успешно записано")
+            else:
+                speech.speak("Произошла ошибка при сохраниении измерения")
+                print(answer, answer.text)
 
-        # self.scheduler = sched.scheduler(time.time, time.sleep)
+            self.data.pop(task_id)
+        else:
+            task['hours'] += 1
+            task['days_week_hour'] += 1
+            task['days_month_hour'] += 1
+            self.data[task_id] = task
 
-    def speak(self, text):
-        self.synthesizeAudio.synthesize(text, self.filename)
+    def main_loop(self):
+        self.__notifications_loop__()
 
-        AudioSegment.from_file(self.filename).export(
-            self.filenamev, format="wav")
-        speechkit.removefile(self.filename)
+        if len(self.data) > 0:
+            for i in self.data:
+                self.__execute_task__(i)
 
-        playsound(self.filenamev)
-        speechkit.removefile(self.filenamev)
+        time.sleep(60)
+
+        if datetime.now().minute in (0, 30):
+            self.data = self.__get_data__()
+
+            if write_db(self.data) == 0:
+                print("ERROR WITH SAVING DATA")
 
 
 def init():
@@ -187,6 +253,14 @@ if __name__ == "__main__":
 
     speech, config = init()
 
+    notificationsagent = NotificationsAgent(
+        config['token'],
+        speech
+    )
+
+    notifications_t = threading.Thread(target=notificationsagent.main_loop)
+    notifications_t.start()
+
     while True:
         input("Press enter and tell something!")
 
@@ -197,6 +271,7 @@ if __name__ == "__main__":
         print(recognize_text)
 
         if recognize_text.lower() == "хватит":
+            notifications_t.terminate()
             break
 
         for i in motions:

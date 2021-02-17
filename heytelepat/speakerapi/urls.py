@@ -6,4 +6,5 @@ urlpatterns = [
     path('remove/', views.SpeakerDeleteApiView.as_view()),
     path('tasks/', views.TaskApiView.as_view()),
     path('sendmessage/', views.SendMessageApiView.as_view()),
+    path('pushvalue/', views.SendValueApiView.as_view()),
 ]

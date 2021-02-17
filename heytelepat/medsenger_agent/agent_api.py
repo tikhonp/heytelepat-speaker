@@ -171,3 +171,45 @@ def get_instance(contract, name, mode, time):
         else:
             t = t.first()
         return t
+
+
+def add_record(contract_id, category_name, value, record_time=None):
+    data = {
+        "contract_id": contract_id,
+        "api_key": settings.APP_KEY,
+        "category_name": category_name,
+        "value": value,
+    }
+
+    if record_time:
+        data['time'] = record_time
+
+    try:
+        _ = requests.post(
+            settings.MAIN_HOST + '/api/agents/records/add', json=data)
+    except Exception as e:
+        print('connection error', e)
+
+
+def add_records(contract_id, values, record_time=None):
+    """values: [(category_name, value)]"""
+    data = {
+        "contract_id": contract_id,
+        "api_key": settings.APP_KEY,
+    }
+
+    if record_time:
+        data['values'] = [{
+            "category_name": category_name,
+            "value": value,
+            "time": record_time
+        } for (category_name, value) in values]
+    else:
+        data['values'] = [{
+            "category_name": category_name,
+            "value": value} for (category_name, value) in values]
+    try:
+        requests.post(
+            settings.MAIN_HOST + '/api/agents/records/add', json=data)
+    except Exception as e:
+        print('connection error', e)

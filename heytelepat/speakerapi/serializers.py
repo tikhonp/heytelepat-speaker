@@ -11,3 +11,13 @@ class TaskSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.Serializer):
     message = serializers.CharField()
     token = serializers.CharField()
+
+
+class DataSendValuesSerializer(serializers.Serializer):
+    category_name = serializers.CharField(read_only=True),
+    value = serializers.CharField(read_only=True),
+
+
+class SendValueSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    data = DataSendValuesSerializer(many=True)
