@@ -11,3 +11,11 @@ Hey Telepat - project with voice assistant for teleport messenger integration
 - звуковой ответ, что сообщение отправлено
 - рассылка заданий и опрос их
 - запрос на сброс колонки
+
+---
+Linux dependencies 
+```bash
+sudo apt-get install -y python3-dev libasound2-dev
+sudo apt-get install python-pyaudio python3-pyaudio
+sudo apt-get install portaudio19-dev python-pyaudio
+```

@@ -16,7 +16,7 @@ def load_db(filename='data.pickle'):
     """load data from binary database as python object"""
 
     try:
-        with open(filename, 'r') as f:
+        with open(filename, 'rb') as f:
             data = pickle.load(f)
     except pickle.UnpicklingError:
         return 0
@@ -30,7 +30,7 @@ def write_db(data, filename='data.pickle'):
     """write data as python object to the binary database"""
 
     try:
-        with open(filename, 'rb') as f:
+        with open(filename, 'wb') as f:
             pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
     except pickle.PicklingError:
         return 0
@@ -210,8 +210,10 @@ def init():
         answer = requests.post(config['domen']+"/speakerapi/init/")
         answer = answer.json()
         config["token"] = answer["token"]
-        with open("speaker.config", "w") as f:
+
+        with open("speaker_config.json", "w") as f:
             f.write(json.dumps(config))
+            print(config)
 
         speack_t.join()
 
