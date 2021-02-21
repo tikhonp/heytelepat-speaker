@@ -60,3 +60,10 @@ class Task(models.Model):
 
     def __str__(self):
         return "{} - {}".format(self.alias, self.contract.contract_id)
+
+
+class Message(models.Model):
+    message_id = models.IntegerField()
+    text = models.TextField()
+    date = models.DateTimeField()
+    is_red = models.BooleanField(default=False)
