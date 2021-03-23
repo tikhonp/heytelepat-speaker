@@ -11,7 +11,7 @@ from rest_framework import status
 
 
 class SpeakerInitApiView(APIView):
-    def post(self, request):
+    def post(self, request, format=None):
         speaker = Speaker.objects.create()
         speaker.save()
 

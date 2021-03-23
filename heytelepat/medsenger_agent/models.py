@@ -30,7 +30,7 @@ class Task(models.Model):
     contract = models.ForeignKey(
         Contract, on_delete=models.CASCADE, null=True, default=None)
 
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
     alias = models.CharField(max_length=255, null=True, default=None)
     unit = models.CharField(max_length=255, null=True, default=None)
 
@@ -60,10 +60,3 @@ class Task(models.Model):
 
     def __str__(self):
         return "{} - {}".format(self.alias, self.contract.contract_id)
-
-
-class Message(models.Model):
-    message_id = models.IntegerField()
-    text = models.TextField()
-    date = models.DateTimeField()
-    is_red = models.BooleanField(default=False)

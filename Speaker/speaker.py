@@ -10,15 +10,13 @@ import speech_recognition as sr
 from playsound import playsound
 import pickle
 from secrets import token_hex
-import pygame
-from os import system
 
 
 def load_db(filename='data.pickle'):
     """load data from binary database as python object"""
 
     try:
-        with open(filename, 'rb') as f:
+        with open(filename, 'r') as f:
             data = pickle.load(f)
     except pickle.UnpicklingError:
         return 0
@@ -32,7 +30,7 @@ def write_db(data, filename='data.pickle'):
     """write data as python object to the binary database"""
 
     try:
-        with open(filename, 'wb') as f:
+        with open(filename, 'rb') as f:
             pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
     except pickle.PicklingError:
         return 0
@@ -59,19 +57,9 @@ class Speech:
         AudioSegment.from_file(self.filename).export(
             self.filenamev, format="wav")
         speechkit.removefile(self.filename)
-        
-        cmd = "ffmpeg -i '{}' -ar 44100 -ac 1 out.wav".format(self.filenamev)
-        out = system(cmd)
 
-        pygame.mixer.pre_init(48000, 32, 2, 4096)
-        pygame.mixer.init()
-        pygame.mixer.music.load("out.wav")
-        pygame.mixer.music.play()
-        while pygame.mixer.music.get_busy() == True:
-            continue
-
+        playsound(self.filenamev)
         speechkit.removefile(self.filenamev)
-        speechkit.removefile("out.wav")
 
 
 class NotificationsAgent:
@@ -222,10 +210,8 @@ def init():
         answer = requests.post(config['domen']+"/speakerapi/init/")
         answer = answer.json()
         config["token"] = answer["token"]
-
-        with open("speaker_config.json", "w") as f:
+        with open("speaker.config", "w") as f:
             f.write(json.dumps(config))
-            print(config)
 
         speack_t.join()
 
