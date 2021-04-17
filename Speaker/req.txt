@@ -6,3 +6,4 @@ pydub==0.24.1
 requests==2.25.1
 SpeechRecognition==3.8.1
 urllib3==1.26.3
+git+https://github.com/TikhonP/speechkit-lib-python.git

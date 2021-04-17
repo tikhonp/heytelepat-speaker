@@ -135,5 +135,6 @@ pyobjc-framework-Virtualization==7.1
 pyobjc-framework-Vision==7.1
 pyobjc-framework-WebKit==7.1
 requests==2.25.1
+git+https://github.com/TikhonP/speechkit-lib-python.git
 SpeechRecognition==3.8.1
 urllib3==1.26.3

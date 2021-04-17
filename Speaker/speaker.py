@@ -1,65 +1,49 @@
+from utils import main_thread, notifications_thread, speech
 import json
 import requests
 import threading
-import speech_recognition as sr
-from speaker_utils import Speech, NotificationsAgent
-from actions import send_message
 
 
-def init():
-    with open("speaker_config.json", "r") as f:
-        config = json.load(f)
+def init(speech):
+    synthesizedSpeech = speech.create_speech(
+        "Привет! Это колонка Telepat Medsenger. Я помогу тебе следить за своим здоровьем. Сейчас я скажу тебе код из 6 цифр, его надо ввести в окне подключения колонки в medsenger.  Именно так я смогу подключиться.")
+    synthesizedSpeech.syntethize()
+    speack_t = threading.Thread(target=synthesizedSpeech.play, args=set())
+    speack_t.start()
 
-    speech = Speech(config)
+    answer = requests.post(config['domen']+"/speakerapi/init/")
+    answer = answer.json()
+    print(answer)
+    config["token"] = answer["token"]
+    with open("speaker_config.json", "w") as f:
+        json.dump(config, f)
 
-    if config['token'] is None:
-        speack_t = threading.Thread(target=speech.speak, args=(
-        "Привет! Это колонка Telepat Medsenger. Я помогу тебе следить за своим здоровьем. Сейчас я скажу тебе код из 6 цифр, его надо ввести в окне подключения колонки в medsenger.  Именно так я смогу подключиться.",))
-        speack_t.start()
-        answer = requests.post(config['domen']+"/speakerapi/init/")
-        answer = answer.json()
-        print(answer)
-        config["token"] = answer["token"]
-        with open("speaker_config.json", "w") as f:
-            json.dump(config, f)
+    speack_t.join()
 
-        speack_t.join()
+    synthesizedSpeech = speech.create_speech(
+        "Итак, твой код: {}".format(", ".join(list(str(answer["code"])))))
+    synthesizedSpeech.syntethize()
+    synthesizedSpeech.play()
 
-        speech.speak(
-            "Итак, твой код: {}".format(", ".join(list(str(answer["code"])))))
-
-    return speech, config
+    return config
 
 
 if __name__ == "__main__":
-    motions = {
-        "сообщение": send_message,
-    }
+    with open("speaker_config.json", "r") as f:
+        config = json.load(f)
 
-    speech, config = init()
+    speech_cls = speech.Speech(
+        config['api_key'], config['catalog'], speech.playaudiofunction,)
 
-    notificationsagent = NotificationsAgent(
-        config,
-        speech
-    )
+    if config['token'] is None:
+        config = init(speech)
 
-    notifications_t = threading.Thread(target=notificationsagent.main_loop)
-    notifications_t.start()
+    notifications_thread_cls = notifications_thread.NotificationsAgentThread(
+        config, main_thread.inputFunction)
 
-    while True:
-        input("Press enter and tell something!")
+    main_thread_cls = main_thread.MainThread(
+        main_thread.inputFunction,
+        main_thread.activitiesList, config['token'], config['catalog'])
 
-        with sr.Microphone() as source:
-            data = speech.recognizer.listen(source)
-            data_sound = data.get_raw_data(convert_rate=48000)
-            recognize_text = speech.recognizeShortAudio.recognize(
-                data_sound, config['catalog'])
-        print(recognize_text)
-
-        if recognize_text.lower() == "хватит":
-            notifications_t.terminate()
-            break
-
-        for i in motions:
-            if i in recognize_text.lower():
-                motions[i](speech, config)
+    notifications_thread_cls.run()
+    main_thread_cls.run()
