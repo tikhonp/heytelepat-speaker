@@ -40,13 +40,13 @@ def playaudiofunction(
 
 
 class SynthesizedSpeech:
-    def __init__(self, text, speech):
+    def __init__(self, text, speech_cls):
         """
         Creates one sentence with method to syntethize and play
         : param text: string text to syntheze
         : param speech: object of Speech class
         """
-        self.speech = speech
+        self.speech = speech_cls
         self.text = text
         self.audio_data = None
 
@@ -61,11 +61,12 @@ class SynthesizedSpeech:
         """
         Plays created wav with speakers
         """
+        print("PLAYS TEXT {}".format(self.text))
         if self.audio_data is None:
             raise Exception(
                 "Audio did not synthesized, please run \"synthesize\" first.")
         self.speech.playaudiofunction(
-            self.audio_data.read(), sample_rate=48000)
+            self.audio_data, sample_rate=48000)
 
 
 class RecognizeSpeech:
@@ -84,8 +85,10 @@ class RecognizeSpeech:
         Starting streaming to yandex api and return recognize text
         """
 
-        return self.speech.recognizeShortAudio.recognize(
+        text = self.speech.recognizeShortAudio.recognize(
                 self.io_vaw, self.speech.catalog)
+        print("RECOGNIZED TEXT {}".format(text))
+        return text
 
 
 class Speech:
@@ -133,7 +136,7 @@ class Speech:
                 )
                 data_sound = data.get_raw_data(convert_rate=48000)
                 return RecognizeSpeech(data_sound, self)
-        except self.recognizer.WaitTimeoutError:
+        except sr.WaitTimeoutError:
             return None
 
     def adjust_for_ambient_noise(self, duration=3):

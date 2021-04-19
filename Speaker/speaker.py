@@ -4,8 +4,8 @@ import requests
 import threading
 
 
-def init(speech):
-    synthesizedSpeech = speech.create_speech(
+def init(speech_cls):
+    synthesizedSpeech = speech_cls.create_speech(
         "Привет! Это колонка Telepat Medsenger. Я помогу тебе следить за своим здоровьем. Сейчас я скажу тебе код из 6 цифр, его надо ввести в окне подключения колонки в medsenger.  Именно так я смогу подключиться.")
     synthesizedSpeech.syntethize()
     speack_t = threading.Thread(target=synthesizedSpeech.play, args=set())
@@ -20,7 +20,7 @@ def init(speech):
 
     speack_t.join()
 
-    synthesizedSpeech = speech.create_speech(
+    synthesizedSpeech = speech_cls.create_speech(
         "Итак, твой код: {}".format(", ".join(list(str(answer["code"])))))
     synthesizedSpeech.syntethize()
     synthesizedSpeech.play()
@@ -32,18 +32,33 @@ if __name__ == "__main__":
     with open("speaker_config.json", "r") as f:
         config = json.load(f)
 
+    event_obj = threading.Event()
+    lock_obj = threading.RLock()
+
+    print("Hello there! Tikhon systems inc all rights reserved.")
+    print("Loaded config, speech class creating...")
+
     speech_cls = speech.Speech(
         config['api_key'], config['catalog'], speech.playaudiofunction,)
 
     if config['token'] is None:
-        config = init(speech)
+        print("Initialisation started")
+        config = init(speech_cls)
+    print("Initialisation skiped, token already exist")
 
+    print("Creating notiofication thread...")
     notifications_thread_cls = notifications_thread.NotificationsAgentThread(
-        config, main_thread.inputFunction)
+        notifications_thread.notifications_list,
+        config, main_thread.inputFunction, event_obj, speech_cls, lock_obj)
 
+    print("Creating main thread...")
     main_thread_cls = main_thread.MainThread(
         main_thread.inputFunction,
-        main_thread.activitiesList, config['token'], config['catalog'])
+        main_thread.activitiesList, config['token'], config['domen'],
+        speech_cls, lock_obj)
 
-    notifications_thread_cls.run()
-    main_thread_cls.run()
+    print("Running Notification thread")
+    notifications_thread_cls.start()
+
+    print("Running main thread")
+    main_thread_cls.start()

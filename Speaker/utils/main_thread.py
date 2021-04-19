@@ -2,8 +2,7 @@ from threading import Thread
 import requests
 import locale
 import datetime
-import speech
-
+import utils.speech as speech
 
 def inputFunction():
     input("Press enter and tell something!")
@@ -19,7 +18,8 @@ class MainThread(Thread):
                  activitiesList,
                  token: str,
                  domain: str,
-                 speech=speech.Speach,
+                 speech_cls: speech.Speech,
+                 lock_obj,
                  ):
         """
         :param inputFunction: Input function that ask button like objects
@@ -32,9 +32,10 @@ class MainThread(Thread):
         Thread.__init__(self)
         self.inputFunction = inputFunction
         self.activitiesList = activitiesList
-        self.speech = speech
+        self.speech = speech_cls
         self.token = token
         self.domain = domain
+        self.lock = lock_obj
 
     def __repeat_recognition__(self, n=1):
         synthesizedSpeech = self.speech.create_speech(
@@ -70,33 +71,34 @@ class MainThread(Thread):
     def __main_loop_item__(self):
         self.inputFunction()
 
-        self.speech.adjust_for_ambient_noise(duration=0.5)
-        recognizeSpeech = self.speech.read_audio()
+        with self.lock:
+            self.speech.adjust_for_ambient_noise(duration=0.5)
+            recognizeSpeech = self.speech.read_audio()
 
-        if recognizeSpeech is None:
-            text = self.__repeat_recognition__()
-            if text is None:
+            if recognizeSpeech is None:
+                text = self.__repeat_recognition__()
+                if text is None:
+                    return
+            else:
+                text = recognizeSpeech.recognize()
+
+            action = self.__get_action__(text)
+            if action is None:
+                synthesizedSpeech = self.speech.create_speech(
+                    "К сожалению, я еще не знаю такой команды.")
+                synthesizedSpeech.syntethize()
+                synthesizedSpeech.play()
                 return
-        else:
-            text = recognizeSpeech.recognize()
 
-        action = self.__get_action__(text)
-        if action is None:
-            synthesizedSpeech = self.speech.create_speech(
-                "К сожалению, я еще не знаю такой команды.")
-            synthesizedSpeech.syntethize()
-            synthesizedSpeech.play()
-            return
-
-        a = action()
-        a.run(self.speech, self.token, self.domen)
+            a = action(self.speech, self.token, self.domain)
+            a.run()
 
     def run(self):
         while True:
-            try:
-                self.__main_loop_item__()
-            except Exception as e:
-                print(e)
+            # try:
+            self.__main_loop_item__()
+            # except Exception as e:
+                # print(e)
 
 
 class Action:
@@ -104,13 +106,13 @@ class Action:
     class that represents action function
     """
 
-    def __init__(self, speech):
+    def __init__(self, speech_cls):
         """
         :param speech: object of Speech class
         """
         self.name = "unknown"
         self.runningState = False
-        self.speech = speech
+        self.speech = speech_cls
 
     def run(self):
         self.runningState = True
@@ -121,8 +123,8 @@ class Action:
 
 
 class TimeAction(Action):
-    def __init__(self, speech, *args):
-        Action.__init__(self, speech)
+    def __init__(self, speech_cls, *args):
+        Action.__init__(self, speech_cls)
         self.name = "Time"
         locale.setlocale(locale.LC_TIME, "ru_RU")
 
@@ -136,8 +138,8 @@ class TimeAction(Action):
 
 
 class SendMessageAction(Action):
-    def __init__(self, speech, token, domen):
-        Action.__init__(self, speech)
+    def __init__(self, speech_cls, token, domen):
+        Action.__init__(self, speech_cls)
         self.name = "SendMessage"
         self.token = token
         self.domen = domen

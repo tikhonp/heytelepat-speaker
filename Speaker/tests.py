@@ -29,7 +29,6 @@ class TestSynthesizeSpeech(unittest.TestCase):
             speech.SynthesizedSpeech,
             msg="Create speech must return SynthesizedSpeech instance"
         )
-        print(type(synthesizedSpeech.audio_data))
         synthesizedSpeech.syntethize()
         synthesizedSpeech.play()
 

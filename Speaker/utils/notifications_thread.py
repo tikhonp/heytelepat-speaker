@@ -1,10 +1,8 @@
-import speech
+import utils.speech as speech
 import dateutil.parser
 from datetime import datetime
 from secrets import token_hex
 import requests
-from main_thread import inputFunction
-import time
 from threading import Thread
 
 
@@ -17,19 +15,45 @@ class NotificationsAgentThread(Thread):
     """
     def __init__(
         self,
+        notifications: list,
         config,
         inputFunction,
-        speech=speech.Speach,
+        timeEvent,
+        speech: speech.Speech,
+        lock_obj,
         host="http://127.0.0.1:8000",
     ):
         Thread.__init__(self)
+        self.config = config
+        self.speech = speech
+        self.inputFunction = inputFunction
+        self.host = host
+        self.timeEvent = timeEvent
+        self.lock = lock_obj
+        self.notifications = []
+
+        for i in notifications:
+            self.notifications.append(
+                i(config, inputFunction, timeEvent, speech, host, lock_obj))
+
+    def run(self):
+        while True:
+            for i in self.notifications:
+                i.main_loop_item()
+                self.timeEvent.wait(60)
+
+
+class MeasurementNotification:
+    def __init__(self, config, inputFunction, timeEvent, speech, host, lock):
         self.config = config
         self.speech = speech
         self.token = config['token']
         self.host = host
         self.data = self.__get_data__()
         self.inputFunction = inputFunction
-        self.tasks = {}  # All tasks that speaker need to ask for
+        self.timeEvent = timeEvent
+        self.lock = lock
+        self.tasks = {}
 
     def __get_data__(self):
         answer = requests.get(
@@ -139,7 +163,7 @@ class NotificationsAgentThread(Thread):
             else:
                 text = recognizeSpeech.recognize()
 
-            value = float(recognize_text.replace(" ", ""))
+            value = float(text.replace(" ", ""))
 
             answer = requests.post(self.host+'/speakerapi/pushvalue/', json={
                 "token": self.token,
@@ -148,7 +172,7 @@ class NotificationsAgentThread(Thread):
             if answer.status_code == 200:
                 self.__play__("Значение успешно записано")
             else:
-                self.__play__(("Произошла ошибка при сохраниении измерения")
+                self.__play__("Произошла ошибка при сохраниении измерения")
                 print(answer, answer.text)
 
             self.data.pop(task_id)
@@ -158,22 +182,17 @@ class NotificationsAgentThread(Thread):
             task['days_month_hour'] += 1
             self.data[task_id] = task
 
-    def __main_loop_item__(self):
+    def main_loop_item(self):
         self.__notifications_loop__()
 
         if len(self.tasks) > 0:
             print("TASKS:", self.tasks)
             for i in self.tasks:
-                self.__execute_task__(i)
-
-        time.sleep(60)
+                with self.lock:
+                    self.__execute_task__(i)
 
         if datetime.now().minute in [0, 30]:
             self.data = self.__get_data__()
 
-    def run(self):
-        while True:
-            try:
-                self.__main_loop_item__()
-            except Exception as e:
-                print(e)
+
+notifications_list = [MeasurementNotification]
