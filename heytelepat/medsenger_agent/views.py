@@ -13,6 +13,7 @@ from medsenger_agent import serializers
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from django.utils import timezone
+from datetime import datetime
 
 
 APP_KEY = settings.APP_KEY
@@ -216,7 +217,10 @@ class IncomingMessageApiView(APIView):
                 contract=contract,
                 message_id=serializer.data['message']['id'],
                 text=serializer.data['message']['text'],
-                date=timezone.localtime(serializer.message.date),
+                date=timezone.localtime(
+                    datetime.datetime.strptime(
+                        serializer['message']['date'],
+                        "%Y-%m-%d %H:%i:%s").astimezone(timezone.utc)),
             )
 
             message.save()

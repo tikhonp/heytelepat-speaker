@@ -9,6 +9,7 @@ class MessageDataSerializer(serializers.Serializer):
         format="%Y-%m-%d %H:%i:%s",
         default_timezone=timezone.utc,
     )
+    sender = serializers.CharField()
 
 
 class MessageSerializer(serializers.Serializer):
