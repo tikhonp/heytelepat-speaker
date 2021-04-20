@@ -107,3 +107,23 @@ class SendValueApiView(APIView):
             return HttpResponse('OK')
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CheckAuthApiView(APIView):
+    serializer_class = serializers.CheckAuthSerializer
+
+    def get(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            token = serializer.data['token']
+
+            try:
+                Speaker.objects.get(token=token)
+            except exceptions.ObjectDoesNotExist:
+                raise ValidationError(detail='Invalid Token')
+
+            return HttpResponse('OK')
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+

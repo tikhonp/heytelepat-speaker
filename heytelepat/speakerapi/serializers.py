@@ -21,3 +21,7 @@ class DataSendValuesSerializer(serializers.Serializer):
 class SendValueSerializer(serializers.Serializer):
     token = serializers.CharField()
     data = DataSendValuesSerializer(many=True)
+
+
+class CheckAuthSerializer(serializers.Serializer):
+    token = serializers.CharField()
