@@ -60,3 +60,14 @@ class Task(models.Model):
 
     def __str__(self):
         return "{} - {}".format(self.alias, self.contract.contract_id)
+
+
+class Message(models.Model):
+    contract = models.ForeignKey(
+        Contract, on_delete=models.CASCADE, null=True, default=None)
+
+    message_id = models.IntegerField()
+    text = models.TextField()
+    date = models.DateTimeField()
+
+    is_red = models.BooleanField(default=False)

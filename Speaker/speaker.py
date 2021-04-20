@@ -1,4 +1,5 @@
 from utils import main_thread, notifications_thread, speech
+import time
 import json
 import requests
 import threading
@@ -33,6 +34,8 @@ def init(speech_cls):
 
         if answer.status_code ==200:
             break
+
+        time.sleep(1)
 
     synthesizedSpeech = speech_cls.create_speech(
         "Отлично! Устройство настроено.")

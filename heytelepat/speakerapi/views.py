@@ -118,12 +118,13 @@ class CheckAuthApiView(APIView):
             token = serializer.data['token']
 
             try:
-                Speaker.objects.get(token=token)
+                s = Speaker.objects.get(token=token)
             except exceptions.ObjectDoesNotExist:
                 raise ValidationError(detail='Invalid Token')
+
+            if s.contract.contract_id is None:
+                raise ValidationError(detail='Contract is not connected')
 
             return HttpResponse('OK')
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-

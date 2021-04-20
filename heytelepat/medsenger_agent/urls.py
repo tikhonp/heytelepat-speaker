@@ -6,7 +6,7 @@ urlpatterns = [
     path('remove', views.remove),
     path('status', views.status),
     path('settings', views.settings),
-    path('message', views.message),
+    path('message', views.IncomingMessageApiView.as_view()),
     path('newdevice', views.newdevice),
     path('order', views.order),
 ]

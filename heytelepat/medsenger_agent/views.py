@@ -1,12 +1,18 @@
-from django.http import HttpResponseServerError, HttpResponse
+from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 import json
 from django.conf import settings
-from medsenger_agent.models import Contract, Speaker
+from medsenger_agent.models import Contract, Speaker, Message
 from medsenger_agent import agent_api
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.core import exceptions
+
+from rest_framework.views import APIView
+from medsenger_agent import serializers
+from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
+from django.utils import timezone
 
 
 APP_KEY = settings.APP_KEY
@@ -108,10 +114,6 @@ def settings(request):
         })
 
 
-def message(request):
-    return HttpResponseServerError()
-
-
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def newdevice(request):
@@ -192,3 +194,33 @@ def order(request):
             instance.save()
 
     return HttpResponse("ok")
+
+
+class IncomingMessageApiView(APIView):
+    serializer_class = serializers.MessageSerializer
+
+    def post(self, request):
+        print(request.data)
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            if serializer.data['api_key'] != APP_KEY:
+                raise ValidationError(detail='Invalid token')
+
+            try:
+                contract = Contract.objects.get(
+                    contract_id=serializer.data['contract_id'])
+            except exceptions.ObjectDoesNotExist:
+                raise ValidationError(detail='Contract does not exist')
+
+            message = Message.objects.create(
+                contract=contract,
+                message_id=serializer.data['message']['id'],
+                text=serializer.data['message']['text'],
+                date=timezone.localtime(serializer.data['message']['date']),
+            )
+
+            message.save()
+
+            return HttpResponse("ok")
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
