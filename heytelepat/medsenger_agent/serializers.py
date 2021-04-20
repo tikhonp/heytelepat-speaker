@@ -1,10 +1,14 @@
 from rest_framework import serializers
+from django.utils import timezone
 
 
 class MessageDataSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     text = serializers.CharField()
-    date = serializers.DateTimeField(format="%Y-%m-%d %H:%i:%s")
+    date = serializers.DateTimeField(
+        format="%Y-%m-%d %H:%i:%s",
+        default_timezone=timezone.utc,
+    )
 
 
 class MessageSerializer(serializers.Serializer):
