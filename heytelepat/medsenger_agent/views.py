@@ -216,7 +216,7 @@ class IncomingMessageApiView(APIView):
                 contract=contract,
                 message_id=serializer.data['message']['id'],
                 text=serializer.data['message']['text'],
-                date=timezone.localtime(serializer.data['message']['date']),
+                date=timezone.localtime(serializer.message.date),
             )
 
             message.save()
