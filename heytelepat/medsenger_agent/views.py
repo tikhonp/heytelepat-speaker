@@ -13,7 +13,7 @@ from medsenger_agent import serializers
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from django.utils import timezone
-from datetime import datetime
+import datetime
 
 
 APP_KEY = settings.APP_KEY
@@ -212,6 +212,9 @@ class IncomingMessageApiView(APIView):
                     contract_id=serializer.data['contract_id'])
             except exceptions.ObjectDoesNotExist:
                 raise ValidationError(detail='Contract does not exist')
+
+            if serializer.data['message']['sender'] == 'patient':
+                return HttpResponse("ok")
 
             message = Message.objects.create(
                 contract=contract,
