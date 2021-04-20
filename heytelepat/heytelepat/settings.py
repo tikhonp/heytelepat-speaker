@@ -128,9 +128,9 @@ STATIC_URL = '/static/'
 
 APP_KEY = "$2y$10$EhnTCMUX3m1MdzJoPc5iQudhoLvZSyWPXV463/yH.EqC3qV9CSir2"
 MAIN_HOST = "https://medsenger.ru"
-DOMEN = "http://tikhonsystems.ddns.net"
+DOMEN = "http://telepatspeaker.ddns.net"
 
-APPEND_SLASH=False
+APPEND_SLASH = False
 
 X_FRAME_OPTIONS = 'ALLOWALL'
 XS_SHARING_ALLOWED_METHODS = ['POST','GET','OPTIONS', 'PUT', 'DELETE']
