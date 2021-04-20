@@ -215,14 +215,15 @@ class IncomingMessageApiView(APIView):
 
             if serializer.data['message']['sender'] == 'patient':
                 return HttpResponse("ok")
-
+            date = serializer['message']['date']
+            print(date, type(date))
             message = Message.objects.create(
                 contract=contract,
                 message_id=serializer.data['message']['id'],
                 text=serializer.data['message']['text'],
                 date=timezone.localtime(
                     datetime.datetime.strptime(
-                        str(serializer['message']['date']),
+                        date,
                         "%Y-%m-%d %H:%M:%S").astimezone(timezone.utc)),
             )
 
