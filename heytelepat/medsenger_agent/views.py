@@ -215,7 +215,7 @@ class IncomingMessageApiView(APIView):
 
             if serializer.data['message']['sender'] == 'patient':
                 return HttpResponse("ok")
-            date = serializer['message']['date']
+            date = serializer['message']['date'].value
             print(date, type(date))
             message = Message.objects.create(
                 contract=contract,
