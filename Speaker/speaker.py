@@ -25,6 +25,20 @@ def init(speech_cls):
     synthesizedSpeech.syntethize()
     synthesizedSpeech.play()
 
+    while True:
+        body = {"token": config["token"]}
+
+        answer = requests.get(
+            config["domen"]+"/speakerapi/init/checkauth/", json=body)
+
+        if answer.status_code ==200:
+            break
+
+    synthesizedSpeech = speech_cls.create_speech(
+        "Отлично! Устройство настроено.")
+    synthesizedSpeech.syntethize()
+    synthesizedSpeech.play()
+
     return config
 
 
@@ -49,7 +63,9 @@ if __name__ == "__main__":
     print("Creating notiofication thread...")
     notifications_thread_cls = notifications_thread.NotificationsAgentThread(
         notifications_thread.notifications_list,
-        config, main_thread.inputFunction, event_obj, speech_cls, lock_obj)
+        config, main_thread.inputFunction, event_obj, speech_cls, lock_obj,
+        host=config['domen'],
+    )
 
     print("Creating main thread...")
     main_thread_cls = main_thread.MainThread(
