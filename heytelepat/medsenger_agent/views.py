@@ -222,7 +222,7 @@ class IncomingMessageApiView(APIView):
                 text=serializer.data['message']['text'],
                 date=timezone.localtime(
                     datetime.datetime.strptime(
-                        serializer['message']['date'],
+                        str(serializer['message']['date']),
                         "%Y-%m-%d %H:%i:%s").astimezone(timezone.utc)),
             )
 
