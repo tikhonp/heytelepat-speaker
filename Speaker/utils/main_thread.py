@@ -3,9 +3,21 @@ import requests
 import locale
 import datetime
 import utils.speech as speech
+import RPi.GPIO as GPIO
+
 
 def inputFunction():
     input("Press enter and tell something!")
+
+
+def raspberryInputFunction():
+    GPIO.setmode(GPIO.BOARD)
+    GPIO.setup(4, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
+    while True:
+        if GPIO.input(4) == GPIO.HIGH:
+            print("Button was pushed!")
+            return
 
 
 class MainThread(Thread):

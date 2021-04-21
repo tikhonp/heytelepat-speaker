@@ -40,7 +40,44 @@ class NotificationsAgentThread(Thread):
         while True:
             for i in self.notifications:
                 i.main_loop_item()
-                self.timeEvent.wait(60)
+                self.timeEvent.wait(5)
+
+
+class MessageNotification:
+    def __init__(self, config, inputFunction, timeEvent, speech, host, lock):
+        self.config = config
+        self.speech = speech
+        self.token = config['token']
+        self.host = host
+        self.inputFunction = inputFunction
+        self.timeEvent = timeEvent
+        self.lock = lock
+
+    def __play__(self, text: str):
+        synthesizedSpeech = self.speech.create_speech(text)
+        synthesizedSpeech.syntethize()
+        synthesizedSpeech.play()
+
+    def main_loop_item(self):
+        answer = requests.get(
+            self.host+'/speakerapi/incomingmessage/',
+            json={"token": self.token, "last_messages": False},
+        )
+
+        if answer.status_code == 200:
+            print(
+                "ERROR WITH GETTING DATA FROM SERVER!\nStatus code: {}\nAnswer: {}".format(
+                    answer.status_code, answer.text))
+            return
+
+        answer = answer.json()
+        if answer == []:
+            return
+
+        with self.lock:
+            text = answer[0]["fields"]
+            self.__play__(
+                "Вам пришло новое сообщение, "+text)
 
 
 class MeasurementNotification:
@@ -195,4 +232,4 @@ class MeasurementNotification:
             self.data = self.__get_data__()
 
 
-notifications_list = [MeasurementNotification]
+notifications_list = [MeasurementNotification, MessageNotification]
