@@ -64,7 +64,7 @@ class MessageNotification:
             json={"token": self.token, "last_messages": False},
         )
 
-        if answer.status_code == 200:
+        if answer.status_code != 200:
             print(
                 "ERROR WITH GETTING DATA FROM SERVER!\nStatus code: {}\nAnswer: {}".format(
                     answer.status_code, answer.text))

@@ -66,13 +66,13 @@ if __name__ == "__main__":
     print("Creating notiofication thread...")
     notifications_thread_cls = notifications_thread.NotificationsAgentThread(
         notifications_thread.notifications_list,
-        config, main_thread.inputFunction, event_obj, speech_cls, lock_obj,
+        config, main_thread.raspberryInputFunction, event_obj, speech_cls, lock_obj,
         host=config['domen'],
     )
 
     print("Creating main thread...")
     main_thread_cls = main_thread.MainThread(
-        main_thread.inputFunction,
+        main_thread.raspberryInputFunction,
         main_thread.activitiesList, config['token'], config['domen'],
         speech_cls, lock_obj)
 

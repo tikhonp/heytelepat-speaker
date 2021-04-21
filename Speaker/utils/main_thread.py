@@ -11,6 +11,7 @@ def inputFunction():
 
 
 def raspberryInputFunction():
+    print("Waiting button")
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(4, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
