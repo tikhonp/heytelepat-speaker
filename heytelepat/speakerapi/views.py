@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-from medsenger_agent.models import Speaker, Task
+from medsenger_agent.models import Speaker, Task, Message
 from rest_framework import generics
 from speakerapi import serializers
 from django.core import exceptions
@@ -8,6 +8,7 @@ from medsenger_agent import agent_api
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.core import serializers as dj_serializers
 
 
 class SpeakerInitApiView(APIView):
@@ -126,5 +127,50 @@ class CheckAuthApiView(APIView):
                 raise ValidationError(detail='Contract is not connected')
 
             return HttpResponse('OK')
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class IncomingMessageNotifyApiView(APIView):
+    serializer_class = serializers.IncomingMessageNotify
+
+    def get(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            token = serializer.data['token']
+
+            try:
+                s = Speaker.objects.get(token=token)
+            except exceptions.ObjectDoesNotExist:
+                raise ValidationError(detail='Invalid Token')
+
+            if serializer.data['last_messages']:
+                messages = Message.objects.filter(
+                    contract=s.contract, is_red=False)
+                text = dj_serializers.serialize(
+                    'json', list(messages), fields=('text'))
+
+                for message in messages:
+                    message.is_red = True
+                    message.is_notified = True
+                    message.save()
+
+                return HttpResponse(text)
+
+            else:
+                try:
+                    message = Message.objects.filter(
+                        contract=s.contract, is_notified=False).earliest(
+                            'date')
+                except exceptions.ObjectDoesNotExist:
+                    return HttpResponse("[]")
+
+                text = dj_serializers.serialize(
+                    'json', [message, ], fields=('text'))
+
+                message.is_notified = True
+                message.save()
+
+                return HttpResponse(text)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

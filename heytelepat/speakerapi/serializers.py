@@ -25,3 +25,8 @@ class SendValueSerializer(serializers.Serializer):
 
 class CheckAuthSerializer(serializers.Serializer):
     token = serializers.CharField()
+
+
+class IncomingMessageNotify(serializers.Serializer):
+    token = serializers.CharField()
+    last_messages = serializers.BooleanField()

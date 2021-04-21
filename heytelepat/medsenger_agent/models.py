@@ -71,3 +71,4 @@ class Message(models.Model):
     date = models.DateTimeField()
 
     is_red = models.BooleanField(default=False)
+    is_notified = models.BooleanField(default=False)
