@@ -13,7 +13,7 @@ def inputFunction():
 def raspberryInputFunction():
     print("Waiting button")
     GPIO.setmode(GPIO.BCM)
-    GPIO.setup(4, GPIO.IN)
+    GPIO.setup(4, GPIO.IN, GPIO.PUD_UP)
 
     while True:
         if GPIO.input(4) == GPIO.HIGH:
