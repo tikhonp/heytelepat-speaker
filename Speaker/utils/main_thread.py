@@ -16,7 +16,7 @@ def raspberryInputFunction():
     GPIO.setup(4, GPIO.IN, GPIO.PUD_UP)
 
     while True:
-        if GPIO.input(4) == GPIO.HIGH:
+        if GPIO.input(4) == GPIO.LOW:
             print("Button was pushed!")
             return
 
@@ -103,15 +103,15 @@ class MainThread(Thread):
                 synthesizedSpeech.play()
                 return
 
-            a = action(self.speech, self.token, self.domain)
+            a = action(self.speech, self.inputFunction, self.token, self.domain)
             a.run()
 
     def run(self):
         while True:
-            # try:
-            self.__main_loop_item__()
-            # except Exception as e:
-                # print(e)
+            try:
+                self.__main_loop_item__()
+            except Exception as e:
+                print(e)
 
 
 class Action:
@@ -135,6 +135,89 @@ class Action:
         self.runningState = False
 
 
+class PresureTestAction(Action):
+    def __init__(self, speech_cls, inputFunction, *args):
+        Action.__init__(self, speech_cls)
+        self.name = "Presure Test"
+        self.inputFunction = inputFunction
+
+    def __play__(self, text: str):
+        synthesizedSpeech = self.speech.create_speech(text)
+        synthesizedSpeech.syntethize()
+        synthesizedSpeech.play()
+
+    def __execute_task__(self):
+        self.__play__("Привет! Вам необходимо произвести измермерение и отправить врачу.")
+
+        text_speak = "Пожалуйста, произведите измерение {}. {} Когда будете готовы нажмите на конпку и произнесите значение верхннего давления".format(
+                "давления",
+                ""
+            )
+        self.__play__(text_speak)
+
+
+        self.inputFunction()
+
+        recognizeSpeech = self.speech.read_audio()
+        if recognizeSpeech is None:
+            text = self.__repeat_recognition__()
+            if text is None:
+                return
+        else:
+            text = recognizeSpeech.recognize()
+
+        try:
+            svalue = int(text.replace(" ", ""))
+        except:
+            self.__play__("Знвчение не соответвсует")
+            return
+
+        self.__play__("Произведите измеренние ниижнего давления")
+
+        recognizeSpeech = self.speech.read_audio()
+        if recognizeSpeech is None:
+            text = self.__repeat_recognition__()
+            if text is None:
+                return
+        else:
+            text = recognizeSpeech.recognize()
+
+        try:
+            dvalue = int(text.replace(" ", ""))
+        except:
+            self.__play__("Знвчение не соответвсует")
+            return
+
+        answer = requests.post('https://medsenger.ru/api/agents/records/add', json={
+            "api_key": '$2y$10$EhnTCMUX3m1MdzJoPc5iQudhoLvZSyWPXV463/yH.EqC3qV9CSir2',
+            "contract_id": 3188,
+            "category_name": "systolic_pressure",
+            "value": svalue,
+        })
+        if answer.status_code == 200:
+            pass
+        else:
+            self.__play__("Произошла ошибка при сохраниении измерения")
+            print(answer, answer.text)
+
+        answer = requests.post('https://medsenger.ru/api/agents/records/add', json={
+            "api_key": '$2y$10$EhnTCMUX3m1MdzJoPc5iQudhoLvZSyWPXV463/yH.EqC3qV9CSir2',
+            "contract_id": 3188,
+            "category_name": "diastolic_pressure",
+            "value": dvalue,
+        })
+        if answer.status_code == 200:
+            pass
+        else:
+            self.__play__("Произошла ошибка при сохраниении измерения")
+            print(answer, answer.text)
+
+        self.__play__("Значение успешно записано")
+
+    def run(self):
+        self.__execute_task__()
+
+
 class TimeAction(Action):
     def __init__(self, speech_cls, *args):
         Action.__init__(self, speech_cls)
@@ -151,7 +234,7 @@ class TimeAction(Action):
 
 
 class SendMessageAction(Action):
-    def __init__(self, speech_cls, token, domen):
+    def __init__(self, speech_cls, inputFunction, token, domen, *args):
         Action.__init__(self, speech_cls)
         self.name = "SendMessage"
         self.token = token
@@ -215,4 +298,5 @@ class SendMessageAction(Action):
 activitiesList = {
     "время": TimeAction,
     "сообщени": SendMessageAction,
+    "давление": PresureTestAction,
 }

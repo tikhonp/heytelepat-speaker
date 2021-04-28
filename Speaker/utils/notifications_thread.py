@@ -39,7 +39,11 @@ class NotificationsAgentThread(Thread):
     def run(self):
         while True:
             for i in self.notifications:
+#                try:
                 i.main_loop_item()
+#                except Exception as e:
+#                    print(e)
+
                 self.timeEvent.wait(5)
 
 
@@ -75,7 +79,7 @@ class MessageNotification:
             return
 
         with self.lock:
-            text = answer[0]["fields"]
+            text = answer[0]["fields"]["text"]
             self.__play__(
                 "Вам пришло новое сообщение, "+text)
 
