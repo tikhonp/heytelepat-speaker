@@ -6,12 +6,12 @@ import utils.speech as speech
 import RPi.GPIO as GPIO
 
 
-def inputFunction():
+def simpleInputFunction():
     input("Press enter and tell something!")
 
 
 def raspberryInputFunction():
-    print("Waiting button")
+    print("Waiting button...")
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(4, GPIO.IN, GPIO.PUD_UP)
 
@@ -21,34 +21,31 @@ def raspberryInputFunction():
             return
 
 
+def exceptionHandler(ex):
+    template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+    message = template.format(type(ex).__name__, ex.args)
+    print(message)
+
+
 class MainThread(Thread):
     """
     Main thread represents user input
     """
 
-    def __init__(self,
-                 inputFunction,
-                 activitiesList,
-                 token: str,
-                 domain: str,
-                 speech_cls: speech.Speech,
-                 lock_obj,
-                 ):
+    def __init__(self, objectStorage, activitiesList):
         """
-        :param inputFunction: Input function that ask button like objects
+        :param objectStorage: ObjectStorage instance
         :param activitiesList: dictionary of activities
-        :param token: string token of serverside
-        :param domain: string domain of server
-        :param speech: object of Speech class
         """
 
         Thread.__init__(self)
-        self.inputFunction = inputFunction
+        self.objectStorage = objectStorage
+        self.inputFunction = objectStorage.inputFunction
         self.activitiesList = activitiesList
-        self.speech = speech_cls
-        self.token = token
-        self.domain = domain
-        self.lock = lock_obj
+        self.speech = objectStorage.speech_cls
+        self.token = objectStorage.config['token']
+        self.domain = objectStorage.domain
+        self.lock = objectStorage.lock_obj
 
     def __repeat_recognition__(self, n=1):
         synthesizedSpeech = self.speech.create_speech(
@@ -103,7 +100,7 @@ class MainThread(Thread):
                 synthesizedSpeech.play()
                 return
 
-            a = action(self.speech, self.inputFunction, self.token, self.domain)
+            a = action(self.objectStorage)
             a.run()
 
     def run(self):
@@ -111,35 +108,14 @@ class MainThread(Thread):
             try:
                 self.__main_loop_item__()
             except Exception as e:
-                print(e)
+                exceptionHandler(e)
 
 
-class Action:
-    """
-    class that represents action function
-    """
-
-    def __init__(self, speech_cls):
-        """
-        :param speech: object of Speech class
-        """
-        self.name = "unknown"
-        self.runningState = False
-        self.speech = speech_cls
-
-    def run(self):
-        self.runningState = True
-        pass
-
-    def stop(self):
-        self.runningState = False
-
-
-class PresureTestAction(Action):
-    def __init__(self, speech_cls, inputFunction, *args):
-        Action.__init__(self, speech_cls)
+class PresureTestAction:
+    def __init__(self, objectStorage):
+        self.speech = objectStorage.speech_cls
         self.name = "Presure Test"
-        self.inputFunction = inputFunction
+        self.inputFunction = objectStorage.inputFunction
 
     def __play__(self, text: str):
         synthesizedSpeech = self.speech.create_speech(text)
@@ -218,10 +194,10 @@ class PresureTestAction(Action):
         self.__execute_task__()
 
 
-class TimeAction(Action):
-    def __init__(self, speech_cls, *args):
-        Action.__init__(self, speech_cls)
+class TimeAction:
+    def __init__(self, objectStorage):
         self.name = "Time"
+        self.speech = objectStorage.speech_cls
         locale.setlocale(locale.LC_TIME, "ru_RU")
 
     def run(self):
@@ -233,12 +209,12 @@ class TimeAction(Action):
         synthesizedSpeech.play()
 
 
-class SendMessageAction(Action):
-    def __init__(self, speech_cls, inputFunction, token, domen, *args):
-        Action.__init__(self, speech_cls)
+class SendMessageAction:
+    def __init__(self, objectStorage):
         self.name = "SendMessage"
-        self.token = token
-        self.domen = domen
+        self.token = objectStorage.config['token']
+        self.domen = objectStorage.domen
+        self.speech = objectStorage.speech_cls
 
     def __repeat_recognition__(self, n=1):
         synthesizedSpeech = self.speech.create_speech(

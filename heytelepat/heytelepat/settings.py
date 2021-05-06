@@ -29,6 +29,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '10.0.1.3',
     'tikhonsystems.ddns.net',
+    'telepatspeaker.ddns.net',
 ]
 
 

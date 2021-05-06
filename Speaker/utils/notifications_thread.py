@@ -4,6 +4,7 @@ from datetime import datetime
 from secrets import token_hex
 import requests
 from threading import Thread
+from utils.main_thread import exceptionHandler
 
 
 class NotificationsAgentThread(Thread):
@@ -15,47 +16,38 @@ class NotificationsAgentThread(Thread):
     """
     def __init__(
         self,
+        objectStorage,
         notifications: list,
-        config,
-        inputFunction,
-        timeEvent,
-        speech: speech.Speech,
-        lock_obj,
-        host="http://127.0.0.1:8000",
     ):
         Thread.__init__(self)
-        self.config = config
-        self.speech = speech
-        self.inputFunction = inputFunction
-        self.host = host
-        self.timeEvent = timeEvent
-        self.lock = lock_obj
-        self.notifications = []
-
-        for i in notifications:
-            self.notifications.append(
-                i(config, inputFunction, timeEvent, speech, host, lock_obj))
+        self.config = objectStorage.config
+        self.speech = objectStorage.speech
+        self.inputFunction = objectStorage.inputFunction
+        self.host = objectStorage.host
+        self.timeEvent = objectStorage.event_obj
+        self.lock = objectStorage.lock_obj
+        self.notifications = [i(objectStorage) for i in notifications]
 
     def run(self):
         while True:
             for i in self.notifications:
-#                try:
-                i.main_loop_item()
-#                except Exception as e:
-#                    print(e)
+                try:
+                    i.main_loop_item()
+                except Exception as e:
+                    exceptionHandler(e)
 
                 self.timeEvent.wait(5)
 
 
 class MessageNotification:
-    def __init__(self, config, inputFunction, timeEvent, speech, host, lock):
-        self.config = config
-        self.speech = speech
-        self.token = config['token']
-        self.host = host
-        self.inputFunction = inputFunction
-        self.timeEvent = timeEvent
-        self.lock = lock
+    def __init__(self, objectStorage):
+        self.config = objectStorage.config
+        self.speech = objectStorage.speech
+        self.token = objectStorage.config['token']
+        self.host = objectStorage.host
+        self.inputFunction = objectStorage.inputFunction
+        self.timeEvent = objectStorage.event_obj
+        self.lock = objectStorage.lock_obj
 
     def __play__(self, text: str):
         synthesizedSpeech = self.speech.create_speech(text)
@@ -85,15 +77,15 @@ class MessageNotification:
 
 
 class MeasurementNotification:
-    def __init__(self, config, inputFunction, timeEvent, speech, host, lock):
-        self.config = config
-        self.speech = speech
-        self.token = config['token']
-        self.host = host
+    def __init__(self, objectStorage):
+        self.config = objectStorage.config
+        self.speech = objectStorage.speech
+        self.token = objectStorage.config['token']
+        self.host = objectStorage.host
         self.data = self.__get_data__()
-        self.inputFunction = inputFunction
-        self.timeEvent = timeEvent
-        self.lock = lock
+        self.inputFunction = objectStorage.inputFunction
+        self.timeEvent = objectStorage.event_obj
+        self.lock = objectStorage.lock_obj
         self.tasks = {}
 
     def __get_data__(self):

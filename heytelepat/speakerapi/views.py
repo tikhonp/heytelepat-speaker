@@ -72,7 +72,8 @@ class SendMessageApiView(APIView):
             except exceptions.ObjectDoesNotExist:
                 raise ValidationError(detail='Invalid Token')
 
-            agent_api.send_message(s.contract.contract_id, message)
+            message = "Сообщение от пациента: " + message
+            agent_api.send_message(s.contract.contract_id, message, need_answer=True)
             return HttpResponse('OK')
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -91,7 +92,7 @@ class SendValueApiView(APIView):
             try:
                 s = Speaker.objects.get(token=token)
             except exceptions.ObjectDoesNotExist:
-                raise ValidationError(detail='Invalid Token')
+                raise ValidationError(detail='Invalid Tokena')
 
             if len(data) == 1:
                 agent_api.add_record(

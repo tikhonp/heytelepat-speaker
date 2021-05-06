@@ -8,7 +8,7 @@ from medsenger_agent.models import Task
 def send_message(contract_id, text, action_link=None, action_name=None,
                  action_onetime=False, action_big=False, only_doctor=False,
                  only_patient=False, action_deadline=None, is_urgent=False,
-                 need_answer=False, attachments=None):
+                 need_answer=False, attachments=None, send_from='patient'):
 
     message = {
         "text": text
@@ -40,6 +40,9 @@ def send_message(contract_id, text, action_link=None, action_name=None,
 
     if is_urgent:
         message['is_urgent'] = is_urgent
+
+    if send_from:
+        message['send_from'] = send_from
 
     if attachments:
         message['attachments'] = []

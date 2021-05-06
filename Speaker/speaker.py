@@ -45,12 +45,57 @@ def init(speech_cls):
     return config
 
 
+class ObjectStorage:
+    def __init__(
+        self,
+        config,
+        playaudiofunction,
+        **kwargs
+    ):
+        """
+        kwargs:
+            - lock_obj
+            - event_obj
+            - speech_cls
+        """
+        self.config = config
+        self.playaudiofunction = playaudiofunction
+
+        if 'event_obj' in kwargs:
+            self.event_obj = kwargs['event_obj']
+        else:
+            self.event_obj = threading.Event()
+
+        if 'lock_obj' in kwargs:
+            self.lock_obj = kwargs['lock_obj']
+        else:
+            self.lock_obj = threading.RLock()
+
+        if 'speech_class' in kwargs:
+            self.speech_class = kwargs['speech_class']
+        else:
+            self.speech_cls = speech.Speech(
+                config['api_key'],
+                config['catalog'],
+                playaudiofunction
+            )
+
+    @property
+    def api_key(self):
+        return self.config['api_key']
+
+    @property
+    def catalog(self):
+        return self.config['catalog']
+
+    @property
+    def host(self):
+        return self.config['domen']
+
+
 if __name__ == "__main__":
     with open("speaker_config.json", "r") as f:
         config = json.load(f)
-
-    event_obj = threading.Event()
-    lock_obj = threading.RLock()
 
     print("Hello there! Tikhon systems inc all rights reserved.")
     print("Loaded config, speech class creating...")
@@ -63,6 +108,11 @@ if __name__ == "__main__":
         config = init(speech_cls)
     print("Initialisation skiped, token already exist")
 
+    objectStorage = ObjectStorage(
+        config,
+        speech.playaudiofunction,
+        speech_cls = speech_cls
+    )
     print("Creating notiofication thread...")
     notifications_thread_cls = notifications_thread.NotificationsAgentThread(
         notifications_thread.notifications_list,
