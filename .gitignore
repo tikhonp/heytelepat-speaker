@@ -131,3 +131,7 @@ dmypy.json
 
 *.DS_Store
 *.swp
+
+static/
+/Speaker/cash.data
+/heytelepat/db.sqlite3

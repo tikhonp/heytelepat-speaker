@@ -1,8 +1,11 @@
+#!/usr/bin/env python
+
 from utils import main_thread, notifications_thread, speech
 import time
 import json
 import requests
 import threading
+import argparse
 
 
 def init(speech_cls):
@@ -32,7 +35,7 @@ def init(speech_cls):
         answer = requests.get(
             config["domen"]+"/speakerapi/init/checkauth/", json=body)
 
-        if answer.status_code ==200:
+        if answer.status_code == 200:
             break
 
         time.sleep(1)
@@ -49,7 +52,8 @@ class ObjectStorage:
     def __init__(
         self,
         config,
-        playaudiofunction,
+        inputFunction,
+        cash_filename,
         **kwargs
     ):
         """
@@ -57,9 +61,16 @@ class ObjectStorage:
             - lock_obj
             - event_obj
             - speech_cls
+            - playaudiofunction
+            - speakSpeech_cls
         """
         self.config = config
-        self.playaudiofunction = playaudiofunction
+        self.inputFunction = inputFunction
+
+        if 'playaudiofunction' in kwargs:
+            self.playaudiofunction = kwargs['playaudiofunction']
+        else:
+            self.playaudiofunction = None
 
         if 'event_obj' in kwargs:
             self.event_obj = kwargs['event_obj']
@@ -71,14 +82,22 @@ class ObjectStorage:
         else:
             self.lock_obj = threading.RLock()
 
-        if 'speech_class' in kwargs:
-            self.speech_class = kwargs['speech_class']
+        if 'speech_cls' in kwargs:
+            self.speech = kwargs['speech_cls']
         else:
-            self.speech_cls = speech.Speech(
+            if self.playaudiofunction is None:
+                raise Exception("You must provide playaudiofunction")
+            self.speech = speech.Speech(
                 config['api_key'],
                 config['catalog'],
-                playaudiofunction
+                self.playaudiofunction
             )
+
+        if 'speakSpeech_cls' in kwargs:
+            self.speakSpeech = kwargs['speakSpeech_cls']
+        else:
+            self.speakSpeech = speech.SpeakSpeech(
+                self.speech, cash_filename)
 
     @property
     def api_key(self):
@@ -94,8 +113,17 @@ class ObjectStorage:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Speaker for telepat.')
+    parser.add_argument("-r", "--reset", help="reset speaker token and init",
+                        action="store_true")
+    parser.add_argument("-cc", "--cleancash", help="clean cashed speaches",
+                        action="store_true")
+    args = parser.parse_args()
+
     with open("speaker_config.json", "r") as f:
         config = json.load(f)
+        if args.reset:
+            config['token'] = None
 
     print("Hello there! Tikhon systems inc all rights reserved.")
     print("Loaded config, speech class creating...")
@@ -110,21 +138,24 @@ if __name__ == "__main__":
 
     objectStorage = ObjectStorage(
         config,
-        speech.playaudiofunction,
-        speech_cls = speech_cls
+        main_thread.simpleInputFunction,
+        'cash.data',
+        speech_cls=speech_cls
     )
+    if args.cleancash:
+        objectStorage.speakSpeech.reset_cash()
+
     print("Creating notiofication thread...")
     notifications_thread_cls = notifications_thread.NotificationsAgentThread(
+        objectStorage,
         notifications_thread.notifications_list,
-        config, main_thread.raspberryInputFunction, event_obj, speech_cls, lock_obj,
-        host=config['domen'],
     )
 
     print("Creating main thread...")
     main_thread_cls = main_thread.MainThread(
-        main_thread.raspberryInputFunction,
-        main_thread.activitiesList, config['token'], config['domen'],
-        speech_cls, lock_obj)
+        objectStorage,
+        main_thread.activitiesList
+    )
 
     print("Running Notification thread")
     notifications_thread_cls.start()

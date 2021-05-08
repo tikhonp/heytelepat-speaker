@@ -2,6 +2,7 @@ from speechkit import speechkit
 import speech_recognition as sr
 # import pygame
 import simpleaudio as sa
+import pickle
 
 
 '''
@@ -142,3 +143,58 @@ class Speech:
     def adjust_for_ambient_noise(self, duration=3):
         with sr.Microphone() as source:
             self.recognizer.adjust_for_ambient_noise(source, duration=1)
+
+
+class SpeakSpeech:
+    """
+    Generates playes and cashes speech generated in Speech class
+    """
+    def __init__(self,
+                 speech_cls: Speech,
+                 cashed_data_filename: str
+                ):
+        """
+        :param speech_cls: object of Speech class
+        :cashed_data_filename: filename of pickle data
+        """
+        self.speech = speech_cls
+        self.cashed_data_filename = cashed_data_filename
+        self.__load_data__()
+
+    def __load_data__(self):
+        try:
+            with open(self.cashed_data_filename, 'rb') as f:
+                self.data = pickle.load(f)
+        except FileNotFoundError:
+            self.data = {}
+            self.__store_data__()
+
+    def __store_data__(self):
+        with open(self.cashed_data_filename, 'wb') as f:
+            pickle.dump(self.data, f)
+
+    def reset_cash(self):
+        self.data = {}
+        self.__store_data__()
+
+    def play(self, text: str, cashed=False):
+        """
+        Generate and plays text with text given
+        :param cashed: bool if need cash it
+        """
+        if cashed:
+            if text in self.data:
+                synthesizedSpeech = self.data[text]
+            else:
+                synthesizedSpeech = self.speech.create_speech(text)
+                synthesizedSpeech.syntethize()
+                self.data[text] = synthesizedSpeech
+                self.__store_data__()
+        else:
+            synthesizedSpeech = self.speech.create_speech(text)
+            synthesizedSpeech.syntethize()
+
+        synthesizedSpeech.play()
+
+
+

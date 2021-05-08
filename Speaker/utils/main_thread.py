@@ -2,8 +2,7 @@ from threading import Thread
 import requests
 import locale
 import datetime
-import utils.speech as speech
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 
 
 def simpleInputFunction():
@@ -42,16 +41,16 @@ class MainThread(Thread):
         self.objectStorage = objectStorage
         self.inputFunction = objectStorage.inputFunction
         self.activitiesList = activitiesList
-        self.speech = objectStorage.speech_cls
+        self.speech = objectStorage.speech
         self.token = objectStorage.config['token']
-        self.domain = objectStorage.domain
+        self.domain = objectStorage.host
         self.lock = objectStorage.lock_obj
+        self.speakSpeech = objectStorage.speakSpeech
 
     def __repeat_recognition__(self, n=1):
-        synthesizedSpeech = self.speech.create_speech(
-            "Я не расслышал, повторите, пожалуйста еще.")
-        synthesizedSpeech.syntethize()
-        synthesizedSpeech.play()
+        self.speakSpeech.play(
+            "Я не расслышал, повторите, пожалуйста еще.", cashed=True)
+
         recognizeSpeech = self.speech.read_audio()
 
         if recognizeSpeech is None:
@@ -94,10 +93,8 @@ class MainThread(Thread):
 
             action = self.__get_action__(text)
             if action is None:
-                synthesizedSpeech = self.speech.create_speech(
-                    "К сожалению, я еще не знаю такой команды.")
-                synthesizedSpeech.syntethize()
-                synthesizedSpeech.play()
+                self.speakSpeech.play(
+                    "К сожалению, я еще не знаю такой команды.", cashed=True)
                 return
 
             a = action(self.objectStorage)
@@ -105,32 +102,27 @@ class MainThread(Thread):
 
     def run(self):
         while True:
-            try:
-                self.__main_loop_item__()
-            except Exception as e:
-                exceptionHandler(e)
+            #try:
+            self.__main_loop_item__()
+            #except Exception as e:
+            #    exceptionHandler(e)
 
 
 class PresureTestAction:
     def __init__(self, objectStorage):
-        self.speech = objectStorage.speech_cls
+        self.speech = objectStorage.speech
         self.name = "Presure Test"
         self.inputFunction = objectStorage.inputFunction
-
-    def __play__(self, text: str):
-        synthesizedSpeech = self.speech.create_speech(text)
-        synthesizedSpeech.syntethize()
-        synthesizedSpeech.play()
+        self.speakSpeech = objectStorage.speakSpeech
 
     def __execute_task__(self):
-        self.__play__("Привет! Вам необходимо произвести измермерение и отправить врачу.")
+        self.speakSpeech.play(
+            "Привет! Вам необходимо произвести измермерение и отправить врачу.", cashed=True)
 
         text_speak = "Пожалуйста, произведите измерение {}. {} Когда будете готовы нажмите на конпку и произнесите значение верхннего давления".format(
                 "давления",
-                ""
-            )
-        self.__play__(text_speak)
-
+                "")
+        self.speakSpeech.play(text_speak, cashed=True)
 
         self.inputFunction()
 
@@ -145,10 +137,12 @@ class PresureTestAction:
         try:
             svalue = int(text.replace(" ", ""))
         except:
-            self.__play__("Знвчение не соответвсует")
+            self.speakSpeech.play(
+                "Значение не соответвсует", cashed=True)
             return
 
-        self.__play__("Произведите измеренние ниижнего давления")
+        self.speakSpeech.play(
+            "Произведите измеренние ниижнего давления", cashed=True)
 
         recognizeSpeech = self.speech.read_audio()
         if recognizeSpeech is None:
@@ -161,7 +155,8 @@ class PresureTestAction:
         try:
             dvalue = int(text.replace(" ", ""))
         except:
-            self.__play__("Знвчение не соответвсует")
+            self.speakSpeech.play(
+                "Значение не соответвсует", cashed=True)
             return
 
         answer = requests.post('https://medsenger.ru/api/agents/records/add', json={
@@ -173,7 +168,8 @@ class PresureTestAction:
         if answer.status_code == 200:
             pass
         else:
-            self.__play__("Произошла ошибка при сохраниении измерения")
+            self.speakSpeech.play(
+                "Произошла ошибка при сохраниении измерения", cashed=True)
             print(answer, answer.text)
 
         answer = requests.post('https://medsenger.ru/api/agents/records/add', json={
@@ -185,10 +181,12 @@ class PresureTestAction:
         if answer.status_code == 200:
             pass
         else:
-            self.__play__("Произошла ошибка при сохраниении измерения")
+            self.speakSpeech.play(
+                "Произошла ошибка при сохраниении измерения", cashed=True)
             print(answer, answer.text)
 
-        self.__play__("Значение успешно записано")
+        self.speakSpeech.play(
+            "Значение успешно записано", cashed=True)
 
     def run(self):
         self.__execute_task__()
@@ -197,30 +195,63 @@ class PresureTestAction:
 class TimeAction:
     def __init__(self, objectStorage):
         self.name = "Time"
-        self.speech = objectStorage.speech_cls
+        self.speakSpeech = objectStorage.speakSpeech
         locale.setlocale(locale.LC_TIME, "ru_RU")
 
     def run(self):
         timestr = datetime.datetime.now().astimezone().strftime(
-            "%A, %-d %B, %-H:%-M")
+            "%A, %-d %B, %H:%M")
         timestr = "Сейчас " + timestr + "."
-        synthesizedSpeech = self.speech.create_speech(timestr)
-        synthesizedSpeech.syntethize()
-        synthesizedSpeech.play()
+        self.speakSpeech.play(timestr)
+
+
+class NewMessagesAction:
+    def __init__(self, objectStorage):
+        self.name = "NewMessages"
+        self.token = objectStorage.config['token']
+        self.domen = objectStorage.host
+        self.speakSpeech = objectStorage.speakSpeech
+
+    def run(self):
+        data = {
+            'token': self.token,
+            'last_messages': True
+        }
+        answer = requests.get(self.domen+'/speakerapi/incomingmessage/',
+                              json=data)
+
+        if answer.status_code != 200:
+            self.speakSpeech.play(
+                "Произошла ошибка при загрузке сообщений", cashed=True)
+            print(answer, answer.text)
+            return
+
+        answer = answer.json()
+        print(answer)
+
+        if len(answer) == 0:
+            self.speakSpeech.play(
+                "Новых сообщений нет", cashed=True)
+        else:
+            for i in answer:
+                text = "Сообщение. " + i['fields']['text']
+                self.speakSpeech.play(text)
+                self.timeEvent.wait(0.5)
 
 
 class SendMessageAction:
     def __init__(self, objectStorage):
         self.name = "SendMessage"
         self.token = objectStorage.config['token']
-        self.domen = objectStorage.domen
-        self.speech = objectStorage.speech_cls
+        self.domen = objectStorage.host
+        self.speech = objectStorage.speech
+        self.speakSpeech = objectStorage.speakSpeech
+        self.timeEvent = objectStorage.event_obj
 
     def __repeat_recognition__(self, n=1):
-        synthesizedSpeech = self.speech.create_speech(
-            "Я не расслышал, повторите, пожалуйста еще.")
-        synthesizedSpeech.syntethize()
-        synthesizedSpeech.play()
+        self.speakSpeech.play(
+            "Я не расслышал, повторите, пожалуйста еще.", cashed=True)
+
         recognizeSpeech = self.speech.read_audio()
 
         if recognizeSpeech is None:
@@ -241,10 +272,9 @@ class SendMessageAction:
                 return text
 
     def run(self):
-        synthesizedSpeech = self.speech.create_speech(
-            "Какое сообщение вы хотите отправить?")
-        synthesizedSpeech.syntethize()
-        synthesizedSpeech.play()
+        self.speakSpeech.play(
+            "Какое сообщение вы хотите отправить?", cashed=True)
+
         recognizeSpeech = self.speech.read_audio()
 
         if recognizeSpeech is None:
@@ -262,17 +292,15 @@ class SendMessageAction:
         if answer.status_code == 200:
             text = "Сообщение успешно отправлено!"
         else:
-            speech.speak("Произошла ошибка приотправлении сообщения")
+            text = "Произошла ошибка приотправлении сообщения"
             print(answer, answer.text)
 
-        synthesizedSpeech = self.speech.create_speech(text)
-        synthesizedSpeech.syntethize()
-        synthesizedSpeech.play()
-        recognizeSpeech = self.speech.read_audio()
+        self.speakSpeech.play(text, cashed=True)
 
 
 activitiesList = {
     "время": TimeAction,
-    "сообщени": SendMessageAction,
+    "отправь сообщени": SendMessageAction,
     "давление": PresureTestAction,
+    "новое сообщение": NewMessagesAction,
 }

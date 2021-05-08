@@ -149,7 +149,7 @@ class IncomingMessageNotifyApiView(APIView):
                 messages = Message.objects.filter(
                     contract=s.contract, is_red=False)
                 text = dj_serializers.serialize(
-                    'json', list(messages), fields=('text'))
+                    'json', list(messages), fields=('text', 'date'))
 
                 for message in messages:
                     message.is_red = True

@@ -1,10 +1,9 @@
-import utils.speech as speech
 import dateutil.parser
 from datetime import datetime
 from secrets import token_hex
 import requests
 from threading import Thread
-from utils.main_thread import exceptionHandler
+# from utils.main_thread import exceptionHandler
 
 
 class NotificationsAgentThread(Thread):
@@ -27,32 +26,25 @@ class NotificationsAgentThread(Thread):
         self.timeEvent = objectStorage.event_obj
         self.lock = objectStorage.lock_obj
         self.notifications = [i(objectStorage) for i in notifications]
+        self.speakSpeech = objectStorage.speakSpeech
 
     def run(self):
         while True:
             for i in self.notifications:
-                try:
-                    i.main_loop_item()
-                except Exception as e:
-                    exceptionHandler(e)
+                # try:
+                i.main_loop_item()
+                # except Exception as e:
+                #   exceptionHandler(e)
 
                 self.timeEvent.wait(5)
 
 
 class MessageNotification:
     def __init__(self, objectStorage):
-        self.config = objectStorage.config
-        self.speech = objectStorage.speech
         self.token = objectStorage.config['token']
         self.host = objectStorage.host
-        self.inputFunction = objectStorage.inputFunction
-        self.timeEvent = objectStorage.event_obj
+        self.speakSpeech = objectStorage.speakSpeech
         self.lock = objectStorage.lock_obj
-
-    def __play__(self, text: str):
-        synthesizedSpeech = self.speech.create_speech(text)
-        synthesizedSpeech.syntethize()
-        synthesizedSpeech.play()
 
     def main_loop_item(self):
         answer = requests.get(
@@ -72,7 +64,7 @@ class MessageNotification:
 
         with self.lock:
             text = answer[0]["fields"]["text"]
-            self.__play__(
+            self.speakSpeech.play(
                 "Вам пришло новое сообщение, "+text)
 
 
@@ -87,6 +79,7 @@ class MeasurementNotification:
         self.timeEvent = objectStorage.event_obj
         self.lock = objectStorage.lock_obj
         self.tasks = {}
+        self.speakSpeech = objectStorage.speakSpeech
 
     def __get_data__(self):
         answer = requests.get(
@@ -131,10 +124,9 @@ class MeasurementNotification:
                     self.__add_task__(i)
 
     def __repeat_recognition__(self, n=1):
-        synthesizedSpeech = self.speech.create_speech(
-            "Я не расслышал, повторите, пожалуйста еще.")
-        synthesizedSpeech.syntethize()
-        synthesizedSpeech.play()
+        self.speakSpeech.play(
+            "Я не расслышал, повторите, пожалуйста еще.", cashed=True)
+
         recognizeSpeech = self.speech.read_audio()
 
         if recognizeSpeech is None:
@@ -154,15 +146,11 @@ class MeasurementNotification:
             else:
                 return text
 
-    def __play__(self, text: str):
-        synthesizedSpeech = self.speech.create_speech(text)
-        synthesizedSpeech.syntethize()
-        synthesizedSpeech.play()
-
     def __execute_task__(self, task_id):
         task = self.tasks[task_id]
 
-        self.__play__("Привет! Вам необходимо произвести измермерение и отправить врачу. Сможете это сделать сейчас?")
+        self.speakSpeech.play(
+            "Привет! Вам необходимо произвести измермерение и отправить врачу. Сможете это сделать сейчас?", cashed=True)
 
         status = None
 
@@ -179,11 +167,11 @@ class MeasurementNotification:
                 task['alias'],
                 "Укажите значение в "+task['unit'] if task['unit'] != "" else ""
             )
-            self.__play__(text_speak)
+            self.speakSpeech.play(text_speak)
 
             status = True
         else:
-            self.__play__("Напоминание отложено на час")
+            self.speakSpeech.play("Напоминание отложено на час", cashed=True)
 
         if status:
             self.inputFunction()
@@ -203,9 +191,12 @@ class MeasurementNotification:
                 "data": [(task['name'], value)],
             })
             if answer.status_code == 200:
-                self.__play__("Значение успешно записано")
+                self.speakSpeech.play("Значение успешно записано", cashed=True)
             else:
-                self.__play__("Произошла ошибка при сохраниении измерения")
+                self.speakSpeech.play(
+                    "Произошла ошибка при сохраниении измерения",
+                    cashed=True
+                )
                 print(answer, answer.text)
 
             self.data.pop(task_id)

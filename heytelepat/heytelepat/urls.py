@@ -20,4 +20,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('medsenger/', include('medsenger_agent.urls')),
     path('speakerapi/', include('speakerapi.urls')),
+
 ]
