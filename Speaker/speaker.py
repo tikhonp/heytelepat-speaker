@@ -118,6 +118,8 @@ if __name__ == "__main__":
                         action="store_true")
     parser.add_argument("-cc", "--cleancash", help="clean cashed speaches",
                         action="store_true")
+    parser.add_argument("-rb", "--rpibutton", help="add input function as button pressed",
+                        action="store_true")
     args = parser.parse_args()
 
     with open("speaker_config.json", "r") as f:
@@ -138,13 +140,13 @@ if __name__ == "__main__":
 
     objectStorage = ObjectStorage(
         config,
-        main_thread.simpleInputFunction,
+        main_thread.raspberryInputFunction if args.rpibutton else main_thread.simpleInputFunction,
         'cash.data',
         speech_cls=speech_cls
     )
     if args.cleancash:
         objectStorage.speakSpeech.reset_cash()
-
+    
     print("Creating notiofication thread...")
     notifications_thread_cls = notifications_thread.NotificationsAgentThread(
         objectStorage,

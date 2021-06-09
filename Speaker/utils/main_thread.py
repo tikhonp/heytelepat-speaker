@@ -2,7 +2,7 @@ from threading import Thread
 import requests
 import locale
 import datetime
-#import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 
 
 def simpleInputFunction():
@@ -36,7 +36,6 @@ class MainThread(Thread):
         :param objectStorage: ObjectStorage instance
         :param activitiesList: dictionary of activities
         """
-
         Thread.__init__(self)
         self.objectStorage = objectStorage
         self.inputFunction = objectStorage.inputFunction

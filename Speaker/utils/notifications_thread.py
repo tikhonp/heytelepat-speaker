@@ -47,15 +47,21 @@ class MessageNotification:
         self.lock = objectStorage.lock_obj
 
     def main_loop_item(self):
-        answer = requests.get(
-            self.host+'/speakerapi/incomingmessage/',
-            json={"token": self.token, "last_messages": False},
-        )
+        try:
+            answer = requests.get(
+                self.host+'/speakerapi/incomingmessage/',
+                json={"token": self.token, "last_messages": False},
+            )
 
-        if answer.status_code != 200:
-            print(
-                "ERROR WITH GETTING DATA FROM SERVER!\nStatus code: {}\nAnswer: {}".format(
-                    answer.status_code, answer.text))
+            if answer.status_code != 200:
+                print(
+                    "ERROR WITH GETTING DATA FROM SERVER!\nStatus code: {}\nAnswer: {}".format(
+                        answer.status_code, answer.text))
+                return
+        except requests.exceptions.ConnectTimeout:
+            print("ERROR WITH GETTING DATA FROM SERVER! Timeout.") 
+            self.speakSpeech.play(
+                    "Сервер не доступен.", cashed=True)
             return
 
         answer = answer.json()
@@ -82,15 +88,20 @@ class MeasurementNotification:
         self.speakSpeech = objectStorage.speakSpeech
 
     def __get_data__(self):
-        answer = requests.get(
-            self.host+'/speakerapi/tasks/',
-            json={"token": self.token},
-        )
-        if answer.status_code != 200:
-            print(
-                "ERROR WITH GETTING DATA FROM SERVER!\nStatus code: {}\nAnswer: {}".format(
-                    answer.status_code, answer.text))
-            return 0
+        try:
+            answer = requests.get(
+                self.host+'/speakerapi/tasks/',
+                json={"token": self.token},
+                timeout=5,
+            )
+            if answer.status_code != 200:
+                print(
+                    "ERROR WITH GETTING DATA FROM SERVER!\nStatus code: {}\nAnswer: {}".format(
+                        answer.status_code, answer.text))
+                return []
+        except requests.exceptions.ConnectTimeout:
+            print("ERROR WITH GETTING DATA FROM SERVER! Timeout.")
+            return []
 
         return answer.json()
 
