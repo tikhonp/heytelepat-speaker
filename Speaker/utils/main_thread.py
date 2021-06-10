@@ -211,6 +211,8 @@ class NewMessagesAction:
         self.token = objectStorage.config['token']
         self.domen = objectStorage.host
         self.speakSpeech = objectStorage.speakSpeech
+        self.timeEvent = objectStorage.event_obj
+        locale.setlocale(locale.LC_TIME, "ru_RU")
 
     def run(self):
         data = {
@@ -227,14 +229,19 @@ class NewMessagesAction:
             return
 
         answer = answer.json()
-        print(answer)
 
         if len(answer) == 0:
             self.speakSpeech.play(
                 "Новых сообщений нет", cashed=True)
         else:
             for i in answer:
-                text = "Сообщение. " + i['fields']['text']
+                date = datetime.datetime.strptime(
+                    i['fields']['date'], "%Y-%m-%dT%H:%M:%SZ")
+                date_str = date.astimezone().strftime(
+                    "%A, %-d %B, %H:%M")
+
+                text = "Сообщение. От {}. {}".format(
+                    date_str, i['fields']['text'])
                 self.speakSpeech.play(text)
                 self.timeEvent.wait(0.5)
 
@@ -284,18 +291,46 @@ class SendMessageAction:
         else:
             text = recognizeSpeech.recognize()
 
-        answer = requests.post(self.domen+"/speakerapi/sendmessage/", json={
-            'token': self.token,
-            'message': text,
-        })
+        self.speakSpeech.play(
+            "Вы написали: " + text + ". Отправить сообщение?")
+        message = text
 
-        if answer.status_code == 200:
-            text = "Сообщение успешно отправлено!"
+        if recognizeSpeech is None:
+            text = self.__repeat_recognition__()
+            if text is None:
+                return
         else:
-            text = "Произошла ошибка приотправлении сообщения"
-            print(answer, answer.text)
+            text = recognizeSpeech.recognize()
 
-        self.speakSpeech.play(text, cashed=True)
+        text = text.lower().strip()
+        if 'да' in text:
+            answer = requests.post(
+                self.domen+"/speakerapi/sendmessage/",
+                json={
+                    'token': self.token,
+                    'message': message,
+                })
+
+            if answer.status_code == 200:
+                text = "Сообщение успешно отправлено!"
+            else:
+                text = "Произошла ошибка приотправлении сообщения"
+                print(answer, answer.text)
+
+            self.speakSpeech.play(text, cashed=True)
+        else:
+            self.speakSpeech.play(
+                "Хотите продиктовать сообщение повторно?", cashed=True)
+
+            if recognizeSpeech is None:
+                text = self.__repeat_recognition__()
+                if text is None:
+                    return
+            else:
+                text = recognizeSpeech.recognize()
+
+            if 'да' in text:
+                self.run()
 
 
 activitiesList = {

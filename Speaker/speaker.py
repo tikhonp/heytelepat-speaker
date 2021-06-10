@@ -145,7 +145,7 @@ if __name__ == "__main__":
     if args.cleancash:
         objectStorage.speakSpeech.reset_cash()
 
-    print("Creating notiofication thread...")
+    print("Creating notification thread...")
     notifications_thread_cls = notifications_thread.NotificationsAgentThread(
         objectStorage,
         notifications_thread.notifications_list,
