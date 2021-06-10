@@ -9,7 +9,6 @@ requests==2.25.1
 s3transfer==0.4.2
 simpleaudio==1.0.4
 six==1.16.0
-speechkit==1.2.1
+git+git://github.com/TikhonP/yandex-speechkit-lib-python.git
 SpeechRecognition==3.8.1
 urllib3==1.26.4
-git+https://github.com/TikhonP/speechkit-lib-python.git
