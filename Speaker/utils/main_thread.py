@@ -9,13 +9,13 @@ def simpleInputFunction():
     input("Press enter and tell something!")
 
 
-def raspberryInputFunction():
+def raspberryInputFunction(gpio_pin=17):
     print("Waiting button...")
     GPIO.setmode(GPIO.BCM)
-    GPIO.setup(4, GPIO.IN, GPIO.PUD_UP)
+    GPIO.setup(gpio_pin, GPIO.IN, GPIO.PUD_UP)
 
     while True:
-        if GPIO.input(4) == GPIO.LOW:
+        if GPIO.input(gpio_pin) == GPIO.LOW:
             print("Button was pushed!")
             return
 
