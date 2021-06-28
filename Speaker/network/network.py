@@ -6,6 +6,8 @@ Connection to network with this instruction:
 """
 
 import subprocess
+import socket
+import urllib.request
 
 
 class Network:
@@ -29,10 +31,10 @@ class Network:
         command = "wpa_passphrase {} {}".format(self.ssid, psk)
         result = subprocess.run(command.split(), stdout=subprocess.PIPE)
         subprocess_return = result.stdout.decode('utf-8')
-        
+
         data = subprocess_return.split('\n')
         data.pop(2)
-        
+
         for i in data:
             subprocess.run(['sudo', './add_network.sh', i])
 
@@ -45,3 +47,18 @@ class Network:
             return True
         else:
             return False
+
+
+def check_connection_hardware():
+    IPaddress=socket.gethostbyname(socket.gethostname())
+    if IPaddress=="127.0.0.1":
+        return False
+    else:
+        return True
+
+def check_really_connection(host='http://google.com'):
+    try:
+        urllib.request.urlopen(host)
+        return True
+    except:
+        return False
