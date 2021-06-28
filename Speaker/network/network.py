@@ -13,7 +13,7 @@ class Network:
         self.ssid = ssid
 
     def check_available(self) -> bool:
-        command = "sudo iwlist wlan0 scan | grep ESSID"
+        command = "sudo iwlist wlan0 scan"
         result = subprocess.run(command.split(), stdout=subprocess.PIPE)
         subprocess_return = result.stdout.decode('utf-8')
 
@@ -23,15 +23,25 @@ class Network:
             return False
 
     def create(self, psk: str):
-        command = "wpa_passphrase air76 petrischev123321"
+        if len(psk) < 8 or len(psk) > 63:
+            raise Exception("Passphrase must be 8..63 characters")
+
+        command = "wpa_passphrase {} {}".format(self.ssid, psk)
         result = subprocess.run(command.split(), stdout=subprocess.PIPE)
         subprocess_return = result.stdout.decode('utf-8')
-
+        
         data = subprocess_return.split('\n')
         data.pop(2)
-        data = "\n".join(data)
+        
+        for i in data:
+            subprocess.run(['sudo', './add_network.sh', i])
 
-        subprocess.run(['sudo', './network/add_network.sh', data])
 
     def connect(self):
-        subprocess.run(['sudo', './network/connect_network.sh'])
+        result = subprocess.run(['sudo', './connect_network.sh'], stdout=subprocess.PIPE)
+        subprocess_return = result.stdout.decode('utf-8')
+
+        if 'OK' in subprocess_return:
+            return True
+        else:
+            return False
