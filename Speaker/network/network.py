@@ -36,11 +36,11 @@ class Network:
         data.pop(2)
 
         for i in data:
-            subprocess.run(['sudo', './add_network.sh', i])
+            subprocess.run(['sudo', './network/add_network.sh', i])
 
 
     def connect(self):
-        result = subprocess.run(['sudo', './connect_network.sh'], stdout=subprocess.PIPE)
+        result = subprocess.run(['sudo', './network/connect_network.sh'], stdout=subprocess.PIPE)
         subprocess_return = result.stdout.decode('utf-8')
 
         if 'OK' in subprocess_return:
