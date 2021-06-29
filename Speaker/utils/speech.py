@@ -104,8 +104,10 @@ class Speech:
         :param api_key: string Yandex API key
         :param catalog: string Yandex catalog
         :param playaudiofunction: function to play vaw bytesio
-        :param timeout_speech: parameter is the maximum number of seconds that this will wait for a phrase
-        :param phrase_time_limit: parameter is the maximum number of seconds that this will allow a phrase to continue
+        :param timeout_speech: parameter is the maximum number of seconds
+                                    that this will wait for a phrase
+        :param phrase_time_limit: parameter is the maximum number of seconds
+                                    that this will allow a phrase to continue
         """
 
         self.synthesizeAudio = speechkit.SynthesizeAudio(
@@ -126,7 +128,8 @@ class Speech:
 
     def read_audio(self):
         """
-        Starting reading audio and if there is audio creates instance of RecognizeSpeech or None
+        Starting reading audio and if there is audio creates instance
+                                                of RecognizeSpeech or None
         """
         try:
             with sr.Microphone() as source:
@@ -151,8 +154,7 @@ class SpeakSpeech:
     """
     def __init__(self,
                  speech_cls: Speech,
-                 cashed_data_filename: str
-                ):
+                 cashed_data_filename: str):
         """
         :param speech_cls: object of Speech class
         :cashed_data_filename: filename of pickle data
@@ -196,5 +198,14 @@ class SpeakSpeech:
 
         synthesizedSpeech.play()
 
+    def cash_only(self, text: str):
+        """
+        Generate and store phrases without play it
+        """
+        if text in self.data:
+            return
 
-
+        synthesizedSpeech = self.speech.create_speech(text)
+        synthesizedSpeech.syntethize()
+        self.data[text] = synthesizedSpeech
+        self.__store_data__()
