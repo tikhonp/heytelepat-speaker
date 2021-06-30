@@ -3,6 +3,7 @@ import ggwave
 import pyaudio
 import json
 import time
+import logging
 
 
 def get_ggwave_input():
@@ -31,43 +32,49 @@ def get_ggwave_input():
     p.terminate()
 
 
-def wirless_network_init(speakSpeach, first=False):
+def wirless_network_init(objectStorage, first=False):
     if first:
-        speakSpeach.play("Привет! Это колонка Telepat Medsenger."
+        objectStorage.speakSpeach.play("Привет! Это колонка Telepat Medsenger."
                          "Для начала работы необходимо подключение к сети."
                          "Для это сгенерируйте аудиокод с паролем от Wi-Fi.",
                          cashed=True)
     else:
-        speakSpeach.play("К сожалению подключиться не удалось, "
+        objectStorage.speakSpeach.play("К сожалению подключиться не удалось, "
                          "Попробуйте сгенерировать код еще раз.", cashed=True)
 
+    objectStorage.pixels.think()
     data = get_ggwave_input()
     data = json.loads(data)
 
     n = network.Network(data['ssid'])
     if not n.check_available():
-        speakSpeach.play(
+        logging.info("Network is unavailable")
+        objectStorage.speakSpeach.play(
             "Пока что сеть недоступна, продолжается попытка подключения",
             cashed=True)
 
+    objectStorage.pixels.think()
     n.create(data['psk'])
     if not n.connect():
-        print("Connection error")
+        logging.error("Connection error")
 
 
-def ConnectionGate(speakSpeach):
+def ConnectionGate(objectStorage):
+    objectStorage.pixels.wakeup()
     first = True
     while not network.check_connection_hardware() or \
             not network.check_really_connection():
-        wirless_network_init(speakSpeach, first)
+        logging.warning("No connection detected")
+        wirless_network_init(objectStorage, first)
         first = False
         time.sleep(5)
 
-    speakSpeach.play(
+    logging.info("Connection exists")
+    objectStorage.speakSpeech.play(
         "Подключение к беспроводной сети произошло успешно", cashed=True)
 
 
-def cash_phrases(speakSpeach):
+def cash_phrases(speakSpeech):
     data = [
         "Привет! Это колонка Telepat Medsenger."
         "Для начала работы необходимо подключение к сети."
@@ -79,4 +86,4 @@ def cash_phrases(speakSpeach):
     ]
 
     for phrase in data:
-        speakSpeach.cash_only(phrase)
+        speakSpeech.cash_only(phrase)

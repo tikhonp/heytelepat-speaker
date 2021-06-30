@@ -3,6 +3,8 @@ import speech_recognition as sr
 # import pygame
 import simpleaudio as sa
 import pickle
+import pixels
+import logging
 
 
 '''
@@ -62,7 +64,7 @@ class SynthesizedSpeech:
         """
         Plays created wav with speakers
         """
-        print("PLAYS TEXT {}".format(self.text))
+        logging.info("PLAYS TEXT {}".format(self.text))
         if self.audio_data is None:
             raise Exception(
                 "Audio did not synthesized, please run \"synthesize\" first.")
@@ -88,7 +90,7 @@ class RecognizeSpeech:
 
         text = self.speech.recognizeShortAudio.recognize(
                 self.io_vaw, self.speech.catalog)
-        print("RECOGNIZED TEXT {}".format(text))
+        logging.info("RECOGNIZED TEXT {}".format(text))
         return text
 
 
@@ -154,7 +156,8 @@ class SpeakSpeech:
     """
     def __init__(self,
                  speech_cls: Speech,
-                 cashed_data_filename: str):
+                 cashed_data_filename: str,
+                 pixels: pixels.Pixels):
         """
         :param speech_cls: object of Speech class
         :cashed_data_filename: filename of pickle data
@@ -196,7 +199,9 @@ class SpeakSpeech:
             synthesizedSpeech = self.speech.create_speech(text)
             synthesizedSpeech.syntethize()
 
+        pixels.speak()
         synthesizedSpeech.play()
+        pixels.off()
 
     def cash_only(self, text: str):
         """
