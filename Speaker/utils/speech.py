@@ -3,7 +3,7 @@ import speech_recognition as sr
 # import pygame
 import simpleaudio as sa
 import pickle
-import pixels
+from utils import pixels
 import logging
 
 
@@ -162,6 +162,7 @@ class SpeakSpeech:
         :param speech_cls: object of Speech class
         :cashed_data_filename: filename of pickle data
         """
+        self.pixels = pixels
         self.speech = speech_cls
         self.cashed_data_filename = cashed_data_filename
         self.__load_data__()
@@ -199,9 +200,9 @@ class SpeakSpeech:
             synthesizedSpeech = self.speech.create_speech(text)
             synthesizedSpeech.syntethize()
 
-        pixels.speak()
+        self.pixels.speak()
         synthesizedSpeech.play()
-        pixels.off()
+        self.pixels.off()
 
     def cash_only(self, text: str):
         """

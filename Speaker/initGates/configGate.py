@@ -49,7 +49,7 @@ class ObjectStorage:
         if 'speech_cls' in kwargs:
             self.speech = kwargs['speech_cls']
         else:
-            if self.playaudiofunction is None:
+            if self.inputFunction is None:
                 raise Exception("You must provide playaudiofunction")
             self.speech = speech.Speech(
                 config['api_key'],

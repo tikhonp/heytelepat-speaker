@@ -6,7 +6,7 @@ from initGates import authGate, connectionGate, configGate
 import logging
 
 
-logging.basicConfig(filename='myapp.log', level=logging.INFO)
+logging.basicConfig(level=logging.INFO)
 logging.info("Started! OOO Telepat, all rights reserved.")
 
 
