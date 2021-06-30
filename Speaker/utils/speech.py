@@ -7,6 +7,7 @@ from utils import pixels
 import logging
 import ctypes
 from contextlib import contextmanager
+import requests
 
 
 """Alsa warnings disable code"""
@@ -135,10 +136,15 @@ class Speech:
                                     that this will allow a phrase to continue
         """
 
-        self.synthesizeAudio = speechkit.SynthesizeAudio(
-            api_key, catalog)
-        self.recognizeShortAudio = speechkit.RecognizeShortAudio(
-            api_key)
+        try:
+            self.synthesizeAudio = speechkit.SynthesizeAudio(
+                api_key, catalog)
+            self.recognizeShortAudio = speechkit.RecognizeShortAudio(
+                api_key)
+        except requests.exceptions.ConnectionError:
+            self.api_key = api_key
+            logging.warnings("Network is unavailable, speeckit is None")
+
         self.playaudiofunction = playaudiofunction
 
         with noalsaerr():
@@ -147,6 +153,18 @@ class Speech:
         self.catalog = catalog
         self.timeout_speech = timeout_speech
         self.phrase_time_limit = phrase_time_limit
+
+    def init_speechkit(self):
+        """
+        If speechkit was not initilized becouse network down, it inits
+        """
+        if self.api_key is None:
+            raise Exception("speechkit already initilised")
+
+        self.synthesizeAudio = speechkit.SynthesizeAudio(
+                self.api_key, self.catalog)
+        self.recognizeShortAudio = speechkit.RecognizeShortAudio(
+                self.api_key)
 
     def create_speech(self, text: str):
         """
