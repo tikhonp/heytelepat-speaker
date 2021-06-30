@@ -70,8 +70,10 @@ def ConnectionGate(objectStorage):
         time.sleep(5)
 
     logging.info("Connection exists")
-    objectStorage.speakSpeech.play(
-        "Подключение к беспроводной сети произошло успешно", cashed=True)
+    if not first:
+        objectStorage.speakSpeech.play(
+            "Подключение к беспроводной сети произошло успешно", cashed=True)
+    objectStorage.pixels.off()
 
 
 def cash_phrases(speakSpeech):

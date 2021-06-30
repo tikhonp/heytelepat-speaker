@@ -140,7 +140,10 @@ class Speech:
         self.recognizeShortAudio = speechkit.RecognizeShortAudio(
             api_key)
         self.playaudiofunction = playaudiofunction
-        self.recognizer = sr.Recognizer()
+
+        with noalsaerr():
+            self.recognizer = sr.Recognizer()
+
         self.catalog = catalog
         self.timeout_speech = timeout_speech
         self.phrase_time_limit = phrase_time_limit
