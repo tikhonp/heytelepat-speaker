@@ -5,6 +5,29 @@ import simpleaudio as sa
 import pickle
 from utils import pixels
 import logging
+import ctypes
+from contextlib import contextmanager
+
+
+"""Alsa warnings disable code"""
+ERROR_HANDLER_FUNC = ctypes.CFUNCTYPE(
+    None, ctypes.c_char_p, ctypes.c_int,
+    ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p)
+
+
+def py_error_handler(filename, line, function, err, fmt):
+    pass
+
+
+c_error_handler = ERROR_HANDLER_FUNC(py_error_handler)
+
+
+@contextmanager
+def noalsaerr():
+    asound = ctypes.cdll.LoadLibrary('libasound.so')
+    asound.snd_lib_error_set_handler(c_error_handler)
+    yield
+    asound.snd_lib_error_set_handler(None)
 
 
 '''
@@ -134,14 +157,15 @@ class Speech:
                                                 of RecognizeSpeech or None
         """
         try:
-            with sr.Microphone() as source:
-                data = self.recognizer.listen(
-                    source,
-                    timeout=self.timeout_speech,
-                    phrase_time_limit=self.phrase_time_limit,
-                )
-                data_sound = data.get_raw_data(convert_rate=48000)
-                return RecognizeSpeech(data_sound, self)
+            with noalsaerr():
+                with sr.Microphone() as source:
+                    data = self.recognizer.listen(
+                        source,
+                        timeout=self.timeout_speech,
+                        phrase_time_limit=self.phrase_time_limit,
+                    )
+                    data_sound = data.get_raw_data(convert_rate=48000)
+                    return RecognizeSpeech(data_sound, self)
         except sr.WaitTimeoutError:
             return None
 
