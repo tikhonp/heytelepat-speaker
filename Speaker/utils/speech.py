@@ -5,12 +5,12 @@ import simpleaudio as sa
 import pickle
 from utils import pixels
 import logging
-import ctypes
-from contextlib import contextmanager
+# import ctypes
+# from contextlib import contextmanager
 import requests
 
 
-"""Alsa warnings disable code"""
+"""
 ERROR_HANDLER_FUNC = ctypes.CFUNCTYPE(
     None, ctypes.c_char_p, ctypes.c_int,
     ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p)
@@ -29,7 +29,7 @@ def noalsaerr():
     asound.snd_lib_error_set_handler(c_error_handler)
     yield
     asound.snd_lib_error_set_handler(None)
-
+"""
 
 '''
 def playaudiofunction_(io_vaw):
@@ -114,6 +114,8 @@ class RecognizeSpeech:
 
         text = self.speech.recognizeShortAudio.recognize(
                 self.io_vaw, self.speech.catalog)
+        if text.strip() == '':
+            text = None
         logging.info("RECOGNIZED TEXT {}".format(text))
         return text
 
@@ -147,8 +149,7 @@ class Speech:
 
         self.playaudiofunction = playaudiofunction
 
-        with noalsaerr():
-            self.recognizer = sr.Recognizer()
+        self.recognizer = sr.Recognizer()
 
         self.catalog = catalog
         self.timeout_speech = timeout_speech
@@ -178,15 +179,14 @@ class Speech:
                                                 of RecognizeSpeech or None
         """
         try:
-            with noalsaerr():
-                with sr.Microphone() as source:
-                    data = self.recognizer.listen(
-                        source,
-                        timeout=self.timeout_speech,
-                        phrase_time_limit=self.phrase_time_limit,
-                    )
-                    data_sound = data.get_raw_data(convert_rate=48000)
-                    return RecognizeSpeech(data_sound, self)
+            with sr.Microphone() as source:
+                data = self.recognizer.listen(
+                    source,
+                    timeout=self.timeout_speech,
+                    phrase_time_limit=self.phrase_time_limit,
+                )
+                data_sound = data.get_raw_data(convert_rate=48000)
+                return RecognizeSpeech(data_sound, self)
         except sr.WaitTimeoutError:
             return None
 

@@ -2,7 +2,11 @@
 LED light pattern like Google Home
 """
 
-from utils import apa102
+import logging
+try:
+    from utils import apa102
+except ImportError:
+    logging.warning("Pixels unavailible spidev error")
 import time
 import threading
 try:
@@ -14,7 +18,11 @@ except ImportError:
 class Pixels:
     PIXELS_N = 3
 
-    def __init__(self):
+    def __init__(self, development=False):
+        self.development = development
+        if development:
+            logging.info("Pixels in development mode")
+            return
         self.basis = [0] * 3 * self.PIXELS_N
         self.basis[0] = 2
         self.basis[3] = 1
@@ -31,6 +39,10 @@ class Pixels:
         self.thread.start()
 
     def wakeup(self, direction=0):
+        if self.development:
+            logging.info("Pixels in development mode, WAKEUP")
+            return
+
         def f():
             self._wakeup(direction)
 
@@ -38,18 +50,30 @@ class Pixels:
         self.queue.put(f)
 
     def listen(self):
+        if self.development:
+            logging.info("Pixels in development mode, LISTEN")
+            return
         self.next.set()
         self.queue.put(self._listen)
 
     def think(self):
+        if self.development:
+            logging.info("Pixels in development mode, THINK")
+            return
         self.next.set()
         self.queue.put(self._think)
 
     def speak(self):
+        if self.development:
+            logging.info("Pixels in development mode, SPEAK")
+            return
         self.next.set()
         self.queue.put(self._speak)
 
     def off(self):
+        if self.development:
+            logging.info("Pixels in development mode, OFF")
+            return
         self.next.set()
         self.queue.put(self._off)
 
@@ -121,6 +145,9 @@ class Pixels:
         self.write([0] * 3 * self.PIXELS_N)
 
     def write(self, colors):
+        if self.development:
+            logging.info("Pixels in development mode, WRITE {}".format(colors))
+            return
         for i in range(self.PIXELS_N):
             self.dev.set_pixel(
                 i, int(colors[3*i]), int(colors[3*i + 1]), int(colors[3*i + 2])

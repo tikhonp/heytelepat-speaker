@@ -64,8 +64,7 @@ def wirless_network_init(objectStorage, first=False):
 def ConnectionGate(objectStorage):
     objectStorage.pixels.wakeup()
     first = True
-    while not network.check_connection_hardware() or \
-            not network.check_really_connection():
+    while not network.check_really_connection():
         logging.warning("No connection detected")
         wirless_network_init(objectStorage, first)
         first = False

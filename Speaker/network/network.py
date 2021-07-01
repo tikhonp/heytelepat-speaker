@@ -8,6 +8,7 @@ Connection to network with this instruction:
 import subprocess
 import socket
 import urllib.request
+import logging
 
 
 class Network:
@@ -38,9 +39,9 @@ class Network:
         for i in data:
             subprocess.run(['sudo', './network/add_network.sh', i])
 
-
     def connect(self):
-        result = subprocess.run(['sudo', './network/connect_network.sh'], stdout=subprocess.PIPE)
+        result = subprocess.run(['sudo', './network/connect_network.sh'],
+                                stdout=subprocess.PIPE)
         subprocess_return = result.stdout.decode('utf-8')
 
         if 'OK' in subprocess_return:
@@ -50,15 +51,18 @@ class Network:
 
 
 def check_connection_hardware():
-    IPaddress=socket.gethostbyname(socket.gethostname())
-    if IPaddress=="127.0.0.1":
+    IPaddress = socket.gethostbyname(socket.gethostname())
+    logging.debug("IPaddress %s", IPaddress)
+    if IPaddress == '127.0.0.1':
         return False
     else:
         return True
+
 
 def check_really_connection(host='http://google.com'):
     try:
         urllib.request.urlopen(host)
         return True
     except:
+        logging.debug("Host connection error")
         return False

@@ -2,7 +2,11 @@ from threading import Thread
 import requests
 import locale
 import datetime
-import RPi.GPIO as GPIO
+import logging
+try:
+    import RPi.GPIO as GPIO
+except ImportError:
+    logging.warning("RPi.GPIO is not available, button is disabled")
 
 
 def simpleInputFunction():
@@ -10,13 +14,13 @@ def simpleInputFunction():
 
 
 def raspberryInputFunction(gpio_pin=17):
-    print("Waiting button...")
+    logging.info("Waiting button...")
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(gpio_pin, GPIO.IN, GPIO.PUD_UP)
 
     while True:
         if GPIO.input(gpio_pin) == GPIO.LOW:
-            print("Button was pushed!")
+            logging.info("Button was pushed!")
             return
 
 

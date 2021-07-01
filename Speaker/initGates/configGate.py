@@ -11,6 +11,7 @@ class ObjectStorage:
         inputFunction,
         cash_filename,
         config_filename,
+        development,
         **kwargs
     ):
         """
@@ -29,7 +30,7 @@ class ObjectStorage:
         if 'pixels' in kwargs:
             self.pixels = kwargs['pixels']
         else:
-            self.pixels = pixels.Pixels()
+            self.pixels = pixels.Pixels(development)
 
         if 'playaudiofunction' in kwargs:
             self.playaudiofunction = kwargs['playaudiofunction']
@@ -49,7 +50,7 @@ class ObjectStorage:
         if 'speech_cls' in kwargs:
             self.speech = kwargs['speech_cls']
         else:
-            if self.inputFunction is None:
+            if self.playaudiofunction is None:
                 raise Exception("You must provide playaudiofunction")
             self.speech = speech.Speech(
                 config['api_key'],
@@ -81,7 +82,8 @@ def ConfigGate(
         cash_data_filename,
         reset=False,
         rpi_button=True,
-        clean_cash=False):
+        clean_cash=False,
+        development=False):
 
     with open(config_filename) as f:
         config = json.load(f)
@@ -103,6 +105,8 @@ def ConfigGate(
         inputFunc,
         cash_data_filename,
         config_filename,
+        development,
+        playaudiofunction=speech.playaudiofunction
     )
 
     if clean_cash:
