@@ -34,13 +34,13 @@ def get_ggwave_input():
 
 def wirless_network_init(objectStorage, first=False):
     if first:
-        objectStorage.speakSpeach.play(
+        objectStorage.speakSpeech.play(
             "Привет! Это колонка Telepat Medsenger."
             "Для начала работы необходимо подключение к сети."
             "Для это сгенерируйте аудиокод с паролем от Wi-Fi.",
             cashed=True)
     else:
-        objectStorage.speakSpeach.play(
+        objectStorage.speakSpeech.play(
             "К сожалению подключиться не удалось, "
             "Попробуйте сгенерировать код еще раз.", cashed=True)
 
@@ -51,7 +51,7 @@ def wirless_network_init(objectStorage, first=False):
     n = network.Network(data['ssid'])
     if not n.check_available():
         logging.info("Network is unavailable")
-        objectStorage.speakSpeach.play(
+        objectStorage.speakSpeech.play(
             "Пока что сеть недоступна, продолжается попытка подключения",
             cashed=True)
 

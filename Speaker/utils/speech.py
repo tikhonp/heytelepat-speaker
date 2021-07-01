@@ -143,7 +143,7 @@ class Speech:
                 api_key)
         except requests.exceptions.ConnectionError:
             self.api_key = api_key
-            logging.warnings("Network is unavailable, speeckit is None")
+            logging.warning("Network is unavailable, speeckit is None")
 
         self.playaudiofunction = playaudiofunction
 
