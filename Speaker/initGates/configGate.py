@@ -77,6 +77,10 @@ class ObjectStorage:
     def host(self):
         return self.config['domen']
 
+    @property
+    def token(self):
+        return self.config['token']
+
 
 def ConfigGate(
         config_filename,
