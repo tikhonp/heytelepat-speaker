@@ -1,5 +1,9 @@
 from dialogs.dialog import Dialog
 import datetime
+import locale
+
+
+locale.setlocale(locale.LC_TIME, "ru_RU")
 
 
 class TimeDialog(Dialog):
@@ -11,3 +15,4 @@ class TimeDialog(Dialog):
 
     cur = first
     name = 'Время'
+    keywords = ('время', 'час')

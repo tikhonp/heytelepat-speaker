@@ -1,10 +1,11 @@
-import queue
 import logging
+from collections import deque
 
 
 class Dialog:
     cur = None
     name = 'default'
+    keywords = ()
 
     def __init__(self, objectStorage):
         self.objectStorage = objectStorage
@@ -19,7 +20,7 @@ class Dialog:
 
     @property
     def is_done(self):
-        return False if self.cur is None else True
+        return True if self.cur is None else False
 
     def __str__(self):
         return self.name
@@ -34,7 +35,7 @@ class DialogEngine:
         logging.info("Creating DialogEngine, with %d dialogs", len(dialogs))
         self.objectStorage = objectStorage
         self.dialogs = dialogs
-        self.dialogQueue = queue.Queue()
+        self.dialogQueue = deque()
         self.currentDialog = None
 
     def add_dialog_to_queue(self, dialog):
@@ -43,7 +44,7 @@ class DialogEngine:
             with self.objectStorage.lock_obj:
                 self.currentDialog.process_input(None)
         else:
-            self.dialogQueue.put(dialog)
+            self.dialogQueue.append(dialog)
 
     def process_input(self, text: str):
         if self.currentDialog is None:
@@ -57,19 +58,22 @@ class DialogEngine:
 
         logging.debug(
             "Got text and chosed dialog {}".format(self.currentDialog))
-        self.currentDialog.process_input('')
+        self.currentDialog.process_input(text)
 
         if self.currentDialog.is_done:
             try:
-                self.currentDialog = self.dialogQueue.get()
+                logging.debug("Trying to get dialog from queue")
+                self.currentDialog = self.dialogQueue.popleft()
+                logging.debug("Got dialog from queue")
                 with self.objectStorage.lock_obj:
                     self.currentDialog.process_input()
-            except queue.Queue.Empty:
+            except IndexError:
+                logging.debug("Queue is empty")
                 self.currentDialog = None
 
     def _chose_dialog_processor(self, text: str):
         text = text.lower()
-        for d in self.dialogs:
-            for ph in d[0]:
-                if ph in text:
-                    return d[1](self.objectStorage)
+        for dialog in self.dialogs:
+            for keyword in dialog.keywords:
+                if keyword in text:
+                    return dialog(self.objectStorage)

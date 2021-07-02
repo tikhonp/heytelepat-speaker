@@ -1,50 +1,10 @@
 from speechkit import speechkit
 import speech_recognition as sr
-# import pygame
 import simpleaudio as sa
 import pickle
 from utils import pixels
 import logging
-# import ctypes
-# from contextlib import contextmanager
 import requests
-
-
-"""
-ERROR_HANDLER_FUNC = ctypes.CFUNCTYPE(
-    None, ctypes.c_char_p, ctypes.c_int,
-    ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p)
-
-
-def py_error_handler(filename, line, function, err, fmt):
-    pass
-
-
-c_error_handler = ERROR_HANDLER_FUNC(py_error_handler)
-
-
-@contextmanager
-def noalsaerr():
-    asound = ctypes.cdll.LoadLibrary('libasound.so')
-    asound.snd_lib_error_set_handler(c_error_handler)
-    yield
-    asound.snd_lib_error_set_handler(None)
-"""
-
-'''
-def playaudiofunction_(io_vaw):
-    """
-    Function to play audio, that can be changed on different devices
-    :param io_vaw: byte array vaw audio
-    """
-    pygame.init()
-    pygame.mixer.music.load(io_vaw)
-    pygame.mixer.music.play()
-
-    while True:
-        if not pygame.mixer.get_busy():
-            return 1
-'''
 
 
 def playaudiofunction(
@@ -81,8 +41,11 @@ class SynthesizedSpeech:
         """
         Creates buffer io wav file that next can be plaeyed
         """
+        self.speech.pixels.think()
         self.audio_data = self.speech.synthesizeAudio.synthesize_stream(
-                self.text, lpcm=True)
+                self.text, lpcm=True,
+                sampleRateHertz=self.speech.synthesisSampleRateHertz)
+        self.speech.pixels.off()
 
     def play(self):
         """
@@ -93,11 +56,11 @@ class SynthesizedSpeech:
             raise Exception(
                 "Audio did not synthesized, please run \"synthesize\" first.")
         self.speech.playaudiofunction(
-            self.audio_data, sample_rate=48000)
+            self.audio_data, sample_rate=self.speech.synthesisSampleRateHertz)
 
 
 class RecognizeSpeech:
-    def __init__(self, io_vaw, speech):
+    def __init__(self, io_vaw, speech, sample_rate):
         """
         Recognizes text from given bytesio vaw
         : param io_vaw: bytesio array with audio vaw
@@ -106,17 +69,21 @@ class RecognizeSpeech:
 
         self.io_vaw = io_vaw
         self.speech = speech
+        self.sample_rate = sample_rate
 
     def recognize(self):
         """
         Starting streaming to yandex api and return recognize text
         """
 
+        self.speech.pixels.think()
+        logging.info("Got audio input, recognizing...")
         text = self.speech.recognizeShortAudio.recognize(
-                self.io_vaw, self.speech.catalog)
+                self.io_vaw, self.speech.catalog, self.sample_rate)
         if text.strip() == '':
             text = None
         logging.info("RECOGNIZED TEXT {}".format(text))
+        self.speech.pixels.off()
         return text
 
 
@@ -125,13 +92,17 @@ class Speech:
                  api_key,
                  catalog,
                  playaudiofunction,
+                 pixels,
                  timeout_speech=10,
-                 phrase_time_limit=15):
+                 phrase_time_limit=15,
+                 recognizingSampleRateHertz=16000,
+                 synthesisSampleRateHertz=48000):
         """
         Class that realase speech recognition and synthesize methods
         :param api_key: string Yandex API key
         :param catalog: string Yandex catalog
         :param playaudiofunction: function to play vaw bytesio
+        :param pixels: instance of Pixels() object to control leds
         :param timeout_speech: parameter is the maximum number of seconds
                                     that this will wait for a phrase
         :param phrase_time_limit: parameter is the maximum number of seconds
@@ -147,7 +118,10 @@ class Speech:
             self.api_key = api_key
             logging.warning("Network is unavailable, speeckit is None")
 
+        self.recognizingSampleRateHertz = recognizingSampleRateHertz
+        self.synthesisSampleRateHertz = synthesisSampleRateHertz
         self.playaudiofunction = playaudiofunction
+        self.pixels = pixels
 
         self.recognizer = sr.Recognizer()
 
@@ -180,13 +154,17 @@ class Speech:
         """
         try:
             with sr.Microphone() as source:
+                self.pixels.listen()
                 data = self.recognizer.listen(
                     source,
                     timeout=self.timeout_speech,
                     phrase_time_limit=self.phrase_time_limit,
                 )
-                data_sound = data.get_raw_data(convert_rate=48000)
-                return RecognizeSpeech(data_sound, self)
+                self.pixels.off()
+                data_sound = data.get_raw_data(
+                    convert_rate=self.recognizingSampleRateHertz)
+                return RecognizeSpeech(
+                    data_sound, self, self.recognizingSampleRateHertz)
         except sr.WaitTimeoutError:
             return None
 
@@ -202,7 +180,8 @@ class SpeakSpeech:
     def __init__(self,
                  speech_cls: Speech,
                  cashed_data_filename: str,
-                 pixels: pixels.Pixels):
+                 pixels: pixels.Pixels,
+                 sample_rate=48000):
         """
         :param speech_cls: object of Speech class
         :cashed_data_filename: filename of pickle data
@@ -210,6 +189,7 @@ class SpeakSpeech:
         self.pixels = pixels
         self.speech = speech_cls
         self.cashed_data_filename = cashed_data_filename
+        self.sample_rate = sample_rate
         self.__load_data__()
 
     def __load_data__(self):

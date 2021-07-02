@@ -1,16 +1,7 @@
 #!/usr/bin/env python
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
-# from utils import main_thread, notifications_thread
 import argparse
-from initGates import authGate, connectionGate, configGate
-from dialogs import dialog, dialogList
-from soundProcessor import SoundProcessor
-
-
-logging.info("Started! OOO Telepat, all rights reserved.")
-
 
 parser = argparse.ArgumentParser(description="Speaker for telepat.")
 parser.add_argument('-r', '--reset', help="reset speaker token and init",
@@ -23,7 +14,38 @@ parser.add_argument('-rb', '--rpibutton',
 parser.add_argument('-d', '--development',
                     help="Develoment mode, can't be used with button",
                     action='store_true')
+parser.add_argument('-s', '--store_cash',
+                    help="Store cash sound for network connection",
+                    action='store_true')
+parser.add_argument(
+    "-log",
+    "--loglevel",
+    default="warning",
+    help=(
+        "Provide logging level. "
+        "Example -log=debug, default='warning'"
+    ),
+)
 args = parser.parse_args()
+
+numeric_level = getattr(logging, args.loglevel.upper(), None)
+if not isinstance(numeric_level, int):
+    raise ValueError('Invalid log level: %s' % args.loglevel)
+
+logging.basicConfig(
+    format='%(asctime)s - %(levelname)s - '
+           '[%(filename)s:%(lineno)d] - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    level=numeric_level
+)
+
+logging.info("Started! OOO Telepat, all rights reserved.")
+
+from initGates import authGate, connectionGate, configGate
+from dialogs import dialog, dialogList
+from soundProcessor import SoundProcessor
+
+
 if args.development and args.rpibutton:
     raise Exception("Rpi Button can't be used with development mode")
 
@@ -38,6 +60,9 @@ objectStorage = configGate.ConfigGate(
 
 connectionGate.ConnectionGate(objectStorage)
 
+if args.store_cash:
+    connectionGate.cash_phrases(objectStorage.speakSpeech)
+
 objectStorage = authGate.AuthGate(objectStorage)
 
 dialogEngineInstance = dialog.DialogEngine(
@@ -46,23 +71,3 @@ dialogEngineInstance = dialog.DialogEngine(
 
 soundProcessorInstance = SoundProcessor(objectStorage, dialogEngineInstance)
 soundProcessorInstance.start()
-
-'''
-print("Creating notification thread...")
-notifications_thread_cls = notifications_thread.NotificationsAgentThread(
-    objectStorage,
-    notifications_thread.notifications_list,
-)
-
-print("Creating main thread...")
-main_thread_cls = main_thread.MainThread(
-    objectStorage,
-    main_thread.activitiesList
-)
-
-print("Running Notification thread")
-notifications_thread_cls.start()
-
-print("Running main thread")
-main_thread_cls.start()
-'''

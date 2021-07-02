@@ -55,14 +55,15 @@ class ObjectStorage:
             self.speech = speech.Speech(
                 config['api_key'],
                 config['catalog'],
-                self.playaudiofunction
+                self.playaudiofunction,
+                self.pixels,
             )
 
         if 'speakSpeech_cls' in kwargs:
             self.speakSpeech = kwargs['speakSpeech_cls']
         else:
             self.speakSpeech = speech.SpeakSpeech(
-                self.speech, cash_filename, self.pixels)
+                self.speech, cash_filename, self.pixels, sample_rate=16000)
 
     @property
     def api_key(self):

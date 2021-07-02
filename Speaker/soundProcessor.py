@@ -52,6 +52,7 @@ class SoundProcessor(Thread):
         # process sound input
 
         self.objectStorage.inputFunction()
+        self.objectStorage.pixels.wakeup()
 
         text = self._get_voice_sr()
         if text is not None:
@@ -63,4 +64,4 @@ class SoundProcessor(Thread):
             # try:
             self._run_item()
             # except Exception as e:
-                # logging.error("There is error in sound_processor: %s", e)
+            # logging.error("There is error in sound_processor: %s", e)
