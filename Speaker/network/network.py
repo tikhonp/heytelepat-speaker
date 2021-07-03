@@ -14,6 +14,7 @@ import logging
 class Network:
     def __init__(self, ssid: str):
         self.ssid = ssid
+        self.wpa_supplicant_filename = '/etc/wpa_supplicant/wpa_supplicant.conf'
 
     def check_available(self) -> bool:
         command = "sudo iwlist wlan0 scan"
@@ -32,7 +33,7 @@ class Network:
         if self.ssid not in data:
             return
 
-        data = data.split('{')
+        data = data.split('network')
         del_i = 0
         for i, item in enumerate(data):
             if self.ssid in item:
@@ -40,8 +41,8 @@ class Network:
         if del_i == 0:
             raise RuntimeError("Could not delete previous network")
 
-        data.remove(del_i)
-        data = '{'.join(data)
+        data.pop(del_i)
+        data = 'network'.join(data)
 
         with open(self.wpa_supplicant_filename, 'w') as f:
             f.write(data)
