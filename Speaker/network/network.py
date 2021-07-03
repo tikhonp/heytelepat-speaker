@@ -7,7 +7,7 @@ Connection to network with this instruction:
 
 import subprocess
 import socket
-import urllib.request
+import requests
 import logging
 
 
@@ -61,8 +61,8 @@ def check_connection_hardware():
 
 def check_really_connection(host='http://google.com'):
     try:
-        urllib.request.urlopen(host)
+        requests.get(host)
         return True
-    except:
+    except requests.ConnectionError:
         logging.debug("Host connection error")
         return False

@@ -35,9 +35,9 @@ def get_ggwave_input():
 def wirless_network_init(objectStorage, first=False):
     if first:
         objectStorage.speakSpeech.play(
-            "Привет! Это колонка Telepat Medsenger."
-            "Для начала работы необходимо подключение к сети."
-            "Для это сгенерируйте аудиокод с паролем от Wi-Fi.",
+            "Привет! Это колонка Telepat Medsenger. "
+            "Для начала работы необходимо подключение к сети. "
+            "Для этого сгенерируйте аудиокод с паролем от Wi-Fi.",
             cashed=True)
     else:
         objectStorage.speakSpeech.play(

@@ -51,17 +51,18 @@ class SoundProcessor(Thread):
     def _run_item(self):
         # process sound input
 
-        self.objectStorage.inputFunction()
         self.objectStorage.pixels.wakeup()
-
         text = self._get_voice_sr()
+
         if text is not None:
-            self.dialogEngineInstance.process_input(text)
+            if self.dialogEngineInstance.process_input(text):
+                self._run_item()
 
     def run(self):
         logging.info("Started soundProcessorInstance")
         while True:
             # try:
+            self.objectStorage.inputFunction()
             self._run_item()
             # except Exception as e:
             # logging.error("There is error in sound_processor: %s", e)

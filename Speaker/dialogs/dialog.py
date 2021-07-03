@@ -5,9 +5,15 @@ from collections import deque
 class Dialog:
     cur = None
     name = 'default'
-    keywords = ()
+    keywords = []
+    need_permanent_answer = False
 
     def __init__(self, objectStorage):
+        if not isinstance(self.name, str):
+            raise TypeError("Name must be string")
+        if not isinstance(self.keywords, list):
+            raise TypeError("Keywords must be a list")
+
         self.objectStorage = objectStorage
 
     def process_input(self, input_str):
@@ -38,13 +44,24 @@ class DialogEngine:
         self.dialogQueue = deque()
         self.currentDialog = None
 
+    def _execute_next_dialog(self):
+        if self.currentDialog is None and self.dialogQueue:
+            logging.debug("Trying to get dialog from queue")
+            self.currentDialog = self.dialogQueue.popleft()
+            logging.debug("Got dialog from queue")
+
+            with self.objectStorage.lock_obj:
+                self.currentDialog.process_input()
+
     def add_dialog_to_queue(self, dialog):
         if self.currentDialog is None:
             self.currentDialog = dialog
-            with self.objectStorage.lock_obj:
-                self.currentDialog.process_input(None)
+            self.process_input(None)
         else:
+            logging.debug("Putting dialog {} into queue".format(dialog))
             self.dialogQueue.append(dialog)
+            logging.debug("Puted dialog {} into queue".format(dialog))
+            self._execute_next_dialog()
 
     def process_input(self, text: str):
         if self.currentDialog is None:
@@ -58,22 +75,25 @@ class DialogEngine:
 
         logging.debug(
             "Got text and chosed dialog {}".format(self.currentDialog))
-        self.currentDialog.process_input(text)
+        with self.objectStorage.lock_obj:
+            self.currentDialog.process_input(text)
+
+        logging.debug("Current dialog {} is done {}".format(
+            self.currentDialog, self.currentDialog.is_done))
 
         if self.currentDialog.is_done:
-            try:
-                logging.debug("Trying to get dialog from queue")
-                self.currentDialog = self.dialogQueue.popleft()
-                logging.debug("Got dialog from queue")
-                with self.objectStorage.lock_obj:
-                    self.currentDialog.process_input()
-            except IndexError:
-                logging.debug("Queue is empty")
-                self.currentDialog = None
+            self.currentDialog = None
+        elif self.currentDialog.need_permanent_answer:
+            return True
+
+        self._execute_next_dialog()
 
     def _chose_dialog_processor(self, text: str):
         text = text.lower()
         for dialog in self.dialogs:
             for keyword in dialog.keywords:
                 if keyword in text:
+                    logging.debug(
+                        "Chosed dialog {}, with keyword ".format(dialog) +
+                        "'{}' in text '{}'".format(keyword, text))
                     return dialog(self.objectStorage)

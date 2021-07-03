@@ -168,9 +168,9 @@ class Speech:
         except sr.WaitTimeoutError:
             return None
 
-    def adjust_for_ambient_noise(self, duration=3):
+    def adjust_for_ambient_noise(self, duration=1):
         with sr.Microphone() as source:
-            self.recognizer.adjust_for_ambient_noise(source, duration=1)
+            self.recognizer.adjust_for_ambient_noise(source, duration=duration)
 
 
 class SpeakSpeech:
@@ -214,6 +214,7 @@ class SpeakSpeech:
         Generate and plays text with text given
         :param cashed: bool if need cash it
         """
+        self.pixels.think()
         if cashed:
             if text in self.data:
                 synthesizedSpeech = self.data[text]

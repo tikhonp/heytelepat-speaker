@@ -9,7 +9,6 @@ class ObjectStorage:
         self,
         config,
         inputFunction,
-        cash_filename,
         config_filename,
         development,
         **kwargs
@@ -24,8 +23,12 @@ class ObjectStorage:
         """
         self.config = config
         self.inputFunction = inputFunction
-        self.cash_filename = cash_filename
         self.config_filename = config_filename
+
+        if 'cash_filename' in kwargs:
+            self.cash_filename = kwargs['cash_filename']
+        else:
+            self.cash_filename = self.config['cash_filename']
 
         if 'pixels' in kwargs:
             self.pixels = kwargs['pixels']
@@ -63,7 +66,8 @@ class ObjectStorage:
             self.speakSpeech = kwargs['speakSpeech_cls']
         else:
             self.speakSpeech = speech.SpeakSpeech(
-                self.speech, cash_filename, self.pixels, sample_rate=16000)
+                self.speech, self.cash_filename,
+                self.pixels, sample_rate=16000)
 
     @property
     def api_key(self):
@@ -84,7 +88,6 @@ class ObjectStorage:
 
 def ConfigGate(
         config_filename,
-        cash_data_filename,
         reset=False,
         rpi_button=True,
         clean_cash=False,
@@ -108,7 +111,6 @@ def ConfigGate(
     objectStorage = ObjectStorage(
         config,
         inputFunc,
-        cash_data_filename,
         config_filename,
         development,
         playaudiofunction=speech.playaudiofunction

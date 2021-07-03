@@ -6,7 +6,7 @@ import logging
 
 def init(objectStorage):
     objectStorage.speakSpeech.play(
-        "Колонка еще не авторизована."
+        "Колонка еще не авторизована. "
         "Сейчас я скажу тебе код из 6 цифр, "
         "его надо ввести в окне подключения колонки в medsenger. ")
 

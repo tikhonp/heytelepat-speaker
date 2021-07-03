@@ -9,12 +9,14 @@ class SendMessageDialog(Dialog):
         self.objectStorage.speakSpeech.play(
             "Какое сообщение вы хотите отправить?", cashed=True)
         self.cur = self.get_message
+        self.need_permanent_answer = True
 
     def get_message(self, _input):
         self.objectStorage.speakSpeech.play(
             "Вы написали: " + _input + ". Отправить сообщение?")
         self.cur = self.submit
         self.message = _input
+        self.need_permanent_answer = True
 
     def submit(self, _input):
         text = _input.lower().strip()
@@ -39,6 +41,7 @@ class SendMessageDialog(Dialog):
             self.objectStorage.speakSpeech.play(
                 "Хотите продиктовать сообщение повторно?", cashed=True)
             self.cur = self.repeat
+            self.need_permanent_answer = True
 
     def repeat(self, _input):
         text = _input.lower().strip()
@@ -47,7 +50,7 @@ class SendMessageDialog(Dialog):
 
     cur = first
     name = 'Отправить Сообщение'
-    keywords = ('отправ', 'сообщение')
+    keywords = ['отправ', 'сообщение']
 
 
 class NewMessagesDialog(Dialog):
@@ -86,4 +89,4 @@ class NewMessagesDialog(Dialog):
 
     cur = first
     name = 'Непрочитанные сообщения'
-    keywords = ('непрочитан', 'сообщени')
+    keywords = ['непрочитан', 'нов']
