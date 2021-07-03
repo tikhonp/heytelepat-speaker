@@ -44,7 +44,10 @@ logging.info("Started! OOO Telepat, all rights reserved.")
 from initGates import authGate, connectionGate, configGate
 from dialogs import dialog, dialogList
 from soundProcessor import SoundProcessor
+import alsaaudio
 
+m = alsaaudio.Mixer(control='Speaker', cardindex=1)
+m.setvolume(90)
 
 if args.development and args.rpibutton:
     raise Exception("Rpi Button can't be used with development mode")

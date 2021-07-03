@@ -33,7 +33,9 @@ class SynthesizedSpeech:
         : param text: string text to syntheze
         : param speech: object of Speech class
         """
-        self.speech = speech_cls
+        self.synthesisSampleRateHertz = speech_cls.synthesisSampleRateHertz
+        self.synthesizeAudio = speech_cls.synthesizeAudio
+        self.playaudiofunction = speech_cls.playaudiofunction
         self.text = text
         self.audio_data = None
 
@@ -41,11 +43,9 @@ class SynthesizedSpeech:
         """
         Creates buffer io wav file that next can be plaeyed
         """
-        self.speech.pixels.think()
-        self.audio_data = self.speech.synthesizeAudio.synthesize_stream(
+        self.audio_data = self.synthesizeAudio.synthesize_stream(
                 self.text, lpcm=True,
-                sampleRateHertz=self.speech.synthesisSampleRateHertz)
-        self.speech.pixels.off()
+                sampleRateHertz=self.synthesisSampleRateHertz)
 
     def play(self):
         """
@@ -55,8 +55,8 @@ class SynthesizedSpeech:
         if self.audio_data is None:
             raise Exception(
                 "Audio did not synthesized, please run \"synthesize\" first.")
-        self.speech.playaudiofunction(
-            self.audio_data, sample_rate=self.speech.synthesisSampleRateHertz)
+        self.playaudiofunction(
+            self.audio_data, sample_rate=self.synthesisSampleRateHertz)
 
 
 class RecognizeSpeech:
@@ -201,6 +201,7 @@ class SpeakSpeech:
             self.__store_data__()
 
     def __store_data__(self):
+        logging.debug("Storing data, data: {}".format(self.data))
         with open(self.cashed_data_filename, 'wb') as f:
             pickle.dump(self.data, f)
 

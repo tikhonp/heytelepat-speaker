@@ -1,6 +1,7 @@
 from dialogs.dialog import Dialog
 import datetime
 import locale
+import alsaaudio
 
 
 locale.setlocale(locale.LC_TIME, "ru_RU")
@@ -16,3 +17,32 @@ class TimeDialog(Dialog):
     cur = first
     name = 'Время'
     keywords = ('время', 'час')
+
+
+class SetVolumeDialog(Dialog):
+    def first(self, _input):
+        self.objectStorage.speakSpeech.play(
+                "Какую громкость вы хотите поставить?", cashed=True)
+        self.cur = self.second
+
+    def second(self, _input):
+        if not _input.isdigit():
+            self.objectStorage.speakSpeech.play(
+                    "Необходимо указать числовое значение", cashed=True)
+            return
+
+        v = int(_input)
+        if v < 1 or v > 100:
+            self.objectStorage.speakSpeech.play(
+                    "Необходимо значение в промежутке от 1 до 100", cashed=True)
+            return
+
+        m = alsaaudio.Mixer(control='Speaker', cardindex=1)
+        m.setvolume(v)
+
+        self.objectStorage.speakSpeech.play(
+                "Громкость установлена", cashed=True)
+
+    cur = first
+    name = "Громкость"
+    keywords = ('громкость')
