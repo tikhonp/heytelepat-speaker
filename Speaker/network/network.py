@@ -25,9 +25,32 @@ class Network:
         else:
             return False
 
+    def _delete_network_if_exist(self):
+        with open(self.wpa_supplicant_filename) as f:
+            data = f.read()
+
+        if self.ssid not in data:
+            return
+
+        data = data.split('{')
+        del_i = 0
+        for i, item in enumerate(data):
+            if self.ssid in item:
+                del_i = i
+        if del_i == 0:
+            raise RuntimeError("Could not delete previous network")
+
+        data.remove(del_i)
+        data = '{'.join(data)
+
+        with open(self.wpa_supplicant_filename, 'w') as f:
+            f.write(data)
+
     def create(self, psk: str):
         if len(psk) < 8 or len(psk) > 63:
             raise Exception("Passphrase must be 8..63 characters")
+
+        self._delete_network_if_exist()
 
         command = "wpa_passphrase {} {}".format(self.ssid, psk)
         result = subprocess.run(command.split(), stdout=subprocess.PIPE)
