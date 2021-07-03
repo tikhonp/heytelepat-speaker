@@ -50,7 +50,7 @@ from events import event, eventsList
 if not args.development:
     import alsaaudio
 
-    m = alsaaudio.Mixer(control='Speaker', cardindex=1)
+    m = alsaaudio.Mixer(control='Speaker', cardindex=2)
     m.setvolume(90)
 else:
     logging.warning("AlsaAudio is not used, development mode")
@@ -69,6 +69,7 @@ objectStorage = configGate.ConfigGate(
 connectionGate.ConnectionGate(objectStorage)
 
 if args.store_cash:
+    logging.info("Store cash active")
     connectionGate.cash_phrases(objectStorage.speakSpeech)
 
 objectStorage = authGate.AuthGate(objectStorage)

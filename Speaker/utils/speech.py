@@ -217,8 +217,11 @@ class SpeakSpeech:
         self.pixels.think()
         if cashed:
             if text in self.data:
+                logging.debug("Cashed data found, playing it")
                 synthesizedSpeech = self.data[text]
             else:
+                logging.debug("Cashed data was not found, synthesing, text: '{}', keywords: '{}'".format(
+                    text, self.data.keys()))
                 synthesizedSpeech = self.speech.create_speech(text)
                 synthesizedSpeech.syntethize()
                 self.data[text] = synthesizedSpeech
