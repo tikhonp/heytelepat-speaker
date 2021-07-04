@@ -8,9 +8,6 @@ parser.add_argument('-r', '--reset', help="reset speaker token and init",
                     action='store_true')
 parser.add_argument('-cc', '--cleancash', help="clean cashed speaches",
                     action='store_true')
-parser.add_argument('-rb', '--rpibutton',
-                    help="add input function as button pressed",
-                    action='store_true')
 parser.add_argument('-d', '--development',
                     help="Develoment mode, can't be used with button",
                     action='store_true')
@@ -18,9 +15,17 @@ parser.add_argument('-s', '--store_cash',
                     help="Store cash sound for network connection",
                     action='store_true')
 parser.add_argument(
-    "-log",
-    "--loglevel",
-    default="warning",
+    '-infunc', '--inputfunction', default='simple',
+    help=(
+        "Provide input function. "
+        "Options: ['simple', 'rpibutton', 'wakeupword'] "
+        "Example: -infunc=rpibutton, default='simple'"
+    )
+)
+parser.add_argument(
+    '-log',
+    '--loglevel',
+    default='warning',
     help=(
         "Provide logging level. "
         "Example -log=debug, default='warning'"
@@ -55,13 +60,13 @@ if not args.development:
 else:
     logging.warning("AlsaAudio is not used, development mode")
 
-if args.development and args.rpibutton:
+if args.development and args.inputfunction == 'rpibutton':
     raise Exception("Rpi Button can't be used with development mode")
 
 objectStorage = configGate.ConfigGate(
     config_filename='speaker_config.json',
+    inputfunction=args.inputfunction,
     reset=args.reset,
-    rpi_button=args.rpibutton,
     clean_cash=args.cleancash,
     development=args.development,
 )

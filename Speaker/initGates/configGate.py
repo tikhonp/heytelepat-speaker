@@ -1,5 +1,6 @@
 import threading
-from utils import speech, pixels, main_thread
+from utils import speech, pixels
+import soundProcessor
 import json
 import logging
 
@@ -55,12 +56,7 @@ class ObjectStorage:
         else:
             if self.playaudiofunction is None:
                 raise Exception("You must provide playaudiofunction")
-            self.speech = speech.Speech(
-                config['api_key'],
-                config['catalog'],
-                self.playaudiofunction,
-                self.pixels,
-            )
+            self.speech = speech.Speech(self)
 
         if 'speakSpeech_cls' in kwargs:
             self.speakSpeech = kwargs['speakSpeech_cls']
@@ -88,8 +84,8 @@ class ObjectStorage:
 
 def ConfigGate(
         config_filename,
+        inputfunction,
         reset=False,
-        rpi_button=True,
         clean_cash=False,
         development=False):
 
@@ -101,12 +97,19 @@ def ConfigGate(
         logging.info("Resetting token")
         config['token'] = None
 
-    if rpi_button:
+    if inputfunction == 'rpibutton':
         logging.info("Setup input function as Button")
-        inputFunc = main_thread.raspberryInputFunction
-    else:
+        inputFunc = soundProcessor.raspberryInputFunction
+    elif inputfunction == 'wakeupword':
+        logging.info("Setup wakeupword input finction")
+        inputFunc = soundProcessor.wakeupWordInputFunction
+    elif inputfunction == 'simple':
         logging.info("Setup input simple input function")
-        inputFunc = main_thread.simpleInputFunction
+        inputFunc = soundProcessor.simpleInputFunction
+    else:
+        raise ValueError(
+            "Invalid inputfiction '{}'. ".format(inputfunction) +
+            "Avalible options: ['simple', 'rpibutton', 'wakeupword']")
 
     objectStorage = ObjectStorage(
         config,

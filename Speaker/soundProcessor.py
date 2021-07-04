@@ -1,9 +1,52 @@
 from threading import Thread
+import pvporcupine
+import pyaudio
 import logging
+import struct
 try:
     import RPi.GPIO as GPIO
 except ImportError:
     logging.warning("RPi.GPIO is not available, button is disabled")
+
+
+def wakeupWordInputFunction(k=2, sensitivity=0.6):
+    keywords = [
+        'alexa', 'bumblebee', 'computer', 'hey google', 'hey siri',
+        'jarvis', 'picovoice', 'porcupine', 'terminator'
+    ]
+    keyword = keywords[k]
+
+    porcupine = pvporcupine.create(
+        keywords=[keyword], sensitivities=[sensitivity])
+
+    pa = None
+    audio_stream = None
+
+    try:
+        pa = pyaudio.PyAudio()
+
+        audio_stream = pa.open(
+            rate=porcupine.sample_rate,
+            channels=1,
+            format=pyaudio.paInt16,
+            input=True,
+            frames_per_buffer=porcupine.frame_length)
+
+        logging.info("Listening wake up word '{}'...".format(keyword))
+
+        while True:
+            pcm = audio_stream.read(porcupine.frame_length)
+            pcm = struct.unpack_from("h" * porcupine.frame_length, pcm)
+
+            keyword_index = porcupine.process(pcm)
+            if keyword_index >= 0:
+                break
+    finally:
+        if audio_stream is not None:
+            audio_stream.close()
+        if pa is not None:
+            pa.terminate()
+        porcupine.delete()
 
 
 def simpleInputFunction():

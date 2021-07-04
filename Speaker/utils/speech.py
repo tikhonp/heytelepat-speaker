@@ -89,10 +89,7 @@ class RecognizeSpeech:
 
 class Speech:
     def __init__(self,
-                 api_key,
-                 catalog,
-                 playaudiofunction,
-                 pixels,
+                 objectStorage,
                  timeout_speech=10,
                  phrase_time_limit=15,
                  recognizingSampleRateHertz=16000,
@@ -109,23 +106,24 @@ class Speech:
                                     that this will allow a phrase to continue
         """
 
+        self.objectStorage = objectStorage
         try:
             self.synthesizeAudio = speechkit.SynthesizeAudio(
-                api_key, catalog)
+                objectStorage.api_key, objectStorage.catalog)
             self.recognizeShortAudio = speechkit.RecognizeShortAudio(
-                api_key)
+                objectStorage.api_key)
         except requests.exceptions.ConnectionError:
-            self.api_key = api_key
+            self.api_key = objectStorage.api_key
             logging.warning("Network is unavailable, speeckit is None")
 
         self.recognizingSampleRateHertz = recognizingSampleRateHertz
         self.synthesisSampleRateHertz = synthesisSampleRateHertz
-        self.playaudiofunction = playaudiofunction
-        self.pixels = pixels
+        self.playaudiofunction = objectStorage.playaudiofunction
+        self.pixels = objectStorage.pixels
 
         self.recognizer = sr.Recognizer()
 
-        self.catalog = catalog
+        self.catalog = objectStorage.catalog
         self.timeout_speech = timeout_speech
         self.phrase_time_limit = phrase_time_limit
 
@@ -220,8 +218,9 @@ class SpeakSpeech:
                 logging.debug("Cashed data found, playing it")
                 synthesizedSpeech = self.data[text]
             else:
-                logging.debug("Cashed data was not found, synthesing, text: '{}', keywords: '{}'".format(
-                    text, self.data.keys()))
+                logging.debug("Cashed data was not found, synthesing, "
+                              "text: '{}', keywords: '{}'".format(
+                                text, self.data.keys()))
                 synthesizedSpeech = self.speech.create_speech(text)
                 synthesizedSpeech.syntethize()
                 self.data[text] = synthesizedSpeech
