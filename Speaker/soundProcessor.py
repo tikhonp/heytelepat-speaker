@@ -104,8 +104,8 @@ class SoundProcessor(Thread):
     def run(self):
         logging.info("Started soundProcessorInstance")
         while True:
-            # try:
-            self.objectStorage.inputFunction()
-            self._run_item()
-            # except Exception as e:
-            # logging.error("There is error in sound_processor: %s", e)
+            try:
+                self.objectStorage.inputFunction()
+                self._run_item()
+            except Exception as e:
+                logging.error("There is error in sound_processor: %s", e)

@@ -35,23 +35,28 @@ class EventsEngine(Thread):
             e.start()
             self.runningEvents.append(e)
 
+    def _run_item(self):
+        create_new_indx = []
+        for i, event in enumerate(self.runningEvents):
+            if event.event_happend:
+                if not event.running:
+                    event.running = True
+                    self.dialogEngineInstance.add_dialog_to_queue(event)
+                elif event.is_done:
+                    create_new_indx.append(i)
+
+        for i in create_new_indx:
+            event = self.runningEvents.pop(i)
+            new_event = event.__class__(self.objectStorage)
+            new_event.start()
+            self.runningEvents.append(new_event)
+
     def run(self):
         logging.info("Starting events engine Thread")
-
         self._first_run()
 
         while True:
-            create_new_indx = []
-            for i, event in enumerate(self.runningEvents):
-                if event.event_happend:
-                    if not event.running:
-                        event.running = True
-                        self.dialogEngineInstance.add_dialog_to_queue(event)
-                    elif event.is_done:
-                        create_new_indx.append(i)
-
-            for i in create_new_indx:
-                event = self.runningEvents.pop(i)
-                new_event = event.__class__(self.objectStorage)
-                new_event.start()
-                self.runningEvents.append(new_event)
+            try:
+                self._run_item()
+            except Exception as e:
+                logging.error("There is error in event engine: %s", e)

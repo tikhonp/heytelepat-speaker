@@ -21,7 +21,7 @@ You can set options, just type help:
 
 ```bash
 $ ./speaker.py -h
-usage: speaker.py [-h] [-r] [-cc] [-rb] [-d] [-s] [-log LOGLEVEL]
+usage: speaker.py [-h] [-r] [-cc] [-d] [-s] [-infunc INPUTFUNCTION] [-log LOGLEVEL]
 
 Speaker for telepat.
 
@@ -29,9 +29,10 @@ optional arguments:
   -h, --help            show this help message and exit
   -r, --reset           reset speaker token and init
   -cc, --cleancash      clean cashed speaches
-  -rb, --rpibutton      add input function as button pressed
   -d, --development     Develoment mode, can't be used with button
   -s, --store_cash      Store cash sound for network connection
+  -infunc INPUTFUNCTION, --inputfunction INPUTFUNCTION
+                        Provide input function. Options: ['simple', 'rpibutton', 'wakeupword'] Example: -infunc=rpibutton, default='simple'
   -log LOGLEVEL, --loglevel LOGLEVEL
                         Provide logging level. Example -log=debug, default='warning'
 ```
@@ -41,4 +42,3 @@ optional arguments:
 - рассылка заданий и опрос их
 - запрос на сброс колонки
 - Сокеты для получены данных с сервера
-- Wake up word
