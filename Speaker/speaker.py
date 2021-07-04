@@ -55,7 +55,7 @@ from events import event, eventsList
 if not args.development:
     import alsaaudio
 
-    m = alsaaudio.Mixer(control='Speaker', cardindex=2)
+    m = alsaaudio.Mixer(control='Speaker', cardindex=1)
     m.setvolume(90)
 else:
     logging.warning("AlsaAudio is not used, development mode")
