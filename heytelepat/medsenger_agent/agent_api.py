@@ -220,7 +220,7 @@ def add_records(contract_id, values, record_time=None):
 
 def get_list_categories():
     answer = requests.get(
-        settings.MAIN_HOST + '/api/agents/records/categories',
+        settings.MAIN_HOST + '/api/agents/records/available_categories',
         json={'api_key': settings.APP_KEY})
 
     if answer.status_code != 200:
