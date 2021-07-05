@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.core import serializers as dj_serializers
+import json
 
 
 class SpeakerInitApiView(APIView):
@@ -73,7 +74,8 @@ class SendMessageApiView(APIView):
                 raise ValidationError(detail='Invalid Token')
 
             message = "Сообщение от пациента: " + message
-            agent_api.send_message(s.contract.contract_id, message, need_answer=True)
+            agent_api.send_message(
+                s.contract.contract_id, message, need_answer=True)
             return HttpResponse('OK')
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -92,7 +94,7 @@ class SendValueApiView(APIView):
             try:
                 s = Speaker.objects.get(token=token)
             except exceptions.ObjectDoesNotExist:
-                raise ValidationError(detail='Invalid Tokena')
+                raise ValidationError(detail='Invalid Token')
 
             if len(data) == 1:
                 agent_api.add_record(
@@ -173,5 +175,26 @@ class IncomingMessageNotifyApiView(APIView):
                 message.save()
 
                 return HttpResponse(text)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetListOfAllCategories(APIView):
+    serializer_class = serializers.CheckAuthSerializer
+
+    def get(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            token = serializer.data['token']
+
+            try:
+                Speaker.objects.get(token=token)
+            except exceptions.ObjectDoesNotExist:
+                raise ValidationError(detail='Invalid Token')
+
+            data = agent_api.get_list_categories()
+            text = json.dumps(data)
+
+            return HttpResponse(text)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -216,3 +216,14 @@ def add_records(contract_id, values, record_time=None):
             settings.MAIN_HOST + '/api/agents/records/add', json=data)
     except Exception as e:
         print('connection error', e)
+
+
+def get_list_categories():
+    answer = requests.get(
+        settings.MAIN_HOST + '/api/agents/records/categories',
+        json={'api_key': settings.APP_KEY})
+
+    if answer.status_code != 200:
+        raise RuntimeError("Error with get list categories")
+
+    return answer.json()

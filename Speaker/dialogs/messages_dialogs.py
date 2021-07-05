@@ -33,7 +33,7 @@ class SendMessageDialog(Dialog):
             else:
                 text = "Произошла ошибка приотправлении сообщения"
                 logging.error("Message send err {} {}".format(
-                    answer, answer.text))
+                    answer, answer.text[:100]))
 
             self.objectStorage.speakSpeech.play(text, cashed=True)
 

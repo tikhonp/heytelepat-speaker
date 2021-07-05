@@ -19,7 +19,7 @@ $ ./speaker.py
 
 You can set options, just type help:
 
-```bash
+```
 $ ./speaker.py -h
 usage: speaker.py [-h] [-r] [-cc] [-d] [-s] [-infunc INPUTFUNCTION] [-log LOGLEVEL]
 

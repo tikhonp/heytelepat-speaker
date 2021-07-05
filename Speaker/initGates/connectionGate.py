@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from network import network
 import ggwave
 import pyaudio

@@ -9,4 +9,5 @@ urlpatterns = [
     path('sendmessage/', views.SendMessageApiView.as_view()),
     path('pushvalue/', views.SendValueApiView.as_view()),
     path('incomingmessage/', views.IncomingMessageNotifyApiView.as_view()),
+    path('getlistcategories/', views.GetListOfAllCategories.as_view()),
 ]

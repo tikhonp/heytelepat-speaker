@@ -17,6 +17,10 @@ class Dialog:
         self.objectStorage = objectStorage
 
     def process_input(self, input_str):
+        if 'хватит' in input_str.lower():
+            self.cur = None
+            return
+
         logging.debug(
             "Processing input in dialog {}, with input {}".format(
                 self.__str__(), input_str))

@@ -27,7 +27,8 @@ SECRET_KEY = 'dp9)ss*07b=7fq%agd459-+j$k^18#eg@#m6eg22jglz6(q3x)'
 DEBUG = True
 
 ALLOWED_HOSTS = [
-        '194.87.234.236',
+    '194.87.234.236',
+    '127.0.0.1',
 ]
 
 
@@ -87,6 +88,8 @@ DATABASES = {
     }
 }
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -133,7 +136,7 @@ DOMEN = "http://telepatspeaker.ddns.net"
 APPEND_SLASH = False
 
 X_FRAME_OPTIONS = 'ALLOWALL'
-XS_SHARING_ALLOWED_METHODS = ['POST','GET','OPTIONS', 'PUT', 'DELETE']
+XS_SHARING_ALLOWED_METHODS = ['POST', 'GET', 'OPTIONS', 'PUT', 'DELETE']
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
