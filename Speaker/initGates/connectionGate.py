@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from network import network
 import ggwave
 import pyaudio
@@ -68,7 +70,7 @@ def ConnectionGate(objectStorage):
         logging.warning("No connection detected")
         wirless_network_init(objectStorage, first)
         first = False
-        time.sleep(5)
+        time.sleep(15)
 
     if not first:
         objectStorage.speech.init_speechkit()
