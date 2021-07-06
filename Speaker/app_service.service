@@ -1,0 +1,9 @@
+[Unit]
+Description=Heytelepat Speaker
+
+[Service]
+ExecStart=/home/pi/heytelepat/Speaker/env/bin/python speaker.py -log=info -infunc=rpibutton
+Type=notify
+
+[Install]
+WantedBy=default.target

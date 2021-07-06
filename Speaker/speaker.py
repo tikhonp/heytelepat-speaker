@@ -38,7 +38,7 @@ if not isinstance(numeric_level, int):
     raise ValueError('Invalid log level: %s' % args.loglevel)
 
 logging.basicConfig(
-        # filename='/home/pi/heytelepat/Speaker/sp.log',
+    # filename='/home/pi/heytelepat/Speaker/sp.log',
     format='%(asctime)s - %(levelname)s - '
            '[%(filename)s:%(lineno)d] - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
@@ -51,6 +51,7 @@ from initGates import authGate, connectionGate, configGate
 from dialogs import dialog, dialogList
 from soundProcessor import SoundProcessor
 from events import event, eventsList
+import systemd.daemon
 
 
 if not args.development:
@@ -94,3 +95,5 @@ eventsEngineInstance = event.EventsEngine(
 eventsEngineInstance.start()
 
 soundProcessorInstance.start()
+
+systemd.daemon.notify('READY=1')
