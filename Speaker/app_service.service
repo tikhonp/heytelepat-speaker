@@ -3,7 +3,7 @@ Description=Heytelepat Speaker
 
 [Service]
 Type=notify
-ExecStart=/home/pi/heytelepat/Speaker/env/bin/python /home/pi/heytelepat/Speaker/speaker.py -log=info -infunc=rpibutton
+ExecStart=/home/pi/heytelepat/Speaker/env/bin/python /home/pi/heytelepat/Speaker/speaker.py -symd -log=info -infunc=rpibutton
 Restart=on-failure
 User=pi
 
