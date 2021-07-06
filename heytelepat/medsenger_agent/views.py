@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from django.utils import timezone
 import datetime
+import medsenger_api
 
 
 APP_KEY = settings.APP_KEY
@@ -24,6 +25,8 @@ context = {
 invalid_key_response = HttpResponse(
     json.dumps(context), content_type='application/json')
 invalid_key_response.status_code = 400
+
+aac = medsenger_api.AgentApiClient(APP_KEY)
 
 
 @csrf_exempt
@@ -41,11 +44,11 @@ def init(request):
             contract_id=data['contract_id'])
         contract.save()
 
-    agent_api.send_message(
+    aac.send_message(
         contract.contract_id,
         "Зарегистрируйте новое устройство",
         "newdevice", "Добавить", only_patient=True, action_big=True)
-    agent_api.send_order(contract.contract_id, 'get_settings',  12)
+    aac.send_order(contract.contract_id, 'get_settings',  12)
 
     return HttpResponse("ok")
 

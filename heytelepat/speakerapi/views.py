@@ -4,12 +4,16 @@ from rest_framework import generics
 from speakerapi import serializers
 from django.core import exceptions
 from rest_framework.exceptions import ValidationError
-from medsenger_agent import agent_api
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.core import serializers as dj_serializers
 import json
+from django.conf import settings
+import medsenger_api
+
+
+aac = medsenger_api.AgentApiClient(settings.APP_KEY)
 
 
 class SpeakerInitApiView(APIView):
@@ -74,7 +78,7 @@ class SendMessageApiView(APIView):
                 raise ValidationError(detail='Invalid Token')
 
             message = "Сообщение от пациента: " + message
-            agent_api.send_message(
+            aac.send_message(
                 s.contract.contract_id, message, need_answer=True)
             return HttpResponse('OK')
 
@@ -96,14 +100,14 @@ class SendValueApiView(APIView):
             except exceptions.ObjectDoesNotExist:
                 raise ValidationError(detail='Invalid Token')
 
-            if len(data) == 1:
-                agent_api.add_record(
+            if isinstance(data, dict):
+                aac.add_record(
                     s.contract.contract_id,
-                    data[0]['category_name'],
-                    data[0]['value'],
+                    data['category_name'],
+                    data['value'],
                 )
             else:
-                agent_api.add_records(
+                aac.add_records(
                     s.contract.contract_id,
                     data
                 )
@@ -188,11 +192,11 @@ class GetListOfAllCategories(APIView):
             token = serializer.data['token']
 
             try:
-                Speaker.objects.get(token=token)
+                s = Speaker.objects.get(token=token)
             except exceptions.ObjectDoesNotExist:
                 raise ValidationError(detail='Invalid Token')
 
-            data = agent_api.get_list_categories()
+            data = aac.get_available_categories(s.contract.contract_id)
             text = json.dumps(data)
 
             return HttpResponse(text)
