@@ -184,12 +184,13 @@ class IncomingMessageNotifyApiView(APIView):
 
 
 class GetListOfAllCategories(APIView):
-    serializer_class = serializers.CheckAuthSerializer
+    serializer_class = serializers.GetListOfAllCategories
 
     def get(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             token = serializer.data['token']
+            names_only = serializer.data['names_only']
 
             try:
                 s = Speaker.objects.get(token=token)
@@ -197,6 +198,9 @@ class GetListOfAllCategories(APIView):
                 raise ValidationError(detail='Invalid Token')
 
             data = aac.get_available_categories(s.contract.contract_id)
+            if names_only:
+                data = [i["name"] for i in data]
+
             text = json.dumps(data)
 
             return HttpResponse(text)

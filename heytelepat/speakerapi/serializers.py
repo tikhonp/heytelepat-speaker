@@ -30,3 +30,8 @@ class CheckAuthSerializer(serializers.Serializer):
 class IncomingMessageNotify(serializers.Serializer):
     token = serializers.CharField()
     last_messages = serializers.BooleanField()
+
+
+class GetListOfAllCategories(serializers.Serializer):
+    token = serializers.CharField()
+    names_only = serializers.BooleanField()
