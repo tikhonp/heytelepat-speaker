@@ -3,6 +3,8 @@ from utils import speech, pixels
 import soundProcessor
 import json
 import logging
+from pathlib import Path
+import os.path
 
 
 class ObjectStorage:
@@ -22,6 +24,7 @@ class ObjectStorage:
             - playaudiofunction
             - speakSpeech_cls
         """
+        self.BASE_DIR = Path(__file__).resolve().parent.parent
         self.config = config
         self.inputFunction = inputFunction
         self.config_filename = config_filename
@@ -29,7 +32,8 @@ class ObjectStorage:
         if 'cash_filename' in kwargs:
             self.cash_filename = kwargs['cash_filename']
         else:
-            self.cash_filename = self.config['cash_filename']
+            self.cash_filename = os.path.join(
+                self.BASE_DIR, self.config['cash_filename'])
 
         if 'pixels' in kwargs:
             self.pixels = kwargs['pixels']

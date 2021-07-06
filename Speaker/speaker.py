@@ -2,6 +2,8 @@
 
 import logging
 import argparse
+import os.path
+from pathlib import Path
 
 parser = argparse.ArgumentParser(description="Speaker for telepat.")
 parser.add_argument('-r', '--reset', help="reset speaker token and init",
@@ -13,6 +15,9 @@ parser.add_argument('-d', '--development',
                     action='store_true')
 parser.add_argument('-s', '--store_cash',
                     help="Store cash sound for network connection",
+                    action='store_true')
+parser.add_argument('-symd', '--systemd',
+                    help="Option for running as systemd service",
                     action='store_true')
 parser.add_argument(
     '-infunc', '--inputfunction', default='simple',
@@ -47,15 +52,26 @@ logging.basicConfig(
 
 logging.info("Started! OOO Telepat, all rights reserved.")
 
-from initGates import authGate, connectionGate, configGate
-from dialogs import dialog, dialogList
-from soundProcessor import SoundProcessor
-from events import event, eventsList
-from cysystemd.daemon import notify, Notification
+try:
+    from initGates import authGate, connectionGate, configGate
+    from dialogs import dialog, dialogList
+    from soundProcessor import SoundProcessor
+    from events import event, eventsList
+except ImportError as e:
+    logging.error("Error with importing modules {}".format(e))
+    raise e
+
+if args.systemd:
+    from cysystemd.daemon import notify, Notification
 
 
 if not args.development:
-    import alsaaudio
+    try:
+        import alsaaudio
+    except ImportError:
+        raise ImportError(
+            "If you using development mode please turn it on '-d', or install"
+            " alsaaudio module.")
 
     m = alsaaudio.Mixer(control='Speaker', cardindex=1)
     m.setvolume(90)
@@ -66,7 +82,9 @@ if args.development and args.inputfunction == 'rpibutton':
     raise Exception("Rpi Button can't be used with development mode")
 
 
-config_filename='/home/pi/heytelepat/Speaker/speaker_config.json'
+config_filename = os.path.join(
+    Path(__file__).resolve().parent, 'speaker_config.json')
+
 objectStorage = configGate.ConfigGate(
     config_filename=config_filename,
     inputfunction=args.inputfunction,
@@ -98,4 +116,5 @@ eventsEngineInstance.start()
 
 soundProcessorInstance.start()
 
-notify(Notification.READY)
+if args.systemd:
+    notify(Notification.READY)
