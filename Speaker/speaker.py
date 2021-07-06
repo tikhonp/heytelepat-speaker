@@ -51,7 +51,7 @@ from initGates import authGate, connectionGate, configGate
 from dialogs import dialog, dialogList
 from soundProcessor import SoundProcessor
 from events import event, eventsList
-import systemd.daemon
+from cysystemd.daemon import notify, Notification
 
 
 if not args.development:
@@ -65,8 +65,10 @@ else:
 if args.development and args.inputfunction == 'rpibutton':
     raise Exception("Rpi Button can't be used with development mode")
 
+
+config_filename='/home/pi/heytelepat/Speaker/speaker_config.json'
 objectStorage = configGate.ConfigGate(
-    config_filename='speaker_config.json',
+    config_filename=config_filename,
     inputfunction=args.inputfunction,
     reset=args.reset,
     clean_cash=args.cleancash,
@@ -96,4 +98,4 @@ eventsEngineInstance.start()
 
 soundProcessorInstance.start()
 
-systemd.daemon.notify('READY=1')
+notify(Notification.READY)
