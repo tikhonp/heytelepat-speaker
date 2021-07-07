@@ -22,7 +22,7 @@ class SendMessageDialog(Dialog):
         text = _input.lower().strip()
         if 'да' in text:
             answer = requests.post(
-                self.objectStorage.host+"/speakerapi/sendmessage/",
+                self.objectStorage.host+"/speakerapi/getlistcategories/",
                 json={
                     'token': self.objectStorage.token,
                     'message': self.message,
