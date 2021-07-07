@@ -1,11 +1,15 @@
 [Unit]
-Description=Heytelepat Speaker
+Description=HeytelepatSpeaker
+After=network.target
 
 [Service]
 Type=notify
-ExecStart=/home/pi/heytelepat/Speaker/env/bin/python /home/pi/heytelepat/Speaker/speaker.py -symd -log=info -infunc=rpibutton
-Restart=on-failure
+WorkingDirectory=/home/pi/heytelepat/Speaker/
+
 User=pi
 
+ExecStart=/home/pi/heytelepat/Speaker/env/bin/python /home/pi/heytelepat/Speaker/speaker.py -symd -log=info -infunc=rpibutton
+Restart=on-failure
+
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
