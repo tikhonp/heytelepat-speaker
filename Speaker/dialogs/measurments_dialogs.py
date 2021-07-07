@@ -44,7 +44,7 @@ class AddValueDialog(Dialog):
                 'names_only': True
             })
         if answer.status_code == 200:
-            if self.category not in answer.json():
+            if self.category['name'] not in answer.json():
                 self.objectStorage.speakSpeech.play(
                     "Эта категория не поддерживается для этого пользователя",
                     cashed=True)
@@ -56,14 +56,14 @@ class AddValueDialog(Dialog):
                     answer, answer.text[:100]))
             return
 
-        self.objectStorage.play(
+        self.objectStorage.speakSpeech.play(
             "Произнесите значение", cashed=True)
         self.cur = self.third
         self.need_permanent_answer = True
 
     def third(self, _input):
         if self.category["type"] == "integer":
-            if not _input.is_digit():
+            if not _input.isdigit():
                 self.objectStorage.speakSpeech.play(
                     "Значение не распознано, пожалуйста,"
                     " произнесите его еще раз", cashed=True)
@@ -76,10 +76,10 @@ class AddValueDialog(Dialog):
             self.objectStorage.host+'/speakerapi/pushvalue/',
             json={
                 'token': self.objectStorage.token,
-                'data': [{
-                    'category_name': self.category["pulse"],
+                'data': {
+                    'category_name': self.category['name'],
                     'value': value
-                }]
+                }
             })
 
         if answer.status_code == 200:
