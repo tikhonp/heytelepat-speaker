@@ -14,13 +14,13 @@ class CommentSerializer(serializers.Serializer):
 
 
 class DataSendValuesSerializer(serializers.Serializer):
-    category_name = serializers.CharField(read_only=True),
-    value = serializers.CharField(read_only=True),
+    category_name = serializers.CharField(),
+    value = serializers.CharField(),
 
 
 class SendValueSerializer(serializers.Serializer):
     token = serializers.CharField()
-    data = DataSendValuesSerializer(many=True)
+    values = serializers.ListField(child=DataSendValuesSerializer())
 
 
 class CheckAuthSerializer(serializers.Serializer):

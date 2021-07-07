@@ -89,33 +89,26 @@ class SendValueApiView(APIView):
     serializer_class = serializers.SendValueSerializer
 
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+        token, data = request.data['token'], request.data['data']
+        try:
+            s = Speaker.objects.get(token=token)
+        except exceptions.ObjectDoesNotExist:
+            raise ValidationError(detail='Invalid Token')
 
-        if serializer.is_valid():
-            data = serializer.data['data']
-            token = serializer.data['token']
+        if len(data) == 1:
+            aac.add_record(
+                s.contract.contract_id,
+                data[0]['category_name'],
+                data[0]['value'],
+            )
+        else:
+            data = [[i[j] for j in i] for i in data]
+            aac.add_records(
+                s.contract.contract_id,
+                data
+            )
 
-            try:
-                s = Speaker.objects.get(token=token)
-            except exceptions.ObjectDoesNotExist:
-                raise ValidationError(detail='Invalid Token')
-
-            if len(data) == 1:
-                aac.add_record(
-                    s.contract.contract_id,
-                    data[0]['category_name'],
-                    data[0]['value'],
-                )
-            else:
-                data = [[i[j] for j in i] for i in data]
-                aac.add_records(
-                    s.contract.contract_id,
-                    data
-                )
-
-            return HttpResponse('OK')
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse('OK')
 
 
 class CheckAuthApiView(APIView):
