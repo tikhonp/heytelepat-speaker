@@ -3,6 +3,20 @@ import requests
 import logging
 
 
+categories = [
+    [('пульс'), {
+        "id": 1,
+        "name": "pulse",
+        "description": "Пульс в покое",
+        "unit": "удары в минуту",
+        "type": "integer",
+        "default_representation": "scatter",
+        "is_legacy": False,
+        "subcategory": "Измерения"
+    }],
+]
+
+
 class AddValueDialog(Dialog):
     def first(self, _input):
         self.objectStorage.speakSpeech.play(
@@ -11,19 +25,6 @@ class AddValueDialog(Dialog):
         self.need_permanent_answer = True
 
     def second(self, _input):
-        categories = [
-            [('пульс'), {
-                "id": 1,
-                "name": "pulse",
-                "description": "Пульс в покое",
-                "unit": "удары в минуту",
-                "type": "integer",
-                "default_representation": "scatter",
-                "is_legacy": False,
-                "subcategory": "Измерения"
-            }],
-        ]
-
         self.category = None
         for i in categories:
             for phrase in i[0]:

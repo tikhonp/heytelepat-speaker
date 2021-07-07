@@ -58,7 +58,7 @@ def wirless_network_init(objectStorage, first=False):
     objectStorage.pixels.think()
     n.create(data['psk'])
     if not n.connect():
-        logging.error("Connection error")
+        logging.error("Connection error when reconfigure")
 
 
 def ConnectionGate(objectStorage):
