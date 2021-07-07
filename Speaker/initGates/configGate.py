@@ -29,6 +29,11 @@ class ObjectStorage:
         self.inputFunction = inputFunction
         self.config_filename = config_filename
 
+        if 'debug_mode' in kwargs:
+            self.debug_mode = kwargs['debug_mode']
+        else:
+            self.debug_mode = None
+
         if 'cash_filename' in kwargs:
             self.cash_filename = kwargs['cash_filename']
         else:
@@ -89,6 +94,7 @@ class ObjectStorage:
 def ConfigGate(
         config_filename,
         inputfunction,
+        debug_mode=False,
         reset=False,
         clean_cash=False,
         development=False):
@@ -120,7 +126,8 @@ def ConfigGate(
         inputFunc,
         config_filename,
         development,
-        playaudiofunction=speech.playaudiofunction
+        playaudiofunction=speech.playaudiofunction,
+        debug_mode=debug_mode,
     )
 
     if clean_cash:

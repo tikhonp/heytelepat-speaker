@@ -88,6 +88,7 @@ config_filename = os.path.join(
 objectStorage = configGate.ConfigGate(
     config_filename=config_filename,
     inputfunction=args.inputfunction,
+    debug_mode=True if args.loglevel.lower() == 'debug' else False,
     reset=args.reset,
     clean_cash=args.cleancash,
     development=args.development,
@@ -95,6 +96,7 @@ objectStorage = configGate.ConfigGate(
 
 if args.systemd:
     notify(Notification.READY)
+    notify(Notification.STATUS, "Connection Gate...")
 
 connectionGate.ConnectionGate(objectStorage)
 
@@ -102,11 +104,17 @@ if args.store_cash:
     logging.info("Store cash active")
     connectionGate.cash_phrases(objectStorage.speakSpeech)
 
+if args.systemd:
+    notify(Notification.STATUS, "Auth Gate...")
+
 objectStorage = authGate.AuthGate(objectStorage)
 
 dialogEngineInstance = dialog.DialogEngine(
                         objectStorage,
                         dialogList.dialogs_list)
+
+if args.systemd:
+    notify(Notification.STATUS, "Loading main processes...")
 
 soundProcessorInstance = SoundProcessor(objectStorage, dialogEngineInstance)
 

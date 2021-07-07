@@ -109,3 +109,5 @@ class SoundProcessor(Thread):
                 self._run_item()
             except Exception as e:
                 logging.error("There is error in sound_processor: %s", e)
+                if self.objectStorage.debug_mode:
+                    raise e

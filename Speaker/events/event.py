@@ -60,3 +60,5 @@ class EventsEngine(Thread):
                 self._run_item()
             except Exception as e:
                 logging.error("There is error in event engine: %s", e)
+                if self.objectStorage.debug_mode:
+                    raise e
