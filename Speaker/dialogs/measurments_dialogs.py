@@ -76,10 +76,10 @@ class AddValueDialog(Dialog):
             self.objectStorage.host+'/speakerapi/pushvalue/',
             json={
                 'token': self.objectStorage.token,
-                'data': {
+                'data': [{
                     'category_name': self.category['name'],
                     'value': value
-                }
+                }]
             })
 
         if answer.status_code == 200:

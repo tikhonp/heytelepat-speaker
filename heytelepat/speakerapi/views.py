@@ -100,13 +100,14 @@ class SendValueApiView(APIView):
             except exceptions.ObjectDoesNotExist:
                 raise ValidationError(detail='Invalid Token')
 
-            if isinstance(data, dict):
+            if len(data) == 1:
                 aac.add_record(
                     s.contract.contract_id,
-                    data['category_name'],
-                    data['value'],
+                    data[0]['category_name'],
+                    data[0]['value'],
                 )
             else:
+                data = [[i[j] for j in i] for i in data]
                 aac.add_records(
                     s.contract.contract_id,
                     data
