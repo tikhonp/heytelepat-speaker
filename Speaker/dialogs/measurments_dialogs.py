@@ -38,7 +38,7 @@ class AddValueDialog(Dialog):
             return
 
         answer = requests.get(
-            self.objectStorage.host+'/speakerapi/getlistcategories',
+            self.objectStorage.host+'/speakerapi/getlistcategories/',
             json={
                 'token': self.objectStorage.token,
                 'names_only': True
