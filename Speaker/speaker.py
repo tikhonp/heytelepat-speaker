@@ -93,6 +93,9 @@ objectStorage = configGate.ConfigGate(
     development=args.development,
 )
 
+if args.systemd:
+    notify(Notification.READY)
+
 connectionGate.ConnectionGate(objectStorage)
 
 if args.store_cash:
@@ -117,4 +120,4 @@ eventsEngineInstance.start()
 soundProcessorInstance.start()
 
 if args.systemd:
-    notify(Notification.READY)
+    notify(Notification.STATUS, "Loaded all processes, running...")
