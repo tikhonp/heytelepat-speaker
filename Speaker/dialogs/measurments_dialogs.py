@@ -52,6 +52,8 @@ class AddValueDialog(Dialog):
         else:
             self.objectStorage.speakSpeech.play(
                 "Ошибка соединения с сервером", cashed=True)
+            logging.error("Message send err {} {}".format(
+                    answer, answer.text[:100]))
             return
 
         self.objectStorage.play(
