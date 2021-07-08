@@ -32,7 +32,6 @@ ALLOWED_HOSTS = [
 ]
 
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -42,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'medsenger_agent',
     'speakerapi',
     'rest_framework',
@@ -76,6 +76,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'heytelepat.wsgi.application'
+ASGI_APPLICATION = 'heytelepat.asgi.application'
 
 
 # Database
