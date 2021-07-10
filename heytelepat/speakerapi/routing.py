@@ -1,8 +1,9 @@
 from django.urls import path
 
-from speakerapi.consumers import WSTest
+from speakerapi.consumers import WSTest, WaitForConsumer
 
 
 ws_urlpatterns = [
-    path('speakerapi/test/', WSTest.as_asgi())
+    path('ws/speakerapi/test/', WSTest.as_asgi()),
+    path('ws/speakerapi/init/checkauth/', WaitForConsumer.as_asgi()),
 ]
