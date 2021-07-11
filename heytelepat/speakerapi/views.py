@@ -111,6 +111,7 @@ class SendValueApiView(APIView):
         return HttpResponse('OK')
 
 
+"""
 class CheckAuthApiView(APIView):
     serializer_class = serializers.CheckAuthSerializer
 
@@ -130,6 +131,7 @@ class CheckAuthApiView(APIView):
             return HttpResponse('OK')
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+"""
 
 
 class IncomingMessageNotifyApiView(APIView):

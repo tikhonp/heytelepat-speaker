@@ -1,5 +1,4 @@
 from threading import Thread
-import pvporcupine
 import pyaudio
 import logging
 import struct
@@ -7,6 +6,10 @@ try:
     import RPi.GPIO as GPIO
 except ImportError:
     logging.warning("RPi.GPIO is not available, button is disabled")
+try:
+    import pvporcupine
+except ImportError:
+    logging.warning("pvporcupine is not available, required -d mode")
 
 
 def wakeupWordInputFunction(k=2, sensitivity=0.6):

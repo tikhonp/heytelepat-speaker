@@ -106,6 +106,8 @@ def ConfigGate(
     if reset:
         logging.info("Resetting token")
         config['token'] = None
+        with open(config_filename, 'w') as f:
+            json.dump(config, f)
 
     if inputfunction == 'rpibutton':
         logging.info("Setup input function as Button")

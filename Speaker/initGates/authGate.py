@@ -1,14 +1,29 @@
 import requests
 import json
-import time
 import logging
+import websockets
+import asyncio
+
+
+async def webSocketAuth(domen: str, token: str, port=8001):
+    url = 'ws://{}:{}/ws/speakerapi/init/checkauth/'.format(
+        domen.split('/')[2], str(port))
+
+    try:
+        async with websockets.connect(url) as ws:
+            await ws.send(json.dumps({"token": token}))
+            msg = await ws.recv()
+            return msg
+    except websockets.exceptions.ConnectionClosedError:
+        return None
 
 
 def init(objectStorage):
     objectStorage.speakSpeech.play(
         "Колонка еще не авторизована. "
         "Сейчас я скажу тебе код из 6 цифр, "
-        "его надо ввести в окне подключения колонки в medsenger. ")
+        "его надо ввести в окне подключения колонки в medsenger. ",
+        cashed=True)
 
     answer = requests.post(objectStorage.host+'/speakerapi/init/')
     answer = answer.json()
@@ -23,19 +38,18 @@ def init(objectStorage):
         "Итак, твой код: {}".format(", ".join(list(str(answer["code"])))))
 
     objectStorage.pixels.think()
-    while True:
-        body = {"token": config["token"]}
 
-        answer = requests.get(
-            config["domen"]+"/speakerapi/init/checkauth/", json=body)
+    authed = None
+    while authed is None:
+        authed = asyncio.get_event_loop().run_until_complete(
+            webSocketAuth(config['domen'], config['token']))
 
-        if answer.status_code == 200:
-            break
-
-        time.sleep(1)
+    if authed != 'OK':
+        raise RuntimeError("Auth confirmation failed, '{}'".format(authed))
 
     logging.info("Authentication passed")
-    objectStorage.speakSpeech.play("Отлично! Устройство настроено.")
+    objectStorage.speakSpeech.play(
+        "Отлично! Устройство настроено.", cashed=True)
 
     return config
 
