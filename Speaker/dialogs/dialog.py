@@ -60,7 +60,7 @@ class DialogEngine:
     def add_dialog_to_queue(self, dialog):
         if self.currentDialog is None:
             self.currentDialog = dialog
-            self.process_input(None)
+            self.process_input('')
         else:
             logging.debug("Putting dialog {} into queue".format(dialog))
             self.dialogQueue.append(dialog)

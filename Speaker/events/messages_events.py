@@ -53,6 +53,8 @@ class MessageNotificationDialog(EventDialog):
     def run(self):
         logging.debug("Running EventDialog '{}'".format(self.name))
         answer = None
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         while answer is None:
             answer = asyncio.get_event_loop().run_until_complete(
                 self.webSocketConnect())
