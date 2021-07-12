@@ -47,7 +47,7 @@ class WaitForAuthConsumer(AsyncJsonWebsocketConsumer):
                 )
             return
 
-        await self.send(json.dumps(serializer.errors))
+        await self.send(json.dumps(serializer.errors, ensure_ascii=False))
         await self.close()
 
     async def receive_authed(self, event):
@@ -131,7 +131,7 @@ class IncomingMessageNotifyConsumer(AsyncJsonWebsocketConsumer):
             )
             return
 
-        await self.send(json.dumps(serializer.errors))
+        await self.send(json.dumps(serializer.errors, ensure_ascii=False))
         await self.close()
 
     async def receive_message(self, event):
@@ -148,5 +148,5 @@ class IncomingMessageNotifyConsumer(AsyncJsonWebsocketConsumer):
                     "text": message
                 }
             }
-        ]))
+        ], ensure_ascii=False))
         await self.close()
