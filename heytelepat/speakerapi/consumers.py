@@ -8,7 +8,15 @@ from channels.db import database_sync_to_async
 
 class WaitForAuthConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
+        self.room_group_name = None
         await self.accept()
+
+    async def disconnect(self, close_code):
+        if self.room_group_name is not None:
+            await self.channel_layer.group_discard(
+                self.room_group_name,
+                self.channel_name
+            )
 
     async def receive_json(self, content, **kwargs):
         serializer = self.get_serializer(data=content)
@@ -23,20 +31,26 @@ class WaitForAuthConsumer(AsyncJsonWebsocketConsumer):
                 await self.close()
                 return
 
-            while True:
-                s = await database_sync_to_async(
-                    Speaker.objects.select_related('contract').get)(
-                        token=token)
+            s = await database_sync_to_async(
+                Speaker.objects.select_related('contract').get)(
+                    token=token)
 
-                if s.contract is not None:
-                    break
-                await asyncio.sleep(1)
-
-            await self.send('OK')
-            await self.close()
+            if s.contract is not None:
+                await self.send('OK')
+                await self.close()
+            else:
+                self.room_group_name = 'auth_%s' % s.id
+                await self.channel_layer.group_add(
+                    self.room_group_name,
+                    self.channel_name
+                )
             return
 
         await self.send_json(serializer.errors)
+        await self.close()
+
+    async def receive_authed(self, event):
+        await self.send('OK')
         await self.close()
 
     def get_serializer(self, *, data):
@@ -45,7 +59,15 @@ class WaitForAuthConsumer(AsyncJsonWebsocketConsumer):
 
 class IncomingMessageNotifyConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
+        self.room_group_name = None
         await self.accept()
+
+    async def disconnect(self, close_code):
+        if self.room_group_name is not None:
+            await self.channel_layer.group_discard(
+                self.room_group_name,
+                self.channel_name
+            )
 
     async def receive_json(self, content, **kwargs):
         serializer = serializers.IncomingMessageNotify(data=content)
@@ -62,48 +84,68 @@ class IncomingMessageNotifyConsumer(AsyncJsonWebsocketConsumer):
                 return
 
             if serializer.data['last_messages']:
-                messages = None
-                while messages is None or \
-                        not await database_sync_to_async(messages.exists)():
-                    messages = await database_sync_to_async(
-                        Message.objects.filter)(
-                            contract=s.contract, is_red=False)
-                    await asyncio.sleep(5)
+                messages = await database_sync_to_async(
+                    Message.objects.filter)(
+                        contract=s.contract, is_red=False)
 
-                text = dj_serializers.serialize(
-                    'json', await database_sync_to_async(list)(messages),
-                    fields=('text', 'date'))
+                if await database_sync_to_async(messages.exists)():
+                    text = dj_serializers.serialize(
+                        'json', await database_sync_to_async(list)(messages),
+                        fields=('text', 'date'))
 
-                for message in messages:
-                    message.is_red = True
-                    message.is_notified = True
-                    await database_sync_to_async(message.save)()
+                    for message in messages:
+                        message.is_red = True
+                        message.is_notified = True
+                        await database_sync_to_async(message.save)()
 
-                print("here")
-                await self.send(text)
-                await self.close()
-                return
+                    await self.send(text)
+                    await self.close()
+                    return
             else:
                 message = None
-                while message is None:
-                    try:
-                        m = await database_sync_to_async(
-                            Message.objects.filter)(
-                                contract=s.contract, is_notified=False)
-                        message = await database_sync_to_async(
-                            m.earliest)('date')
-                    except Message.DoesNotExist:
-                        pass
-                    await asyncio.sleep(5)
-                text = dj_serializers.serialize(
-                    'json', [message, ], fields=('text'))
-                message.is_notified = True
+                try:
+                    m = await database_sync_to_async(
+                        Message.objects.filter)(
+                            contract=s.contract, is_notified=False)
+                    message = await database_sync_to_async(
+                        m.earliest)('date')
+                except Message.DoesNotExist:
+                    pass
 
-                await database_sync_to_async(message.save)()
+                if message is not None:
+                    text = dj_serializers.serialize(
+                        'json', [message, ], fields=('text'))
+                    message.is_notified = True
 
-                await self.send(text)
-                await self.close()
-                return
+                    await database_sync_to_async(message.save)()
+
+                    await self.send(text)
+                    await self.close()
+                    return
+
+            self.room_group_name = 'message_%s' % s.contract.contract_id
+            await self.channel_layer.group_add(
+                self.room_group_name,
+                self.channel_name
+            )
+            return
 
         await self.send_json(serializer.errors)
+        await self.close()
+
+    async def receive_message(self, event):
+        message = event['message']
+
+        m = await database_sync_to_async(
+            Message.objects.get)(id=event['message_id'])
+        m.is_notified = True
+        await database_sync_to_async(m.save)()
+
+        await self.send_json([
+            {
+                "fields": {
+                    "text": message
+                }
+            }
+        ])
         await self.close()

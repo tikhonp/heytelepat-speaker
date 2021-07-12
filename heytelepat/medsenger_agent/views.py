@@ -16,6 +16,9 @@ from django.utils import timezone
 import datetime
 import medsenger_api
 
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
 
 APP_KEY = settings.APP_KEY
 DOMEN = settings.DOMEN
@@ -62,7 +65,6 @@ def remove(request):
         return invalid_key_response
 
     try:
-        print(data['contract_id'])
         contract = Contract.objects.get(contract_id=data['contract_id'])
     except exceptions.ObjectDoesNotExist:
         response = HttpResponse(json.dumps({
@@ -155,6 +157,12 @@ def newdevice(request):
         speaker.contract = contract
         speaker.save()
 
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            'auth_%s' % speaker.id,
+            {'type': 'receive_authed'}
+        )
+
         return render(request, 'done_add_device.html')
 
 
@@ -204,7 +212,6 @@ class IncomingMessageApiView(APIView):
     serializer_class = serializers.MessageSerializer
 
     def post(self, request):
-        print(request.data)
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             if serializer.data['api_key'] != APP_KEY:
@@ -219,7 +226,6 @@ class IncomingMessageApiView(APIView):
             if serializer.data['message']['sender'] == 'patient':
                 return HttpResponse("ok")
             date = serializer['message']['date'].value
-            print(date, type(date))
             message = Message.objects.create(
                 contract=contract,
                 message_id=serializer.data['message']['id'],
@@ -231,6 +237,16 @@ class IncomingMessageApiView(APIView):
             )
 
             message.save()
+
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                'message_%s' % contract.contract_id,
+                {
+                    'type': 'receive_message',
+                    'message': message.text,
+                    'message_id': message.id
+                }
+            )
 
             return HttpResponse("ok")
 
