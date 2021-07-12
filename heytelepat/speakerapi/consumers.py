@@ -4,6 +4,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 import asyncio
 from medsenger_agent.models import Speaker, Message
 from channels.db import database_sync_to_async
+import json
 
 
 class WaitForAuthConsumer(AsyncJsonWebsocketConsumer):
@@ -46,7 +47,7 @@ class WaitForAuthConsumer(AsyncJsonWebsocketConsumer):
                 )
             return
 
-        await self.send_json(serializer.errors)
+        await self.send(json.dumps(serializer.errors))
         await self.close()
 
     async def receive_authed(self, event):
@@ -130,7 +131,7 @@ class IncomingMessageNotifyConsumer(AsyncJsonWebsocketConsumer):
             )
             return
 
-        await self.send_json(serializer.errors)
+        await self.send(json.dumps(serializer.errors))
         await self.close()
 
     async def receive_message(self, event):
@@ -141,11 +142,11 @@ class IncomingMessageNotifyConsumer(AsyncJsonWebsocketConsumer):
         m.is_notified = True
         await database_sync_to_async(m.save)()
 
-        await self.send_json([
+        await self.send(json.dumps([
             {
                 "fields": {
                     "text": message
                 }
             }
-        ])
+        ]))
         await self.close()
