@@ -61,20 +61,30 @@ def wirless_network_init(objectStorage, first=False):
         logging.error("Connection error when reconfigure")
 
 
-def ConnectionGate(objectStorage):
+def ConnectionGate(objectStorage, systemd=False):
     objectStorage.pixels.wakeup()
     first = True
     while not network.check_really_connection():
+        if systemd:
+            time.sleep(15)
+            systemd = False
+            continue
+
         logging.warning("No connection detected")
         wirless_network_init(objectStorage, first)
         first = False
         time.sleep(15)
 
-    if not first:
+    try:
         objectStorage.speech.init_speechkit()
         logging.info("Successfully connected and initilized speechkit")
-        objectStorage.speakSpeech.play(
-            "Подключение к беспроводной сети произошло успешно", cashed=True)
+        if not first:
+            objectStorage.speakSpeech.play(
+                "Подключение к беспроводной сети произошло успешно", cashed=True)
+    except Exception as e:
+        logging.warning(e)
+        pass
+
     else:
         logging.info("Connection exists")
         objectStorage.pixels.off()

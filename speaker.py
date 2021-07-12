@@ -98,7 +98,7 @@ if args.systemd:
     notify(Notification.READY)
     notify(Notification.STATUS, "Connection Gate...")
 
-connectionGate.ConnectionGate(objectStorage)
+connectionGate.ConnectionGate(objectStorage, args.systemd)
 
 if args.store_cash:
     logging.info("Store cash active")
