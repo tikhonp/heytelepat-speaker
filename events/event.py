@@ -1,6 +1,8 @@
 from threading import Thread
 from dialogs.dialog import Dialog
 import logging
+import websockets
+import json
 
 
 class EventDialog(Thread, Dialog):
@@ -12,6 +14,18 @@ class EventDialog(Thread, Dialog):
         Dialog.__init__(self, objectStorage)
 
         logging.debug("Creating EventDialog '{}'".format(self.name))
+
+    async def webSocketConnect(self, url, data_json, port=8001):
+        url = 'ws://{}:{}/{}'.format(
+            self.objectStorage.host.split('/')[2], port, url)
+
+        try:
+            async with websockets.connect(url) as ws:
+                await ws.send(json.dumps(data_json))
+                msg = await ws.recv()
+                return msg
+        except websockets.exceptions.ConnectionClosedError:
+            return None
 
     def run(self):
         logging.debug("Running EventDialog '{}'".format(self.name))
