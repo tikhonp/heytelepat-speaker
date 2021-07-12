@@ -4,11 +4,11 @@ After=network.target
 
 [Service]
 Type=notify
-WorkingDirectory=/home/pi/heytelepat/Speaker/
+WorkingDirectory=/home/pi/heytelepat-speaker
 
 User=pi
 
-ExecStart=/home/pi/heytelepat/Speaker/env/bin/python /home/pi/heytelepat/Speaker/speaker.py -symd -log=info -infunc=rpibutton
+ExecStart=/home/pi/heytelepat-speaker/env/bin/python /home/pi/heytelepat-speaker/speaker.py -symd -log=info -infunc=rpibutton
 Restart=on-failure
 
 [Install]
