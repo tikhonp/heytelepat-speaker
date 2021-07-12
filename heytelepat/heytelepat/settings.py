@@ -78,7 +78,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'heytelepat.wsgi.application'
 ASGI_APPLICATION = 'heytelepat.asgi.application'
 
-"""
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -87,13 +86,14 @@ CHANNEL_LAYERS = {
         },
     },
 }
-"""
 
+"""
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels.layers.InMemoryChannelLayer"
     }
 }
+"""
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
