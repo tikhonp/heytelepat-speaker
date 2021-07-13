@@ -51,7 +51,7 @@ class SynthesizedSpeech:
         """
         Plays created wav with speakers
         """
-        logging.info("PLAYS TEXT {}".format(self.text))
+        logging.info("PLAYS TEXT '{}'".format(self.text))
         if self.audio_data is None:
             raise Exception(
                 "Audio did not synthesized, please run \"synthesize\" first.")
@@ -82,7 +82,7 @@ class RecognizeSpeech:
                 self.io_vaw, self.speech.catalog, self.sample_rate)
         if text.strip() == '':
             text = None
-        logging.info("RECOGNIZED TEXT {}".format(text))
+        logging.info("RECOGNIZED TEXT '{}'".format(text))
         self.speech.pixels.off()
         return text
 

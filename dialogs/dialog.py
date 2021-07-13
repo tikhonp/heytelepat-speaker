@@ -1,5 +1,6 @@
 import logging
 from collections import deque
+import time
 
 
 class Dialog:
@@ -47,18 +48,19 @@ class DialogEngine:
         self.dialogs = dialogs
         self.dialogQueue = deque()
         self.currentDialog = None
+        self.time_delay = 30
 
     def _execute_next_dialog(self):
         if self.currentDialog is None and self.dialogQueue:
             logging.debug("Trying to get dialog from queue")
             self.currentDialog = self.dialogQueue.popleft()
             logging.debug("Got dialog from queue")
-
-            with self.objectStorage.lock_obj:
-                self.currentDialog.process_input()
+            self.cur_dialog_time = time.time()
+            self.process_input('')
 
     def add_dialog_to_queue(self, dialog):
         if self.currentDialog is None:
+            self.cur_dialog_time = time.time()
             self.currentDialog = dialog
             self.process_input('')
         else:
@@ -68,6 +70,11 @@ class DialogEngine:
             self._execute_next_dialog()
 
     def process_input(self, text: str):
+        if self.currentDialog is not None and \
+                (time.time() - self.cur_dialog_time) > self.time_delay:
+            self.currentDialog.cur = None
+            self.currentDialog = None
+
         if self.currentDialog is None:
             self.currentDialog = self._chose_dialog_processor(text)
 
@@ -87,8 +94,10 @@ class DialogEngine:
 
         if self.currentDialog.is_done:
             self.currentDialog = None
-        elif self.currentDialog.need_permanent_answer:
-            return True
+        else:
+            self.cur_dialog_time = time.time()
+            if self.currentDialog.need_permanent_answer:
+                return True
 
         self._execute_next_dialog()
 

@@ -15,15 +15,17 @@ class EventDialog(Thread, Dialog):
 
         logging.debug("Creating EventDialog '{}'".format(self.name))
 
-    async def webSocketConnect(self, url, data_json, port=8001):
+    async def webSocketConnect(self, url, data_json, on_message, port=8001):
         url = 'ws://{}:{}/{}'.format(
             self.objectStorage.host.split('/')[2], port, url)
 
         try:
-            async with websockets.connect(url) as ws:
-                await ws.send(json.dumps(data_json))
-                msg = await ws.recv()
-                return msg
+            async with websockets.connect(url) as self.ws:
+                await self.ws.send(json.dumps(data_json))
+                while True:
+                    msg = await self.ws.recv()
+                    on_message(msg)
+
         except websockets.exceptions.ConnectionClosedError:
             return None
 
@@ -50,20 +52,15 @@ class EventsEngine(Thread):
             self.runningEvents.append(e)
 
     def _run_item(self):
-        create_new_indx = []
         for i, event in enumerate(self.runningEvents):
             if event.event_happend:
                 if not event.running:
                     event.running = True
                     self.dialogEngineInstance.add_dialog_to_queue(event)
                 elif event.is_done:
-                    create_new_indx.append(i)
-
-        for i in create_new_indx:
-            event = self.runningEvents.pop(i)
-            new_event = event.__class__(self.objectStorage)
-            new_event.start()
-            self.runningEvents.append(new_event)
+                    event.cur = event.first
+                    event.event_happend = False
+                    event.running = False
 
     def run(self):
         logging.info("Starting events engine Thread")
