@@ -1,18 +1,17 @@
 from threading import Thread
-from dialogs.dialog import Dialog
 import logging
 import websockets
 import json
 
 
-class EventDialog(Thread, Dialog):
+class EventDialog(Thread):
     event_happend = False
-    running = False
+    dialog_class = None
 
     def __init__(self, objectStorage):
         Thread.__init__(self)
-        Dialog.__init__(self, objectStorage)
 
+        self.objectStorage = objectStorage
         logging.debug("Creating EventDialog '{}'".format(self.name))
 
     async def webSocketConnect(self, url, data_json, on_message, port=8001):
@@ -35,6 +34,14 @@ class EventDialog(Thread, Dialog):
             self._loop_item()
             self.objectStorage.event_obj.wait(5)
 
+    def get_dialog(self, *args, **kwargs):
+        if self.dialog_class is None:
+            raise NotImplementedError("You must provide dialog class")
+        return self.dialog_class(*args, **kwargs)
+
+    def return_dialog(self, *args, **kwargs):
+        raise NotImplementedError("You must provide return dialog method")
+
 
 class EventsEngine(Thread):
     def __init__(self, objectStorage, eventsDialogList, dialogEngineInstance):
@@ -52,15 +59,11 @@ class EventsEngine(Thread):
             self.runningEvents.append(e)
 
     def _run_item(self):
-        for i, event in enumerate(self.runningEvents):
+        for event in self.runningEvents:
             if event.event_happend:
-                if not event.running:
-                    event.running = True
-                    self.dialogEngineInstance.add_dialog_to_queue(event)
-                elif event.is_done:
-                    event.cur = event.first
-                    event.event_happend = False
-                    event.running = False
+                self.dialogEngineInstance.add_dialog_to_queue(
+                    event.return_dialog())
+                event.event_happend = False
 
     def run(self):
         logging.info("Starting events engine Thread")

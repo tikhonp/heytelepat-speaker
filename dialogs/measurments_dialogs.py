@@ -281,13 +281,15 @@ class AddValueDialog(Dialog):
         self.need_permanent_answer = True
 
     def third(self, _input):
-        if self.category["type"] == "integer":
+        type_m = self.category.get('type', '') \
+            + self.category.get('value_type', '')
+        if type_m == "integer":
             if not _input.isdigit():
                 self.objectStorage.speakSpeech.play(
                     "Значение не распознано, пожалуйста,"
                     " произнесите его еще раз", cashed=True)
                 return
-        elif self.category["type"] == "float":
+        elif type_m == "float":
             if _input.isdigit():
                 value = int(_input)
             elif 'и' in _input.lower():
@@ -298,6 +300,8 @@ class AddValueDialog(Dialog):
                     self.objectStorage.speakSpeech.play(
                         "Значение не распознано, пожалуйста,"
                         " произнесите его еще раз", cashed=True)
+        elif type_m == 'textarea':
+            value = _input.strip()
         else:
             logging.error("Unknown type %s" % self.category["type"])
             return
@@ -306,8 +310,9 @@ class AddValueDialog(Dialog):
             self.objectStorage.host+'/speakerapi/pushvalue/',
             json={
                 'token': self.objectStorage.token,
-                'data': [{
-                    'category_name': self.category['name'],
+                'values': [{
+                    'category_name': self.category.get('name', '')
+                    + self.category.get('category', ''),
                     'value': value
                 }]
             })
@@ -320,6 +325,8 @@ class AddValueDialog(Dialog):
                 answer, answer.text[:100]))
 
         self.objectStorage.speakSpeech.play(text, cashed=True)
+        if hasattr(self, 'data') and len(self.data['fields']) > 0:
+            return self.yes_no('да')
 
     cur = first
     name = 'Отправить значение измерения'

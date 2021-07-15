@@ -18,6 +18,8 @@ class Dialog:
         self.objectStorage = objectStorage
 
     def process_input(self, input_str):
+        self.need_permanent_answer = False
+
         if 'хватит' in input_str.lower():
             self.cur = None
             return
@@ -53,26 +55,25 @@ class DialogEngine:
     def _execute_next_dialog(self):
         if self.currentDialog is None and self.dialogQueue:
             logging.debug("Trying to get dialog from queue")
-            self.currentDialog = self.dialogQueue.popleft()
+            self.currentDialog, text = self.dialogQueue.popleft()
             logging.debug("Got dialog from queue")
             self.cur_dialog_time = time.time()
-            self.process_input('')
+            self.process_input(text)
 
-    def add_dialog_to_queue(self, dialog):
+    def add_dialog_to_queue(self, dialog, text=''):
         if self.currentDialog is None:
             self.cur_dialog_time = time.time()
             self.currentDialog = dialog
-            self.process_input('')
+            self.process_input(text)
         else:
             logging.debug("Putting dialog {} into queue".format(dialog))
-            self.dialogQueue.append(dialog)
+            self.dialogQueue.append((dialog, text))
             logging.debug("Puted dialog {} into queue".format(dialog))
             self._execute_next_dialog()
 
     def process_input(self, text: str):
         if self.currentDialog is not None and \
                 (time.time() - self.cur_dialog_time) > self.time_delay:
-            self.currentDialog.cur = None
             self.currentDialog = None
 
         if self.currentDialog is None:

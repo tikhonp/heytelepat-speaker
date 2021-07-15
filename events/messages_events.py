@@ -1,36 +1,14 @@
 from events.event import EventDialog
+from dialogs.dialog import Dialog
 import logging
 import json
 import asyncio
 
 
-class MessageNotificationDialog(EventDialog):
-    def on_message(self, message):
-        try:
-            data = json.loads(message)
-        except json.decoder.JSONDecodeError:
-            logging.error("Error decoding message '%s'", message)
-            return
-        try:
-            self.text = data['text']
-            self.m_id = data['id']
-        except KeyError:
-            logging.error("Invalid keys in data '%s'", data)
-            return
-        self.event_happend = True
-
-    def run(self):
-        logging.debug("Running EventDialog '{}'".format(self.name))
-        loop = asyncio.new_event_loop()
-        while True:
-            loop.run_until_complete(
-                self.webSocketConnect(
-                    'ws/speakerapi/incomingmessage/',
-                    {
-                        "token": self.objectStorage.token,
-                    },
-                    self.on_message,
-                ))
+class MessageNotificationDialog(Dialog):
+    text = None
+    m_id = None
+    ws = None
 
     def first(self, _input):
         self.objectStorage.speakSpeech.play(
@@ -61,4 +39,44 @@ class MessageNotificationDialog(EventDialog):
                 "Сообщение не помечено как прочитанное", cashed=True)
 
     cur = first
+    name = 'Уведомление о новом сообщении'
+
+
+class MessageNotificationEvent(EventDialog):
+    dialog_class = MessageNotificationDialog
+
+    def on_message(self, message):
+        try:
+            data = json.loads(message)
+        except json.decoder.JSONDecodeError:
+            logging.error("Error decoding message '%s'", message)
+            return
+        try:
+            self.text = data['text']
+            self.m_id = data['id']
+        except KeyError:
+            logging.error("Invalid keys in data '%s'", data)
+            return
+        self.event_happend = True
+
+    def run(self):
+        logging.debug("Running EventDialog '{}'".format(self.name))
+        loop = asyncio.new_event_loop()
+        while True:
+            loop.run_until_complete(
+                self.webSocketConnect(
+                    'ws/speakerapi/incomingmessage/',
+                    {
+                        "token": self.objectStorage.token,
+                    },
+                    self.on_message,
+                ))
+
+    def return_dialog(self, *args, **kwargs):
+        dialog = self.get_dialog(self.objectStorage)
+        dialog.text = self.text
+        dialog.m_id = self.m_id
+        dialog.ws = self.ws
+        return dialog
+
     name = 'Уведомление о новом сообщении'

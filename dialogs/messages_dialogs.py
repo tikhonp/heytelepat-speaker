@@ -1,7 +1,7 @@
 from dialogs.dialog import Dialog
 import logging
 import requests
-import datetime
+from dateutil import parser
 
 
 class SendMessageDialog(Dialog):
@@ -77,13 +77,12 @@ class NewMessagesDialog(Dialog):
             return
 
         for i in answer:
-            date = datetime.datetime.strptime(
-                i['fields']['date'], "%Y-%m-%dT%H:%M:%SZ")
+            date = parser.parse(i['date'])
             date_str = date.astimezone().strftime(
                 "%A, %-d %B, %H:%M")
 
             text = "Сообщение. От {}. {}".format(
-                date_str, i['fields']['text'])
+                date_str, i['text'])
             self.objectStorage.speakSpeech.play(text)
             self.objectStorage.event_obj.wait(0.5)
 
