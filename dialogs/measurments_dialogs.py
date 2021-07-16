@@ -1,6 +1,8 @@
 from dialogs.dialog import Dialog
 import requests
 import logging
+import asyncio
+import json
 
 
 categories = [
@@ -327,6 +329,13 @@ class AddValueDialog(Dialog):
         self.objectStorage.speakSpeech.play(text, cashed=True)
         if hasattr(self, 'data') and len(self.data['fields']) > 0:
             return self.yes_no('да')
+        if hasattr(self, 'ws'):
+            asyncio.new_event_loop().run_until_complete(
+                self.ws.send(json.dumps({
+                    'token': self.objectStorage.token,
+                    'request_type': 'is_done',
+                    'measurement_id': self.data['id'],
+                })))
 
     cur = first
     name = 'Отправить значение измерения'
