@@ -7,4 +7,5 @@ dialogs_list = [
     messages_dialogs.NewMessagesDialog,
     messages_dialogs.SendMessageDialog,
     measurments_dialogs.AddValueDialog,
+    measurments_dialogs.CommitFormsDialog,
 ]

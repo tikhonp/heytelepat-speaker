@@ -1,6 +1,4 @@
 from dialogs.dialog import Dialog
-import logging
-import requests
 from dateutil import parser
 
 
@@ -21,22 +19,16 @@ class SendMessageDialog(Dialog):
     def submit(self, _input):
         text = _input.lower().strip()
         if 'да' in text:
-            answer = requests.post(
-                self.objectStorage.host+"/speakerapi/getlistcategories/",
-                json={
-                    'token': self.objectStorage.token,
-                    'message': self.message,
-                })
+            if self.fetch_data(
+                    'post',
+                    self.objectStorage.host+"/speakerapi/sendmessage/",
+                    json={
+                        'token': self.objectStorage.token,
+                        'message': self.message,
+                    }):
 
-            if answer.status_code == 200:
-                text = "Сообщение успешно отправлено!"
-            else:
-                text = "Произошла ошибка приотправлении сообщения"
-                logging.error("Message send err {} {}".format(
-                    answer, answer.text[:100]))
-
-            self.objectStorage.speakSpeech.play(text, cashed=True)
-
+                self.objectStorage.speakSpeech.play(
+                    "Сообщение успешно отправлено!", cashed=True)
         else:
             self.objectStorage.speakSpeech.play(
                 "Хотите продиктовать сообщение повторно?", cashed=True)
@@ -55,23 +47,15 @@ class SendMessageDialog(Dialog):
 
 class NewMessagesDialog(Dialog):
     def first(self, _input):
-        answer = requests.get(
-            self.objectStorage.host+'/speakerapi/incomingmessage/',
-            json={
-                'token': self.objectStorage.token,
-                'last_messages': True
-            })
-
-        if answer.status_code != 200:
-            self.objectStorage.speakSpeech.play(
-                "Произошла ошибка при загрузке сообщений", cashed=True)
-            logging.error("Message send err {} {}".format(
-                    answer, answer.text))
+        if (answer := self.fetch_data(
+                    'get',
+                    self.objectStorage.host+'/speakerapi/incomingmessage/',
+                    json={
+                        'token': self.objectStorage.token,
+                    })) is None:
             return
 
-        answer = answer.json()
-
-        if len(answer) == 0:
+        if not answer:
             self.objectStorage.speakSpeech.play(
                 "Новых сообщений нет", cashed=True)
             return

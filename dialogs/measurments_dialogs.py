@@ -1,5 +1,4 @@
 from dialogs.dialog import Dialog
-import requests
 import logging
 import asyncio
 import json
@@ -304,29 +303,28 @@ class AddValueDialog(Dialog):
                         " произнесите его еще раз", cashed=True)
         elif type_m == 'textarea':
             value = _input.strip()
+            if self.category.get('category', '') == 'information':
+                if _input.strip().lower() == 'нет':
+                    value = None
         else:
             logging.error("Unknown type %s" % self.category["type"])
             return
 
-        answer = requests.post(
-            self.objectStorage.host+'/speakerapi/pushvalue/',
-            json={
-                'token': self.objectStorage.token,
-                'values': [{
-                    'category_name': self.category.get('name', '')
-                    + self.category.get('category', ''),
-                    'value': value
-                }]
-            })
+        if value is not None:
+            if self.fetch_data(
+                    'post',
+                    self.objectStorage.host+'/speakerapi/pushvalue/',
+                    json={
+                        'token': self.objectStorage.token,
+                        'values': [{
+                            'category_name': self.category.get('name', '')
+                            + self.category.get('category', ''),
+                            'value': value
+                        }]
+                    }):
+                self.objectStorage.speakSpeech.play(
+                    "Значение успешно отправлено.", cashed=True)
 
-        if answer.status_code == 200:
-            text = "Значение успешно отправлено."
-        else:
-            text = "Произошла ошибка при отправлении значения"
-            logging.error("Value send err {} {}".format(
-                answer, answer.text[:100]))
-
-        self.objectStorage.speakSpeech.play(text, cashed=True)
         if hasattr(self, 'data') and len(self.data['fields']) > 0:
             return self.yes_no('да')
         if hasattr(self, 'ws'):
@@ -340,3 +338,118 @@ class AddValueDialog(Dialog):
     cur = first
     name = 'Отправить значение измерения'
     keywords = ['измерени', 'значени']
+
+
+class CommitFormsDialog(Dialog):
+    def first(self, _input):
+        if answer := self.fetch_data(
+                'get',
+                self.objectStorage.host+'/speakerapi/measurements/',
+                json={
+                    'token': self.objectStorage.token,
+                    'request_type': 'get'
+                }):
+            if len(answer) == 0:
+                self.objectStorage.speakSpeech.play(
+                    "Нет незаплоненных опросников", cashed=True)
+                return
+
+            self.data = answer
+            self.first_t(_input)
+
+    def first_t(self, _input):
+        if hasattr(self, 'current'):
+            self.fetch_data(
+                'patch',
+                self.objectStorage.host+'/speakerapi/measurements/',
+                json={
+                    'token': self.objectStorage.token,
+                    'request_type': 'is_done',
+                    'measurement_id': self.current['id']
+                })
+
+        if self.data:
+            self.current = self.data.pop(0)
+            self.objectStorage.speakSpeech.play(
+                self.current['patient_description']
+                + " Вы готовы произнести ответ сейчас?")
+            if not self.current['is_sent']:
+                self.fetch_data(
+                    'patch',
+                    self.objectStorage.host+'/speakerapi/measurements/',
+                    json={
+                        'token': self.objectStorage.token,
+                        'request_type': 'is_sent',
+                        'measurement_id': self.current['id']
+                    })
+            self.cur = self.yes_no
+            self.need_permanent_answer = True
+        else:
+            self.objectStorage.speakSpeech.play(
+                "Спасибо за заполнение опросника", cashed=True)
+
+    def yes_no(self, _input):
+        if 'да' in _input.lower():
+            self.category = self.current['fields'].pop(0)
+            self.objectStorage.speakSpeech.play(
+                "Произнесите значение {}".format(self.category.get('text')))
+            self.cur = self.third
+            self.need_permanent_answer = True
+            return
+        else:
+            self.objectStorage.speakSpeech.play(
+                "Введите значение позже с помощию"
+                " команды 'запистать значение'", cashed=True)
+
+    def third(self, _input):
+        type_m = self.category.get('type', '') \
+            + self.category.get('value_type', '')
+        if type_m == "integer":
+            if not _input.isdigit():
+                self.objectStorage.speakSpeech.play(
+                    "Значение не распознано, пожалуйста,"
+                    " произнесите его еще раз", cashed=True)
+                return
+        elif type_m == "float":
+            if _input.isdigit():
+                value = int(_input)
+            elif 'и' in _input.lower():
+                d = [i.strip() for i in _input.lower().split('и')]
+                if sum([i.isdigit() for i in d]) and len(d) == 2:
+                    value = float(".".join(d))
+                else:
+                    self.objectStorage.speakSpeech.play(
+                        "Значение не распознано, пожалуйста,"
+                        " произнесите его еще раз", cashed=True)
+        elif type_m == 'textarea':
+            value = _input.strip()
+            if self.category.get('category', '') == 'information':
+                if _input.strip().lower() == 'нет':
+                    value = None
+        else:
+            logging.error("Unknown type %s" % self.category["type"])
+            return
+
+        if value is not None:
+            if self.fetch_data(
+                    'post',
+                    self.objectStorage.host+'/speakerapi/pushvalue/',
+                    json={
+                        'token': self.objectStorage.token,
+                        'values': [{
+                            'category_name': self.category.get('name', '')
+                            + self.category.get('category', ''),
+                            'value': value
+                        }]
+                    }):
+                self.objectStorage.speakSpeech.play(
+                    "Значение успешно отправлено.", cashed=True)
+
+        if len(self.current['fields']) > 0:
+            return self.yes_no('да')
+        else:
+            return self.first_t(_input)
+
+    cur = first
+    name = 'Заполнить незаполненные опросники'
+    keywords = ['заполни', 'опросник']

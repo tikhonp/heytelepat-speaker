@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import json
+import datetime
 
 from dialogs.measurments_dialogs import (
     AddValueDialog,
@@ -11,11 +12,12 @@ from events.event import EventDialog
 class MeasurementNotificationDialog(AddValueDialog):
     data = None
     ws = None
+    dialog_time = None
 
     def first(self, _input):
         self.objectStorage.speakSpeech.play(
             self.data['patient_description']
-            + " Вы готовы произнести ответ сейчас?", cashed=True)
+            + " Вы готовы произнести ответ сейчас?")
         asyncio.new_event_loop().run_until_complete(
             self.ws.send(json.dumps({
                 'token': self.objectStorage.token,
@@ -36,13 +38,21 @@ class MeasurementNotificationDialog(AddValueDialog):
             self.objectStorage.speakSpeech.play(
                 "Введите значение позже с помощию"
                 " команды 'запистать значение'", cashed=True)
-            return
+            dialog = self.__class__(self.objectStorage)
+            dialog.data = self.data
+            dialog.ws = self.ws
+            dialog.dialog_time = self.dialog_time
+
+            self.dialog_time.append(
+                (datetime.datetime.now() + datetime.timedelta(minutes=5),
+                 dialog))
 
     cur = first
 
 
 class MeasurementNotificationEvent(EventDialog):
     dialog_class = MeasurementNotificationDialog
+    dialog_time = []
 
     def on_message(self, message):
         self.data = json.loads(message)
@@ -67,6 +77,10 @@ class MeasurementNotificationEvent(EventDialog):
         dialog = self.get_dialog(self.objectStorage)
         dialog.data = self.data
         dialog.ws = self.ws
+        dialog.dialog_time = self.dialog_time
         return dialog
+
+    def get_dialog_time(self):
+        return self.dialog_time.pop(0) if self.dialog_time else False
 
     name = "Уведомление об измерении"

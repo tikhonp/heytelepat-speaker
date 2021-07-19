@@ -1,6 +1,7 @@
 import logging
 from collections import deque
 import time
+import requests
 
 
 class Dialog:
@@ -38,6 +39,17 @@ class Dialog:
     def __str__(self):
         return self.name
 
+    def fetch_data(self, request_type: str, *args, **kwargs):
+        answer = getattr(requests, request_type)(*args, **kwargs)
+        if answer.status_code == 200:
+            return answer.json()
+        else:
+            self.objectStorage.speakSpeech.play(
+                "Ошибка соединения с сетью.", cashed=True)
+            logging.error(
+                "Error in requests, status code: '{}', answer: '{}'".format(
+                    answer.status_code, answer.text[:100]))
+
 
 class DialogEngine:
     def __init__(self, objectStorage, dialogs):
@@ -72,6 +84,7 @@ class DialogEngine:
             self._execute_next_dialog()
 
     def process_input(self, text: str):
+        logging.debug("Processing input in DialogEngine")
         if self.currentDialog is not None and \
                 (time.time() - self.cur_dialog_time) > self.time_delay:
             self.currentDialog = None

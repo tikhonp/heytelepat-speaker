@@ -5,9 +5,9 @@ import websockets
 import asyncio
 
 
-async def webSocketAuth(domen: str, token: str, port=8001):
-    url = 'ws://{}:{}/ws/speakerapi/init/checkauth/'.format(
-        domen.split('/')[2], str(port))
+async def webSocketAuth(domen: str, token: str):
+    url = 'ws://{}/ws/speakerapi/init/checkauth/'.format(
+        domen.split('/')[2])
 
     try:
         async with websockets.connect(url) as ws:
