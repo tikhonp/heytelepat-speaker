@@ -305,7 +305,9 @@ class AddValueDialog(Dialog):
             value = _input.strip()
             if self.category.get('category', '') == 'information':
                 if _input.strip().lower() == 'нет':
-                    value = None
+                    value = ''
+            if prefix := self.category.get('prefix', False):
+                value = prefix + ' ' + value
         else:
             logging.error("Unknown type %s" % self.category["type"])
             return
@@ -426,6 +428,8 @@ class CommitFormsDialog(Dialog):
             if self.category.get('category', '') == 'information':
                 if _input.strip().lower() == 'нет':
                     value = None
+            if prefix := self.category.get('prefix', False):
+                value = prefix + ' ' + value
         else:
             logging.error("Unknown type %s" % self.category["type"])
             return

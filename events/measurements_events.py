@@ -37,15 +37,15 @@ class MeasurementNotificationDialog(AddValueDialog):
         else:
             self.objectStorage.speakSpeech.play(
                 "Введите значение позже с помощию"
-                " команды 'запистать значение'", cashed=True)
-            dialog = self.__class__(self.objectStorage)
-            dialog.data = self.data
-            dialog.ws = self.ws
-            dialog.dialog_time = self.dialog_time
+                " команды 'заполнить опросники'", cashed=True)
+            # dialog = self.__class__(self.objectStorage)
+            # dialog.data = self.data
+            # dialog.ws = self.ws
+            # dialog.dialog_time = self.dialog_time
 
-            self.dialog_time.append(
-                (datetime.datetime.now() + datetime.timedelta(minutes=5),
-                 dialog))
+            # self.dialog_time.append(
+                # (datetime.datetime.now() + datetime.timedelta(minutes=5),
+                 # dialog))
 
     cur = first
 
