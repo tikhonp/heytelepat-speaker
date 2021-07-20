@@ -1,10 +1,12 @@
-from speechkit import speechkit
-import speech_recognition as sr
-import simpleaudio as sa
 import pickle
-from utils import pixels
 import logging
 import requests
+
+import speech_recognition as sr
+import simpleaudio as sa
+import speechkit
+
+from utils import pixels
 
 
 def playaudiofunction(
@@ -38,14 +40,16 @@ class SynthesizedSpeech:
         self.playaudiofunction = speech_cls.playaudiofunction
         self.text = text
         self.audio_data = None
+        self.folderId = speech_cls.objectStorage.catalog
 
     def syntethize(self):
         """
         Creates buffer io wav file that next can be plaeyed
         """
         self.audio_data = self.synthesizeAudio.synthesize_stream(
-                self.text, lpcm=True,
-                sampleRateHertz=self.synthesisSampleRateHertz)
+            text=self.text, voice='alena', format='lpcm',
+            sampleRateHertz=str(self.synthesisSampleRateHertz),
+            folderId=self.folderId)
 
     def play(self):
         """
@@ -79,7 +83,8 @@ class RecognizeSpeech:
         self.speech.pixels.think()
         logging.info("Got audio input, recognizing...")
         text = self.speech.recognizeShortAudio.recognize(
-                self.io_vaw, self.speech.catalog, self.sample_rate)
+            self.io_vaw, folderId=self.speech.catalog, format='lpcm',
+            sampleRateHertz=str(self.sample_rate))
         if text.strip() == '':
             text = None
         logging.info("RECOGNIZED TEXT '{}'".format(text))
@@ -93,7 +98,7 @@ class Speech:
                  timeout_speech=10,
                  phrase_time_limit=15,
                  recognizingSampleRateHertz=16000,
-                 synthesisSampleRateHertz=48000):
+                 synthesisSampleRateHertz=16000):
         """
         Class that realase speech recognition and synthesize methods
         :param api_key: string Yandex API key
@@ -109,7 +114,7 @@ class Speech:
         self.objectStorage = objectStorage
         try:
             self.synthesizeAudio = speechkit.SynthesizeAudio(
-                objectStorage.api_key, objectStorage.catalog)
+                objectStorage.api_key)
             self.recognizeShortAudio = speechkit.RecognizeShortAudio(
                 objectStorage.api_key)
         except requests.exceptions.ConnectionError:
@@ -135,7 +140,7 @@ class Speech:
             raise Exception("speechkit already initilised")
 
         self.synthesizeAudio = speechkit.SynthesizeAudio(
-                self.api_key, self.catalog)
+                self.api_key)
         self.recognizeShortAudio = speechkit.RecognizeShortAudio(
                 self.api_key)
 
