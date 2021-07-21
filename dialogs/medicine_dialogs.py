@@ -18,7 +18,7 @@ class CheckMedicinesDialog(Dialog):
             self.first_t(_input)
         elif isinstance(answer, list):
             self.objectStorage.speakSpeech.play(
-                "Нет препаратов которые необходимо принять", cashed=True)
+                "Нет препаратов которые необходимо принять", cache=True)
 
     def first_t(self, _input):
         if self.data:
@@ -33,7 +33,7 @@ class CheckMedicinesDialog(Dialog):
             self.need_permanent_answer = True
         else:
             self.objectStorage.speakSpeech.play(
-                "Спасибо за заполнение уведомление о выпитых препаратах", cashed=True
+                "Спасибо за заполнение уведомление о выпитых препаратах", cache=True
             )
 
     def commit_medicine_status(self, type: str):
@@ -57,11 +57,11 @@ class CheckMedicinesDialog(Dialog):
                 }
             )
             self.commit_medicine_status('is_done')
-            self.objectStorage.speakSpeech.play("Отлично!", cashed=True)
+            self.objectStorage.speakSpeech.play("Отлично!", cache=True)
             return self.first_t(_input)
         else:
             self.objectStorage.speakSpeech.play(
-                "Подтвердите прием позже с помощью комманды 'какие лекарства необходимо принять'", cashed=True
+                "Подтвердите прием позже с помощью комманды 'какие лекарства необходимо принять'", cache=True
             )
 
     cur = first
@@ -72,7 +72,7 @@ class CheckMedicinesDialog(Dialog):
 class CommitMedicineDialog(Dialog):
     def first(self, _input):
         self.objectStorage.speakSpeech.play(
-            "Какое лекарство вы приняли?", cashed=True
+            "Какое лекарство вы приняли?", cache=True
         )
         self.cur = self.yes_no
         self.need_permanent_answer = True

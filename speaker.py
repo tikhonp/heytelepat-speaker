@@ -8,7 +8,7 @@ from pathlib import Path
 parser = argparse.ArgumentParser(description="Speaker for telepat.")
 parser.add_argument('-r', '--reset', help="reset speaker token and init",
                     action='store_true')
-parser.add_argument('-cc', '--clean_cash', help="clean cashed speeches",
+parser.add_argument('-cc', '--clean_cash', help="clean cache speeches",
                     action='store_true')
 parser.add_argument('-d', '--development',
                     help="Development mode, can't be used with button",

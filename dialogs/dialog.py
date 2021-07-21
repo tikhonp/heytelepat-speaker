@@ -76,7 +76,7 @@ class Dialog:
             return answer.json()
         else:
             self.objectStorage.speakSpeech.play(
-                "Ошибка соединения с сетью.", cashed=True)
+                "Ошибка соединения с сетью.", cache=True)
             logging.error(
                 "Error in requests, status code: '{}', answer: '{}'".format(
                     answer.status_code, answer.text[:100]))
@@ -127,7 +127,7 @@ class DialogEngine:
         if self.currentDialog is None:
             with self.objectStorage.lock_obj:
                 self.objectStorage.speakSpeech.play(
-                    "К сожалению, я не знаю что ответить", cashed=True)
+                    "К сожалению, я не знаю что ответить", cache=True)
             return
 
         logging.debug(

@@ -61,7 +61,7 @@ class MessageNotification:
         except requests.exceptions.ConnectTimeout:
             print("ERROR WITH GETTING DATA FROM SERVER! Timeout.") 
             self.speakSpeech.play(
-                    "Сервер не доступен.", cashed=True)
+                    "Сервер не доступен.", cache=True)
             return
 
         answer = answer.json()
@@ -136,7 +136,7 @@ class MeasurementNotification:
 
     def __repeat_recognition__(self, n=1):
         self.speakSpeech.play(
-            "Я не расслышал, повторите, пожалуйста еще.", cashed=True)
+            "Я не расслышал, повторите, пожалуйста еще.", cache=True)
 
         recognizeSpeech = self.speech.read_audio()
 
@@ -161,7 +161,7 @@ class MeasurementNotification:
         task = self.tasks[task_id]
 
         self.speakSpeech.play(
-            "Привет! Вам необходимо произвести измермерение и отправить врачу. Сможете это сделать сейчас?", cashed=True)
+            "Привет! Вам необходимо произвести измермерение и отправить врачу. Сможете это сделать сейчас?", cache=True)
 
         status = None
 
@@ -182,7 +182,7 @@ class MeasurementNotification:
 
             status = True
         else:
-            self.speakSpeech.play("Напоминание отложено на час", cashed=True)
+            self.speakSpeech.play("Напоминание отложено на час", cache=True)
 
         if status:
             self.inputFunction()
@@ -202,11 +202,11 @@ class MeasurementNotification:
                 "data": [(task['name'], value)],
             })
             if answer.status_code == 200:
-                self.speakSpeech.play("Значение успешно записано", cashed=True)
+                self.speakSpeech.play("Значение успешно записано", cache=True)
             else:
                 self.speakSpeech.play(
                     "Произошла ошибка при сохраниении измерения",
-                    cashed=True
+                    cache=True
                 )
                 print(answer, answer.text)
 

@@ -21,7 +21,7 @@ class MessageNotificationDialog(Dialog):
                 "message_id": self.data.get('id')
             })))
         self.objectStorage.speakSpeech.play(
-            "Пометить сообщение как прочитанное?", cashed=True)
+            "Пометить сообщение как прочитанное?", cache=True)
         self.cur = self.second
         self.need_permanent_answer = True
 
@@ -34,10 +34,10 @@ class MessageNotificationDialog(Dialog):
                     "message_id": self.data.get('id')
                 })))
             self.objectStorage.speakSpeech.play(
-                "Отлично!", cashed=True)
+                "Отлично!", cache=True)
         else:
             self.objectStorage.speakSpeech.play(
-                "Сообщение не помечено как прочитанное", cashed=True)
+                "Сообщение не помечено как прочитанное", cache=True)
 
     cur = first
     name = 'Уведомление о новом сообщении'

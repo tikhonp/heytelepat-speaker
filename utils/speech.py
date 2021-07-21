@@ -206,17 +206,17 @@ class SpeakSpeech:
         self.data = {}
         self.__store_data__()
 
-    def play(self, text, cashed=False):
+    def play(self, text, cache=False):
         """
         Generate and plays speech with text given
 
         :param string text: text to play
-        :param boolean cashed: if need cash it
+        :param boolean cache: if need cash it
 
         :return none:
         """
         self.pixels.think()
-        if cashed:
+        if cache:
             if text in self.data:
                 logging.debug("Cashed data found, playing it")
                 synthesized_speech = self.data[text]

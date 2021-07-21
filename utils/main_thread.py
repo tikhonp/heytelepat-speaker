@@ -52,7 +52,7 @@ class MainThread(Thread):
 
     def __repeat_recognition__(self, n=1):
         self.speakSpeech.play(
-            "Я не расслышал, повторите, пожалуйста еще.", cashed=True)
+            "Я не расслышал, повторите, пожалуйста еще.", cache=True)
 
         recognizeSpeech = self.speech.read_audio()
 
@@ -97,7 +97,7 @@ class MainThread(Thread):
             action = self.__get_action__(text)
             if action is None:
                 self.speakSpeech.play(
-                    "К сожалению, я еще не знаю такой команды.", cashed=True)
+                    "К сожалению, я еще не знаю такой команды.", cache=True)
                 return
 
             a = action(self.objectStorage)
@@ -120,12 +120,12 @@ class PresureTestAction:
 
     def __execute_task__(self):
         self.speakSpeech.play(
-            "Привет! Вам необходимо произвести измермерение и отправить врачу.", cashed=True)
+            "Привет! Вам необходимо произвести измермерение и отправить врачу.", cache=True)
 
         text_speak = "Пожалуйста, произведите измерение {}. {} Когда будете готовы нажмите на конпку и произнесите значение верхннего давления".format(
                 "давления",
                 "")
-        self.speakSpeech.play(text_speak, cashed=True)
+        self.speakSpeech.play(text_speak, cache=True)
 
         self.inputFunction()
 
@@ -141,11 +141,11 @@ class PresureTestAction:
             svalue = int(text.replace(" ", ""))
         except:
             self.speakSpeech.play(
-                "Значение не соответвсует", cashed=True)
+                "Значение не соответвсует", cache=True)
             return
 
         self.speakSpeech.play(
-            "Произведите измеренние ниижнего давления", cashed=True)
+            "Произведите измеренние ниижнего давления", cache=True)
 
         recognizeSpeech = self.speech.read_audio()
         if recognizeSpeech is None:
@@ -159,7 +159,7 @@ class PresureTestAction:
             dvalue = int(text.replace(" ", ""))
         except:
             self.speakSpeech.play(
-                "Значение не соответвсует", cashed=True)
+                "Значение не соответвсует", cache=True)
             return
 
         answer = requests.post('https://medsenger.ru/api/agents/records/add', json={
@@ -172,7 +172,7 @@ class PresureTestAction:
             pass
         else:
             self.speakSpeech.play(
-                "Произошла ошибка при сохраниении измерения", cashed=True)
+                "Произошла ошибка при сохраниении измерения", cache=True)
             print(answer, answer.text)
 
         answer = requests.post('https://medsenger.ru/api/agents/records/add', json={
@@ -185,11 +185,11 @@ class PresureTestAction:
             pass
         else:
             self.speakSpeech.play(
-                "Произошла ошибка при сохраниении измерения", cashed=True)
+                "Произошла ошибка при сохраниении измерения", cache=True)
             print(answer, answer.text)
 
         self.speakSpeech.play(
-            "Значение успешно записано", cashed=True)
+            "Значение успешно записано", cache=True)
 
     def run(self):
         self.__execute_task__()
@@ -227,7 +227,7 @@ class NewMessagesAction:
 
         if answer.status_code != 200:
             self.speakSpeech.play(
-                "Произошла ошибка при загрузке сообщений", cashed=True)
+                "Произошла ошибка при загрузке сообщений", cache=True)
             print(answer, answer.text)
             return
 
@@ -235,7 +235,7 @@ class NewMessagesAction:
 
         if len(answer) == 0:
             self.speakSpeech.play(
-                "Новых сообщений нет", cashed=True)
+                "Новых сообщений нет", cache=True)
         else:
             for i in answer:
                 date = datetime.datetime.strptime(
@@ -260,7 +260,7 @@ class SendMessageAction:
 
     def __repeat_recognition__(self, n=1):
         self.speakSpeech.play(
-            "Я не расслышал, повторите, пожалуйста еще.", cashed=True)
+            "Я не расслышал, повторите, пожалуйста еще.", cache=True)
 
         recognizeSpeech = self.speech.read_audio()
 
@@ -283,7 +283,7 @@ class SendMessageAction:
 
     def run(self):
         self.speakSpeech.play(
-            "Какое сообщение вы хотите отправить?", cashed=True)
+            "Какое сообщение вы хотите отправить?", cache=True)
 
         recognizeSpeech = self.speech.read_audio()
 
@@ -320,10 +320,10 @@ class SendMessageAction:
                 text = "Произошла ошибка приотправлении сообщения"
                 print(answer, answer.text)
 
-            self.speakSpeech.play(text, cashed=True)
+            self.speakSpeech.play(text, cache=True)
         else:
             self.speakSpeech.play(
-                "Хотите продиктовать сообщение повторно?", cashed=True)
+                "Хотите продиктовать сообщение повторно?", cache=True)
 
             if recognizeSpeech is None:
                 text = self.__repeat_recognition__()

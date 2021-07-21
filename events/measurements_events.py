@@ -38,7 +38,7 @@ class MeasurementNotificationDialog(AddValueDialog):
         else:
             self.objectStorage.speakSpeech.play(
                 "Введите значение позже с помощию"
-                " команды 'заполнить опросники'", cashed=True)
+                " команды 'заполнить опросники'", cache=True)
             # dialog = self.__class__(self.objectStorage)
             # dialog.data = self.data
             # dialog.ws = self.ws

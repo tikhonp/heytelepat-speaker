@@ -5,7 +5,7 @@ from dateutil import parser
 class SendMessageDialog(Dialog):
     def first(self, _input):
         self.objectStorage.speakSpeech.play(
-            "Какое сообщение вы хотите отправить?", cashed=True)
+            "Какое сообщение вы хотите отправить?", cache=True)
         self.cur = self.get_message
         self.need_permanent_answer = True
 
@@ -28,10 +28,10 @@ class SendMessageDialog(Dialog):
                     }):
 
                 self.objectStorage.speakSpeech.play(
-                    "Сообщение успешно отправлено!", cashed=True)
+                    "Сообщение успешно отправлено!", cache=True)
         else:
             self.objectStorage.speakSpeech.play(
-                "Хотите продиктовать сообщение повторно?", cashed=True)
+                "Хотите продиктовать сообщение повторно?", cache=True)
             self.cur = self.repeat
             self.need_permanent_answer = True
 
@@ -57,7 +57,7 @@ class NewMessagesDialog(Dialog):
 
         if not answer:
             self.objectStorage.speakSpeech.play(
-                "Новых сообщений нет", cashed=True)
+                "Новых сообщений нет", cache=True)
             return
 
         for i in answer:

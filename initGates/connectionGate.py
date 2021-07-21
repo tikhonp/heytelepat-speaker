@@ -38,11 +38,11 @@ def wirless_network_init(objectStorage, first=False):
             "Привет! Это колонка Telepat Medsenger. "
             "Для начала работы необходимо подключение к сети. "
             "Для этого сгенерируйте аудиокод с паролем от Wi-Fi.",
-            cashed=True)
+            cache=True)
     else:
         objectStorage.speakSpeech.play(
             "К сожалению подключиться не удалось, "
-            "Попробуйте сгенерировать код еще раз.", cashed=True)
+            "Попробуйте сгенерировать код еще раз.", cache=True)
 
     objectStorage.pixels.think()
     data = get_ggwave_input()
@@ -53,7 +53,7 @@ def wirless_network_init(objectStorage, first=False):
         logging.info("Network is unavailable")
         objectStorage.speakSpeech.play(
             "Пока что сеть недоступна, продолжается попытка подключения",
-            cashed=True)
+            cache=True)
 
     objectStorage.pixels.think()
     n.create(data['psk'])
@@ -80,7 +80,7 @@ def ConnectionGate(objectStorage, systemd=False):
         logging.info("Successfully connected and initilized speechkit")
         if not first:
             objectStorage.speakSpeech.play(
-                "Подключение к беспроводной сети произошло успешно", cashed=True)
+                "Подключение к беспроводной сети произошло успешно", cache=True)
     except Exception as e:
         logging.warning(e)
         pass

@@ -243,7 +243,7 @@ dry_categories = [
 class AddValueDialog(Dialog):
     def first(self, _input):
         self.objectStorage.speakSpeech.play(
-            "Какое значение вы хотите отправить?", cashed=True)
+            "Какое значение вы хотите отправить?", cache=True)
         self.cur = self.second
         self.need_permanent_answer = True
 
@@ -272,12 +272,12 @@ class AddValueDialog(Dialog):
         if self.category is None:
             self.objectStorage.speak.play(
                 "Категория нераспознана, "
-                "пожалуйста, назовите категорию еще раз", cashed=True)
+                "пожалуйста, назовите категорию еще раз", cache=True)
             self.cur = self.second
             return
 
         self.objectStorage.speakSpeech.play(
-            "Произнесите значение", cashed=True)
+            "Произнесите значение", cache=True)
         self.cur = self.third
         self.need_permanent_answer = True
 
@@ -288,7 +288,7 @@ class AddValueDialog(Dialog):
             if not _input.isdigit():
                 self.objectStorage.speakSpeech.play(
                     "Значение не распознано, пожалуйста,"
-                    " произнесите его еще раз", cashed=True)
+                    " произнесите его еще раз", cache=True)
                 return
         elif type_m == "float":
             if _input.isdigit():
@@ -300,7 +300,7 @@ class AddValueDialog(Dialog):
                 else:
                     self.objectStorage.speakSpeech.play(
                         "Значение не распознано, пожалуйста,"
-                        " произнесите его еще раз", cashed=True)
+                        " произнесите его еще раз", cache=True)
         elif type_m == 'textarea':
             value = _input.strip()
             if self.category.get('category', '') == 'information':
@@ -325,7 +325,7 @@ class AddValueDialog(Dialog):
                         }]
                     }):
                 self.objectStorage.speakSpeech.play(
-                    "Значение успешно отправлено.", cashed=True)
+                    "Значение успешно отправлено.", cache=True)
 
         if hasattr(self, 'data') and len(self.data['fields']) > 0:
             return self.yes_no('да')
@@ -356,7 +356,7 @@ class CommitFormsDialog(Dialog):
             self.first_t(_input)
         elif isinstance(answer, list):
             self.objectStorage.speakSpeech.play(
-                "Нет незаплоненных опросников", cashed=True)
+                "Нет незаплоненных опросников", cache=True)
 
     def first_t(self, _input):
         if hasattr(self, 'current'):
@@ -387,7 +387,7 @@ class CommitFormsDialog(Dialog):
             self.need_permanent_answer = True
         else:
             self.objectStorage.speakSpeech.play(
-                "Спасибо за заполнение опросника", cashed=True)
+                "Спасибо за заполнение опросника", cache=True)
 
     def yes_no(self, _input):
         if 'да' in _input.lower():
@@ -400,7 +400,7 @@ class CommitFormsDialog(Dialog):
         else:
             self.objectStorage.speakSpeech.play(
                 "Введите значение позже с помощию"
-                " команды 'запистать значение'", cashed=True)
+                " команды 'запистать значение'", cache=True)
 
     def third(self, _input):
         type_m = self.category.get('type', '') \
@@ -409,7 +409,7 @@ class CommitFormsDialog(Dialog):
             if not _input.isdigit():
                 self.objectStorage.speakSpeech.play(
                     "Значение не распознано, пожалуйста,"
-                    " произнесите его еще раз", cashed=True)
+                    " произнесите его еще раз", cache=True)
                 return
         elif type_m == "float":
             if _input.isdigit():
@@ -421,7 +421,7 @@ class CommitFormsDialog(Dialog):
                 else:
                     self.objectStorage.speakSpeech.play(
                         "Значение не распознано, пожалуйста,"
-                        " произнесите его еще раз", cashed=True)
+                        " произнесите его еще раз", cache=True)
         elif type_m == 'textarea':
             value = _input.strip()
             if self.category.get('category', '') == 'information':
@@ -446,7 +446,7 @@ class CommitFormsDialog(Dialog):
                         }]
                     }):
                 self.objectStorage.speakSpeech.play(
-                    "Значение успешно отправлено.", cashed=True)
+                    "Значение успешно отправлено.", cache=True)
 
         if len(self.current['fields']) > 0:
             return self.yes_no('да')

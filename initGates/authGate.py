@@ -23,7 +23,7 @@ def init(object_storage):
         "Колонка еще не авторизована. "
         "Сейчас я скажу тебе код из 6 цифр, "
         "его надо ввести в окне подключения колонки в medsenger. ",
-        cashed=True)
+        cache=True)
 
     answer = requests.post(object_storage.host + '/speakerapi/init/')
     answer = answer.json()
@@ -49,7 +49,9 @@ def init(object_storage):
 
     logging.info("Authentication passed")
     object_storage.speakSpeech.play(
-        "Отлично! Устройство настроено.", cashed=True)
+        "Отлично! Устройство настроено. Чтобы узнать, о моих возможностях, спросите, 'что ты умеешь?'",
+        cache=True
+    )
 
     return config
 

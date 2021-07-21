@@ -27,28 +27,45 @@ class TimeDialog(Dialog):
 class SetVolumeDialog(Dialog):
     def first(self, _input):
         self.objectStorage.speakSpeech.play(
-                "Какую громкость вы хотите поставить?", cashed=True)
+                "Какую громкость вы хотите поставить?", cache=True)
         self.cur = self.second
         self.need_permanent_answer = True
 
     def second(self, _input):
         if not _input.isdigit():
             self.objectStorage.speakSpeech.play(
-                    "Необходимо указать числовое значение", cashed=True)
+                    "Необходимо указать числовое значение", cache=True)
             return
 
         v = int(_input)
         if v < 1 or v > 100:
             self.objectStorage.speakSpeech.play(
-                "Необходимо значение в промежутке от 1 до 100", cashed=True)
+                "Необходимо значение в промежутке от 1 до 100", cache=True)
             return
 
         m = alsaaudio.Mixer(control='Speaker', cardindex=1)
         m.setvolume(v)
 
         self.objectStorage.speakSpeech.play(
-                "Громкость установлена", cashed=True)
+                "Громкость установлена", cache=True)
 
     cur = first
     name = 'Громкость'
     keywords = ['громкость']
+
+
+class HelpDialog(Dialog):
+    def first(self, _input):
+        self.objectStorage.speakSpeech.play(
+            "Я знаю очень много вещей, например 'который час' и умею общаться с вашим врачём. "
+            "Попросите меня отправить сообщение врачу или спросите: "
+            "'Расскажи о непрочитанных сообщениях', и я прочитаю новые сообщения от врача. "
+            "Я напомню о необходимых опросниках, которые нужно направить врачу, "
+            "а если вы пропустите просто попросите: 'Заполнить опросники.' "
+            "Если вам нужно передать только одно измерение произнесите: 'Записать значение измерения.' "
+            "Чтобы не забыть о лекарствах, спросите 'Какие лекарства мне нужно принять?', "
+            "А чтобы подтвердить прием лекарства скажите 'Подтверди прием.'", cache=True
+        )
+    cur = first
+    name = 'Помощь'
+    keywords = ['умеешь']

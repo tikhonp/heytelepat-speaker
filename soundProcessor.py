@@ -83,13 +83,13 @@ class SoundProcessor(Thread):
 
             if recognizeSpeech is None:
                 self.objectStorage.speakSpeech.play(
-                    "Я не расслышал, повторите, пожалуйста еще.", cashed=True)
+                    "Я не расслышал, повторите, пожалуйста еще.", cache=True)
                 return
 
             text = recognizeSpeech.recognize()
             if text is None:
                 self.objectStorage.speakSpeech.play(
-                    "Я не расслышал, повторите, пожалуйста еще.", cashed=True)
+                    "Я не расслышал, повторите, пожалуйста еще.", cache=True)
                 return
 
             return text

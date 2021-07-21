@@ -37,10 +37,10 @@ class MedicineNotificationDialog(Dialog):
                     'request_type': 'is_done',
                     'measurement_id': self.data['id'],
                 })))
-            self.objectStorage.speakSpeech.play("Отлично!", cashed=True)
+            self.objectStorage.speakSpeech.play("Отлично!", cache=True)
         else:
             self.objectStorage.speakSpeech.play(
-                "Подтвердите прием позже с помощью комманды 'какие лекарства необходимо принять'", cashed=True
+                "Подтвердите прием позже с помощью комманды 'какие лекарства необходимо принять'", cache=True
             )
 
     cur = first
