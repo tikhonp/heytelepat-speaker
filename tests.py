@@ -8,7 +8,7 @@ class TestPlayaudiofunctions(unittest.TestCase):
         with open("tests_data/test_audio.wav", "rb") as f:
             print(f)
             self.assertEqual(
-                speech.playaudiofunction(f.read(), sample_rate=88200),
+                speech.play_audio_function(f.read(), sample_rate=88200),
                 1
             )
 
@@ -18,7 +18,7 @@ class TestSynthesizeSpeech(unittest.TestCase):
         self.speech = speech.Speech(
             "AgAAAAAsHJhgAATuwZCvoKKoLUKfrwvw8kgAFv8",
             "b1gedt47d0j9tltvtjaq",
-            speech.playaudiofunction,
+            speech.play_audio_function,
         )
 
     def test_create_SynthesizeSpeech_instance(self):
@@ -29,7 +29,7 @@ class TestSynthesizeSpeech(unittest.TestCase):
             speech.SynthesizedSpeech,
             msg="Create speech must return SynthesizedSpeech instance"
         )
-        synthesizedSpeech.syntethize()
+        synthesizedSpeech.synthesize()
         synthesizedSpeech.play()
 
 
@@ -38,7 +38,7 @@ class TestSpeechRecognition(unittest.TestCase):
         self.speech = speech.Speech(
             "AgAAAAAsHJhgAATuwZCvoKKoLUKfrwvw8kgAFv8",
             "b1gedt47d0j9tltvtjaq",
-            speech.playaudiofunction,
+            speech.play_audio_function,
         )
 
     def test_adjustVolume(self):

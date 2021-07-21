@@ -45,10 +45,10 @@ class ObjectStorage:
         else:
             self.pixels = pixels.Pixels(development)
 
-        if 'playaudiofunction' in kwargs:
-            self.playaudiofunction = kwargs['playaudiofunction']
+        if 'play_audio_function' in kwargs:
+            self.play_audio_function = kwargs['play_audio_function']
         else:
-            self.playaudiofunction = None
+            self.play_audio_function = None
 
         if 'event_obj' in kwargs:
             self.event_obj = kwargs['event_obj']
@@ -63,8 +63,8 @@ class ObjectStorage:
         if 'speech_cls' in kwargs:
             self.speech = kwargs['speech_cls']
         else:
-            if self.playaudiofunction is None:
-                raise Exception("You must provide playaudiofunction")
+            if self.play_audio_function is None:
+                raise Exception("You must provide play_audio_function")
             self.speech = speech.Speech(self)
 
         if 'speakSpeech_cls' in kwargs:
@@ -72,7 +72,7 @@ class ObjectStorage:
         else:
             self.speakSpeech = speech.SpeakSpeech(
                 self.speech, self.cash_filename,
-                self.pixels, sample_rate=16000)
+                self.pixels)
 
     @property
     def api_key(self):
@@ -128,7 +128,7 @@ def ConfigGate(
         inputFunc,
         config_filename,
         development,
-        playaudiofunction=speech.playaudiofunction,
+        play_audio_function=speech.play_audio_function,
         debug_mode=debug_mode,
     )
 

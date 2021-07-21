@@ -3,16 +3,15 @@ LED light pattern like Google Home
 """
 
 import logging
+import time
+import threading
+from queue import Queue
+
 try:
     from utils import apa102
 except ImportError:
-    logging.warning("Pixels unavailible spidev error")
-import time
-import threading
-try:
-    import queue as Queue
-except ImportError:
-    import Queue as Queue
+    logging.warning("Pixels unavailable spi_dev error")
+    apa102 = None
 
 
 class Pixels:
@@ -33,18 +32,18 @@ class Pixels:
         self.dev = apa102.APA102(num_led=self.PIXELS_N)
 
         self.next = threading.Event()
-        self.queue = Queue.Queue()
+        self.queue = Queue()
         self.thread = threading.Thread(target=self._run)
         self.thread.daemon = True
         self.thread.start()
 
-    def wakeup(self, direction=0):
+    def wakeup(self):
         if self.development:
             logging.info("Pixels in development mode, WAKEUP")
             return
 
         def f():
-            self._wakeup(direction)
+            self._wakeup()
 
         self.next.set()
         self.queue.put(f)
@@ -82,7 +81,8 @@ class Pixels:
             func = self.queue.get()
             func()
 
-    def _wakeup(self, direction=0):
+    def _wakeup(self):
+        colors = [0] * 3 * self.PIXELS_N
         for i in range(1, 25):
             colors = [i * v for v in self.basis]
             self.write(colors)
@@ -91,6 +91,7 @@ class Pixels:
         self.colors = colors
 
     def _listen(self):
+        colors = [0] * 3 * self.PIXELS_N
         for i in range(1, 25):
             colors = [i * v for v in self.basis]
             self.write(colors)

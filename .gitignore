@@ -133,3 +133,4 @@ dmypy.json
 *.swp
 
 cash.data
+.idea/

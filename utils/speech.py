@@ -9,14 +9,16 @@ import speechkit
 from utils import pixels
 
 
-def playaudiofunction(
-        io_vaw,
-        num_channels=1,
-        bytes_per_sample=2,
-        sample_rate=44100):
+def play_audio_function(io_vaw, num_channels=1, bytes_per_sample=2, sample_rate=48000):
     """
     Function to play audio, that can be changed on different devices
-    : param io_vaw: byte array vaw audio
+
+    :param io.BytesIO io_vaw: byte array vaw audio
+    :param integer num_channels: Count of channels in audio, for stereo set `2`
+    :param integer bytes_per_sample: number of bytes per second (16 bit = 2 bytes)
+    :param integer sample_rate: Sample rate of audio, default `48000`
+
+    :return None:
     """
     play_obj = sa.play_buffer(
         io_vaw,
@@ -25,41 +27,39 @@ def playaudiofunction(
         sample_rate,
     )
     play_obj.wait_done()
-    return 1
 
 
 class SynthesizedSpeech:
     def __init__(self, text, speech_cls):
         """
-        Creates one sentence with method to syntethize and play
-        : param text: string text to syntheze
-        : param speech: object of Speech class
+        Creates one sentence with method to synthesize and play
+
+        :param string text: string text to synthesize
+        :param Speech speech_cls: object of Speech class
         """
         self.synthesisSampleRateHertz = speech_cls.synthesisSampleRateHertz
         self.synthesizeAudio = speech_cls.synthesizeAudio
-        self.playaudiofunction = speech_cls.playaudiofunction
+        self.play_audio_function = speech_cls.play_audio_function
         self.text = text
         self.audio_data = None
         self.folderId = speech_cls.objectStorage.catalog
 
-    def syntethize(self):
-        """
-        Creates buffer io wav file that next can be plaeyed
-        """
+    def synthesize(self):
+        """Creates buffer io wav file that next can be played"""
+
         self.audio_data = self.synthesizeAudio.synthesize_stream(
             text=self.text, voice='alena', format='lpcm',
             sampleRateHertz=str(self.synthesisSampleRateHertz),
             folderId=self.folderId)
 
     def play(self):
-        """
-        Plays created wav with speakers
-        """
+        """Plays created wav with speakers"""
+
         logging.info("PLAYS TEXT '{}'".format(self.text))
         if self.audio_data is None:
             raise Exception(
                 "Audio did not synthesized, please run \"synthesize\" first.")
-        self.playaudiofunction(
+        self.play_audio_function(
             self.audio_data, sample_rate=self.synthesisSampleRateHertz)
 
 
@@ -67,18 +67,18 @@ class RecognizeSpeech:
     def __init__(self, io_vaw, speech, sample_rate):
         """
         Recognizes text from given bytesio vaw
-        : param io_vaw: bytesio array with audio vaw
-        : param speech: object of Speech class
+
+        :param io.BytesIO io_vaw: bytesio array with audio vaw
+        :param Speech speech: object of Speech class
+        :param integer sample_rate: Sample rate of audio
         """
 
         self.io_vaw = io_vaw
         self.speech = speech
         self.sample_rate = sample_rate
 
-    def recognize(self):
-        """
-        Starting streaming to yandex api and return recognize text
-        """
+    def recognize(self) -> str:
+        """Starting streaming to yandex api and return recognize text"""
 
         self.speech.pixels.think()
         logging.info("Got audio input, recognizing...")
@@ -93,68 +93,62 @@ class RecognizeSpeech:
 
 
 class Speech:
+    """Class that realise speech recognition and synthesize methods"""
+
     def __init__(self,
-                 objectStorage,
+                 object_storage,
                  timeout_speech=10,
                  phrase_time_limit=15,
-                 recognizingSampleRateHertz=16000,
-                 synthesisSampleRateHertz=16000):
+                 recognizing_sample_rate_hertz=16000,
+                 synthesis_sample_rate_hertz=16000):
         """
-        Class that realase speech recognition and synthesize methods
-        :param api_key: string Yandex API key
-        :param catalog: string Yandex catalog
-        :param playaudiofunction: function to play vaw bytesio
-        :param pixels: instance of Pixels() object to control leds
-        :param timeout_speech: parameter is the maximum number of seconds
-                                    that this will wait for a phrase
-        :param phrase_time_limit: parameter is the maximum number of seconds
-                                    that this will allow a phrase to continue
+        :param ObjectStorage object_storage: ObjectStorage instance
+        :param integer timeout_speech: parameter is the maximum number of seconds that this will wait for a phrase
+        :param integer phrase_time_limit: parameter is the maximum seconds that this will allow a phrase to continue
+        :param integer recognizing_sample_rate_hertz: sample rate for recording audio
+        :param integer synthesis_sample_rate_hertz: sample rate for playing audio
         """
 
-        self.objectStorage = objectStorage
+        self.objectStorage = object_storage
         try:
             self.synthesizeAudio = speechkit.SynthesizeAudio(
-                objectStorage.api_key)
+                object_storage.api_key)
             self.recognizeShortAudio = speechkit.RecognizeShortAudio(
-                objectStorage.api_key)
+                object_storage.api_key)
         except requests.exceptions.ConnectionError:
-            self.api_key = objectStorage.api_key
-            logging.warning("Network is unavailable, speeckit is None")
+            self.api_key = object_storage.api_key
+            logging.warning("Network is unavailable, speechkit is None")
 
-        self.recognizingSampleRateHertz = recognizingSampleRateHertz
-        self.synthesisSampleRateHertz = synthesisSampleRateHertz
-        self.playaudiofunction = objectStorage.playaudiofunction
-        self.pixels = objectStorage.pixels
+        self.recognizingSampleRateHertz = recognizing_sample_rate_hertz
+        self.synthesisSampleRateHertz = synthesis_sample_rate_hertz
+        self.play_audio_function = object_storage.play_audio_function
+        self.pixels = object_storage.pixels
 
         self.recognizer = sr.Recognizer()
 
-        self.catalog = objectStorage.catalog
+        self.catalog = object_storage.catalog
         self.timeout_speech = timeout_speech
         self.phrase_time_limit = phrase_time_limit
 
     def init_speechkit(self):
-        """
-        If speechkit was not initilized becouse network down, it inits
-        """
+        """If speechkit was not initialized because network down, it init"""
+
         if self.api_key is None:
-            raise Exception("speechkit already initilised")
+            raise Exception("speechkit already initialised")
 
         self.synthesizeAudio = speechkit.SynthesizeAudio(
                 self.api_key)
         self.recognizeShortAudio = speechkit.RecognizeShortAudio(
                 self.api_key)
 
-    def create_speech(self, text: str):
-        """
-        Creates inctance of SynthesizedSpeech to be used for synth later
-        """
+    def create_speech(self, text: str) -> SynthesizedSpeech:
+        """Creates instance of SynthesizedSpeech to be used for synth later"""
+
         return SynthesizedSpeech(text, self)
 
     def read_audio(self):
-        """
-        Starting reading audio and if there is audio creates instance
-                                                of RecognizeSpeech or None
-        """
+        """Starting reading audio and if there is audio creates instance of RecognizeSpeech or None"""
+
         try:
             with sr.Microphone() as source:
                 self.pixels.listen()
@@ -169,7 +163,7 @@ class Speech:
                 return RecognizeSpeech(
                     data_sound, self, self.recognizingSampleRateHertz)
         except sr.WaitTimeoutError:
-            return None
+            return
 
     def adjust_for_ambient_noise(self, duration=1):
         with sr.Microphone() as source:
@@ -177,22 +171,22 @@ class Speech:
 
 
 class SpeakSpeech:
-    """
-    Generates playes and cashes speech generated in Speech class
-    """
+    """Generates plays and cashes speech generated in Speech class"""
+
     def __init__(self,
-                 speech_cls: Speech,
-                 cashed_data_filename: str,
-                 pixels: pixels.Pixels,
-                 sample_rate=48000):
+                 speech_cls,
+                 cashed_data_filename,
+                 pixels_obj):
         """
-        :param speech_cls: object of Speech class
-        :cashed_data_filename: filename of pickle data
+        :param Speech speech_cls: object of Speech class
+        :param string cashed_data_filename: filename of pickle data
+        :param pixels.Pixels pixels_obj: Object to control LEDs
         """
-        self.pixels = pixels
+        self.pixels = pixels_obj
         self.speech = speech_cls
         self.cashed_data_filename = cashed_data_filename
-        self.sample_rate = sample_rate
+        self.sample_rate = speech_cls.synthesisSampleRateHertz
+        self.data = {}
         self.__load_data__()
 
     def __load_data__(self):
@@ -212,40 +206,43 @@ class SpeakSpeech:
         self.data = {}
         self.__store_data__()
 
-    def play(self, text: str, cashed=False):
+    def play(self, text, cashed=False):
         """
-        Generate and plays text with text given
-        :param cashed: bool if need cash it
+        Generate and plays speech with text given
+
+        :param string text: text to play
+        :param boolean cashed: if need cash it
+
+        :return none:
         """
         self.pixels.think()
         if cashed:
             if text in self.data:
                 logging.debug("Cashed data found, playing it")
-                synthesizedSpeech = self.data[text]
+                synthesized_speech = self.data[text]
             else:
-                logging.debug("Cashed data was not found, synthesing, "
+                logging.debug("Cashed data was not found, synthesizing, "
                               "text: '{}', keywords: '{}'".format(
                                 text, self.data.keys()))
-                synthesizedSpeech = self.speech.create_speech(text)
-                synthesizedSpeech.syntethize()
-                self.data[text] = synthesizedSpeech
+                synthesized_speech = self.speech.create_speech(text)
+                synthesized_speech.synthesize()
+                self.data[text] = synthesized_speech
                 self.__store_data__()
         else:
-            synthesizedSpeech = self.speech.create_speech(text)
-            synthesizedSpeech.syntethize()
+            synthesized_speech = self.speech.create_speech(text)
+            synthesized_speech.synthesize()
 
         self.pixels.speak()
-        synthesizedSpeech.play()
+        synthesized_speech.play()
         self.pixels.off()
 
     def cash_only(self, text: str):
-        """
-        Generate and store phrases without play it
-        """
+        """Generate and store phrases without play it"""
+
         if text in self.data:
             return
 
-        synthesizedSpeech = self.speech.create_speech(text)
-        synthesizedSpeech.syntethize()
-        self.data[text] = synthesizedSpeech
+        synthesized_speech = self.speech.create_speech(text)
+        synthesized_speech.synthesize()
+        self.data[text] = synthesized_speech
         self.__store_data__()

@@ -1,9 +1,9 @@
 # heytelepat
 Hey Telepat - project with voice assistant for teleport messenger integration
 
-# Demo Speaker Mac OS install
+# Demo Speaker macOS install
 
-Python 3 and python virtual enviroment required
+Python 3 and python virtual environment required
 
 ```bash 
 $ cd heytelepat/Speaker
@@ -11,7 +11,7 @@ $ python3 -m venv env
 $ source env/bin/activate
 $ pip install -r req_macos.txt
 ```
-And now just run:
+Then just run:
 
 ```bash
 $ ./speaker.py

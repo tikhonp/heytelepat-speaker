@@ -1,18 +1,19 @@
 import asyncio
 import logging
 import json
-import datetime
+
 
 from dialogs.measurments_dialogs import (
     AddValueDialog,
 )
-from events.event import EventDialog
+from events.event import Event
 
 
 class MeasurementNotificationDialog(AddValueDialog):
     data = None
     ws = None
     dialog_time = None
+    category = None
 
     def first(self, _input):
         self.objectStorage.speakSpeech.play(
@@ -44,19 +45,20 @@ class MeasurementNotificationDialog(AddValueDialog):
             # dialog.dialog_time = self.dialog_time
 
             # self.dialog_time.append(
-                # (datetime.datetime.now() + datetime.timedelta(minutes=5),
-                 # dialog))
+            # (datetime.datetime.now() + datetime.timedelta(minutes=5),
+            # dialog))
 
     cur = first
 
 
-class MeasurementNotificationEvent(EventDialog):
+class MeasurementNotificationEvent(Event):
+    name = "Уведомление об измерении"
     dialog_class = MeasurementNotificationDialog
     dialog_time = []
 
     def on_message(self, message):
         self.data = json.loads(message)
-        self.event_happend = True
+        self.event_happened = True
         logging.debug("New message from socket: {}".format(self.data))
 
     def run(self):
@@ -64,7 +66,7 @@ class MeasurementNotificationEvent(EventDialog):
         loop = asyncio.new_event_loop()
         while True:
             loop.run_until_complete(
-                self.webSocketConnect(
+                self.web_socket_connect(
                     'ws/speakerapi/measurements/',
                     {
                         "token": self.objectStorage.token,
@@ -82,5 +84,3 @@ class MeasurementNotificationEvent(EventDialog):
 
     def get_dialog_time(self):
         return self.dialog_time.pop(0) if self.dialog_time else False
-
-    name = "Уведомление об измерении"

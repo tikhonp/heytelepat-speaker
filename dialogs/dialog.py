@@ -5,41 +5,72 @@ import requests
 
 
 class Dialog:
+    """Base class to build dialogs
+
+    Attributes:
+        cur (function)               Stores function to execute next, if `None` dialog stops
+        name (string)                Name for logging
+        keywords (list[str])         List of strings that are keywords to start dialog by keyword
+        need_permanent_answer (bool) If true sound processor listen will permanently activate after one dialog func
+        stop_words (list[str])       List of strings with stop words for dialog
+    """
+
     cur = None
     name = 'default'
     keywords = []
     need_permanent_answer = False
+    stop_words = ['хватит']
 
-    def __init__(self, objectStorage):
+    def __init__(self, object_storage):
+        """
+        :param ObjectStorage object_storage: ObjectStorage instance
+        """
         if not isinstance(self.name, str):
             raise TypeError("Name must be string")
         if not isinstance(self.keywords, list):
             raise TypeError("Keywords must be a list")
+        if not isinstance(self.stop_words, list):
+            raise TypeError("stop_words must be a list")
+        self.stop_words = [i.lower() for i in self.stop_words]
 
-        self.objectStorage = objectStorage
+        self.objectStorage = object_storage
 
-    def process_input(self, input_str):
+    def _process_input(self, input_str: str):
+        """Processes input text with current dialog or stops dialog"""
+
+        if not callable(self.cur):
+            raise TypeError("`self.cur` must be function")
+
         self.need_permanent_answer = False
-
-        if 'хватит' in input_str.lower():
+        if any(word in input_str.lower() for word in self.stop_words):
             self.cur = None
             return
 
         logging.debug(
             "Processing input in dialog {}, with input {}".format(
                 self.__str__(), input_str))
+
         f = self.cur
         self.cur = None
         f(input_str)
 
     @property
-    def is_done(self):
+    def _is_done(self):
+        """Indicates if dialog empty"""
+
         return True if self.cur is None else False
 
     def __str__(self):
         return self.name
 
-    def fetch_data(self, request_type: str, *args, **kwargs):
+    def fetch_data(self, request_type, *args, **kwargs):
+        """Represents request to server and handles errors
+
+        :param string request_type: Must be `requests` method, like `get` or `post`
+        """
+        if not hasattr(requests, request_type):
+            raise ValueError("`request_type` must be `requests` method, like `get` or `post`")
+
         answer = getattr(requests, request_type)(*args, **kwargs)
         if answer.status_code == 200:
             return answer.json()
@@ -52,17 +83,18 @@ class Dialog:
 
 
 class DialogEngine:
-    def __init__(self, objectStorage, dialogs):
+    def __init__(self, object_storage, dialogs):
         """
-        :param objectStorage: ObjectStorage instance
+        :param object_storage: ObjectStorage instance
         :param dialogs: list of dialog Instances
         """
         logging.info("Creating DialogEngine, with %d dialogs", len(dialogs))
-        self.objectStorage = objectStorage
+        self.objectStorage = object_storage
         self.dialogs = dialogs
         self.dialogQueue = deque()
         self.currentDialog = None
         self.time_delay = 30
+        self.cur_dialog_time = None
 
     def _execute_next_dialog(self):
         if self.currentDialog is None and self.dialogQueue:
@@ -80,7 +112,7 @@ class DialogEngine:
         else:
             logging.debug("Putting dialog {} into queue".format(dialog))
             self.dialogQueue.append((dialog, text))
-            logging.debug("Puted dialog {} into queue".format(dialog))
+            logging.debug("Put dialog {} into queue".format(dialog))
             self._execute_next_dialog()
 
     def process_input(self, text: str):
@@ -99,14 +131,14 @@ class DialogEngine:
             return
 
         logging.debug(
-            "Got text and chosed dialog {}".format(self.currentDialog))
+            "Got text and chased dialog {}".format(self.currentDialog))
         with self.objectStorage.lock_obj:
-            self.currentDialog.process_input(text)
+            self.currentDialog._process_input(text)
 
         logging.debug("Current dialog {} is done {}".format(
-            self.currentDialog, self.currentDialog.is_done))
+            self.currentDialog, self.currentDialog._is_done))
 
-        if self.currentDialog.is_done:
+        if self.currentDialog._is_done:
             self.currentDialog = None
         else:
             self.cur_dialog_time = time.time()
@@ -121,6 +153,6 @@ class DialogEngine:
             for keyword in dialog.keywords:
                 if keyword in text:
                     logging.debug(
-                        "Chosed dialog {}, with keyword ".format(dialog) +
+                        "Chased dialog {}, with keyword ".format(dialog) +
                         "'{}' in text '{}'".format(keyword, text))
                     return dialog(self.objectStorage)

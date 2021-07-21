@@ -61,12 +61,13 @@ class NewMessagesDialog(Dialog):
             return
 
         for i in answer:
-            date = parser.parse(i['date'])
+            date = parser.parse(i.get('date'))
             date_str = date.astimezone().strftime(
                 "%A, %-d %B, %H:%M")
 
-            text = "Сообщение. От {}. {}".format(
-                date_str, i['text'])
+            text = "{} - {} - написал: - {}".format(
+                i.get('sender'), date_str, i.get('text')
+            )
             self.objectStorage.speakSpeech.play(text)
             self.objectStorage.event_obj.wait(0.5)
 

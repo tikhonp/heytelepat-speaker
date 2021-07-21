@@ -1,4 +1,4 @@
-from events.event import EventDialog
+from events.event import Event
 from dialogs.dialog import Dialog
 import logging
 import json
@@ -6,18 +6,19 @@ import asyncio
 
 
 class MessageNotificationDialog(Dialog):
-    text = None
-    m_id = None
+    data = None
     ws = None
 
     def first(self, _input):
         self.objectStorage.speakSpeech.play(
-            "Вам пришло новое сообщение, "+self.text)
+            "{} вам, только что написал: {}.".format(
+                self.data.get('sender'), self.data.get('text'))
+        )
         asyncio.new_event_loop().run_until_complete(
             self.ws.send(json.dumps({
                 "token": self.objectStorage.token,
                 "notified_message": True,
-                "message_id": self.m_id
+                "message_id": self.data.get('id')
             })))
         self.objectStorage.speakSpeech.play(
             "Пометить сообщение как прочитанное?", cashed=True)
@@ -30,7 +31,7 @@ class MessageNotificationDialog(Dialog):
                 self.ws.send(json.dumps({
                     "token": self.objectStorage.token,
                     "red_message": True,
-                    "message_id": self.m_id
+                    "message_id": self.data.get('id')
                 })))
             self.objectStorage.speakSpeech.play(
                 "Отлично!", cashed=True)
@@ -42,40 +43,31 @@ class MessageNotificationDialog(Dialog):
     name = 'Уведомление о новом сообщении'
 
 
-class MessageNotificationEvent(EventDialog):
+class MessageNotificationEvent(Event):
     dialog_class = MessageNotificationDialog
 
     def on_message(self, message):
         try:
-            data = json.loads(message)
+            self.data = json.loads(message)
         except json.decoder.JSONDecodeError:
             logging.error("Error decoding message '%s'", message)
             return
-        try:
-            self.text = data['text']
-            self.m_id = data['id']
-        except KeyError:
-            logging.error("Invalid keys in data '%s'", data)
-            return
-        self.event_happend = True
+        self.event_happened = True
 
     def run(self):
         logging.debug("Running EventDialog '{}'".format(self.name))
         loop = asyncio.new_event_loop()
         while True:
             loop.run_until_complete(
-                self.webSocketConnect(
+                self.web_socket_connect(
                     'ws/speakerapi/incomingmessage/',
-                    {
-                        "token": self.objectStorage.token,
-                    },
+                    {"token": self.objectStorage.token},
                     self.on_message,
                 ))
 
     def return_dialog(self, *args, **kwargs):
         dialog = self.get_dialog(self.objectStorage)
-        dialog.text = self.text
-        dialog.m_id = self.m_id
+        dialog.data = self.data
         dialog.ws = self.ws
         return dialog
 

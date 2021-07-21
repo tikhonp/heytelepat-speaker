@@ -8,10 +8,10 @@ from pathlib import Path
 parser = argparse.ArgumentParser(description="Speaker for telepat.")
 parser.add_argument('-r', '--reset', help="reset speaker token and init",
                     action='store_true')
-parser.add_argument('-cc', '--cleancash', help="clean cashed speaches",
+parser.add_argument('-cc', '--clean_cash', help="clean cashed speeches",
                     action='store_true')
 parser.add_argument('-d', '--development',
-                    help="Develoment mode, can't be used with button",
+                    help="Development mode, can't be used with button",
                     action='store_true')
 parser.add_argument('-s', '--store_cash',
                     help="Store cash sound for network connection",
@@ -90,7 +90,7 @@ objectStorage = configGate.ConfigGate(
     inputfunction=args.inputfunction,
     debug_mode=True if args.loglevel.lower() == 'debug' else False,
     reset=args.reset,
-    clean_cash=args.cleancash,
+    clean_cash=args.clean_cash,
     development=args.development,
 )
 
@@ -107,7 +107,7 @@ if args.store_cash:
 if args.systemd:
     notify(Notification.STATUS, "Auth Gate...")
 
-objectStorage = authGate.AuthGate(objectStorage)
+objectStorage = authGate.auth_gate(objectStorage)
 
 dialogEngineInstance = dialog.DialogEngine(
                         objectStorage,

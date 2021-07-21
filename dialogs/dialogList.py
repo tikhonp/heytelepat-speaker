@@ -1,4 +1,9 @@
-from dialogs import basic_dialogs, messages_dialogs, measurments_dialogs
+from dialogs import (
+    basic_dialogs,
+    messages_dialogs,
+    measurments_dialogs,
+    medicine_dialogs,
+)
 
 
 dialogs_list = [
@@ -8,4 +13,6 @@ dialogs_list = [
     messages_dialogs.SendMessageDialog,
     measurments_dialogs.AddValueDialog,
     measurments_dialogs.CommitFormsDialog,
+    medicine_dialogs.CheckMedicinesDialog,
+    medicine_dialogs.CommitMedicineDialog,
 ]

@@ -5,20 +5,38 @@ import json
 import datetime
 
 
-class EventDialog(Thread):
-    event_happend = False
+class Event(Thread):
+    """Provides attributes and methods for event using in event engine."""
+
+    event_happened = False
     dialog_class = None
 
-    def __init__(self, objectStorage):
+    def __init__(self, object_storage):
+        """
+        :param ObjectStorage object_storage: ObjectStorage instance
+        """
         Thread.__init__(self)
 
-        self.objectStorage = objectStorage
+        self.objectStorage = object_storage
+        self.ws = None
         logging.debug("Creating EventDialog '{}'".format(self.name))
 
-    async def webSocketConnect(self, url, data_json, on_message):
+    def on_message(self, msg: str):
+        """Default message handler"""
+
+        logging.warning("Default websocket message handler handled '{}'".format(msg))
+
+    async def web_socket_connect(self, url, data_json, on_message):
+        """Creates websocket, stores it in `Event.ws` and sends data `data_json`
+
+        :param string url: url to connect without domain
+        :param Union[dict, list] data_json: json serializable data to send to socket
+        :param function on_message:  function that handles message with one parameter `msg`
+        """
         url = 'ws://{}/{}'.format(
             self.objectStorage.host.split('/')[2], url)
 
+        # noinspection PyUnresolvedReferences
         try:
             async with websockets.connect(url) as self.ws:
                 await self.ws.send(json.dumps(data_json))
@@ -29,37 +47,51 @@ class EventDialog(Thread):
         except websockets.exceptions.ConnectionClosedError:
             return None
 
+    def _loop_item(self):
+        """You must provide ._loop_item method if using default .run()"""
+
+        raise NotImplementedError("You must provide ._loop_item() method if using default .run()")
+
     def run(self):
+        """Default run method for loop running ._loop_item()"""
+
         logging.debug("Running EventDialog '{}'".format(self.name))
-        while not self.event_happend:
+        while not self.event_happened:
             self._loop_item()
             self.objectStorage.event_obj.wait(5)
 
     def get_dialog(self, *args, **kwargs):
+        """Default get dialog method, that implements getting dialog on event happened"""
+
         if self.dialog_class is None:
             raise NotImplementedError("You must provide dialog class")
         return self.dialog_class(*args, **kwargs)
 
     def return_dialog(self, *args, **kwargs):
+        """You must provide return dialog method"""
+
         raise NotImplementedError("You must provide return dialog method")
 
-    def get_time_dialog(self):
+    @staticmethod
+    def get_time_dialog():
+        """You must provide return dialog method and then override it"""
+
         return False
 
 
 class EventsEngine(Thread):
-    def __init__(self, objectStorage, eventsDialogList, dialogEngineInstance):
+    def __init__(self, object_storage, events_dialog_list, dialog_engine_instance):
         super().__init__()
-        self.objectStorage = objectStorage
-        self.eventsDialogList = eventsDialogList
+        self.objectStorage = object_storage
+        self.eventsDialogList = events_dialog_list
         self.runningEvents = list()
         self.timeDialogs = list()
-        self.dialogEngineInstance = dialogEngineInstance
-        logging.info("Creating events engine Thread")
+        self.dialogEngineInstance = dialog_engine_instance
+        logging.info("Creating events engine Thread with %d events", len(events_dialog_list))
 
-    def _put_dialog_to_time(self, datetime, dialog):
-        self.timeEvents.append(
-            (datetime.timestamp(), dialog))
+    def _put_dialog_to_time(self, datetime_dialog, dialog):
+        self.timeDialogs.append(
+            (datetime_dialog.timestamp(), dialog))
 
     def _put_event_to_running(self, event):
         e = event(self.objectStorage)
@@ -80,16 +112,16 @@ class EventsEngine(Thread):
                 to_delete.append(i)
 
         for i in to_delete:
-            self.dialog_time.pop(i)
+            self.timeDialogs.pop(i)
 
     def _run_item(self):
         for event in self.runningEvents:
-            if event.event_happend:
+            if event.event_happened:
                 self.dialogEngineInstance.add_dialog_to_queue(
                     event.return_dialog())
-                event.event_happend = False
+                event.event_happened = False
 
-            if (time_dialog := event.get_time_dialog()):
+            if time_dialog := event.get_time_dialog():
                 self._put_dialog_to_time(*time_dialog)
 
     def run(self):

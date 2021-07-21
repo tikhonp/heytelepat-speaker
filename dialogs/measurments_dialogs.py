@@ -351,13 +351,12 @@ class CommitFormsDialog(Dialog):
                     'token': self.objectStorage.token,
                     'request_type': 'get'
                 }):
-            if len(answer) == 0:
-                self.objectStorage.speakSpeech.play(
-                    "Нет незаплоненных опросников", cashed=True)
-                return
 
             self.data = answer
             self.first_t(_input)
+        elif isinstance(answer, list):
+            self.objectStorage.speakSpeech.play(
+                "Нет незаплоненных опросников", cashed=True)
 
     def first_t(self, _input):
         if hasattr(self, 'current'):
@@ -427,7 +426,7 @@ class CommitFormsDialog(Dialog):
             value = _input.strip()
             if self.category.get('category', '') == 'information':
                 if _input.strip().lower() == 'нет':
-                    value = None
+                    value = ''
             if prefix := self.category.get('prefix', False):
                 value = prefix + ' ' + value
         else:
