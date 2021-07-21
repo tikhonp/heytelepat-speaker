@@ -8,10 +8,8 @@ import logging
 
 def get_ggwave_input():
     p = pyaudio.PyAudio()
-
     stream = p.open(format=pyaudio.paFloat32, channels=1,
                     rate=48000, input=True, frames_per_buffer=1024)
-
     instance = ggwave.init()
 
     while True:
@@ -20,49 +18,49 @@ def get_ggwave_input():
         if res is not None:
             try:
                 data_str = res.decode('utf-8')
-                return data_str
+                break
             except ValueError:
                 pass
 
     ggwave.free(instance)
-
     stream.stop_stream()
     stream.close()
-
     p.terminate()
 
+    return data_str
 
-def wirless_network_init(objectStorage, first=False):
+
+def wireless_network_init(object_storage, first=False):
     if first:
-        objectStorage.speakSpeech.play(
+        object_storage.speakSpeech.play(
             "Привет! Это колонка Telepat Medsenger. "
             "Для начала работы необходимо подключение к сети. "
             "Для этого сгенерируйте аудиокод с паролем от Wi-Fi.",
             cache=True)
     else:
-        objectStorage.speakSpeech.play(
-            "К сожалению подключиться не удалось, "
+        object_storage.speakSpeech.play(
+            "К сожалению, подключиться не удалось, "
             "Попробуйте сгенерировать код еще раз.", cache=True)
 
-    objectStorage.pixels.think()
+    object_storage.pixels.think()
     data = get_ggwave_input()
     data = json.loads(data)
 
     n = network.Network(data['ssid'])
     if not n.check_available():
         logging.info("Network is unavailable")
-        objectStorage.speakSpeech.play(
+        object_storage.speakSpeech.play(
             "Пока что сеть недоступна, продолжается попытка подключения",
             cache=True)
 
-    objectStorage.pixels.think()
+    object_storage.pixels.think()
     n.create(data['psk'])
     if not n.connect():
         logging.error("Connection error when reconfigure")
 
 
-def ConnectionGate(objectStorage, systemd=False):
-    objectStorage.pixels.wakeup()
+def connection_gate(object_storage, systemd=False):
+    object_storage.pixels.wakeup()
     first = True
     while not network.check_really_connection():
         if systemd:
@@ -71,15 +69,15 @@ def ConnectionGate(objectStorage, systemd=False):
             continue
 
         logging.warning("No connection detected")
-        wirless_network_init(objectStorage, first)
+        wireless_network_init(object_storage, first)
         first = False
         time.sleep(15)
 
     try:
-        objectStorage.speech.init_speechkit()
-        logging.info("Successfully connected and initilized speechkit")
+        object_storage.speech.init_speechkit()
+        logging.info("Successfully connected and initialized speechkit")
         if not first:
-            objectStorage.speakSpeech.play(
+            object_storage.speakSpeech.play(
                 "Подключение к беспроводной сети произошло успешно", cache=True)
     except Exception as e:
         logging.warning(e)
@@ -87,19 +85,19 @@ def ConnectionGate(objectStorage, systemd=False):
 
     else:
         logging.info("Connection exists")
-        objectStorage.pixels.off()
+        object_storage.pixels.off()
 
 
-def cash_phrases(speakSpeech):
+def cash_phrases(speak_speech):
     data = [
         "Привет! Это колонка Telepat Medsenger. "
         "Для начала работы необходимо подключение к сети. "
         "Для этого сгенерируйте аудиокод с паролем от Wi-Fi.",
-        "К сожалению подключиться не удалось, "
+        "К сожалению, подключиться не удалось, "
         "Попробуйте сгенерировать код еще раз.",
         "Пока что сеть недоступна, продолжается попытка подключения",
         "Подключение к беспроводной сети произошло успешно"
     ]
 
     for phrase in data:
-        speakSpeech.cash_only(phrase)
+        speak_speech.cash_only(phrase)

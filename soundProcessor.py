@@ -12,7 +12,7 @@ except ImportError:
     logging.warning("pvporcupine is not available, required -d mode")
 
 
-def wakeupWordInputFunction(k=2, sensitivity=0.6):
+def wakeup_word_input_function(k=2, sensitivity=0.6):
     keywords = [
         'alexa', 'bumblebee', 'computer', 'hey google', 'hey siri',
         'jarvis', 'picovoice', 'porcupine', 'terminator'
@@ -52,11 +52,11 @@ def wakeupWordInputFunction(k=2, sensitivity=0.6):
         porcupine.delete()
 
 
-def simpleInputFunction():
+def simple_input_function():
     input("Press enter and tell something!")
 
 
-def raspberryInputFunction(gpio_pin=17):
+def raspberry_input_function(gpio_pin=17):
     logging.info("Waiting button...")
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(gpio_pin, GPIO.IN, GPIO.PUD_UP)
@@ -68,10 +68,10 @@ def raspberryInputFunction(gpio_pin=17):
 
 
 class SoundProcessor(Thread):
-    def __init__(self, objectStorage, dialogEngineInstance):
+    def __init__(self, object_storage, dialog_engine_instance):
         super(SoundProcessor, self).__init__()
-        self.objectStorage = objectStorage
-        self.dialogEngineInstance = dialogEngineInstance
+        self.objectStorage = object_storage
+        self.dialogEngineInstance = dialog_engine_instance
         logging.info("Created SoundProcessor thread")
 
     def _get_voice_sr(self, duration=0.1):
@@ -79,14 +79,14 @@ class SoundProcessor(Thread):
             self.objectStorage.speech.adjust_for_ambient_noise(
                 duration=duration)
 
-            recognizeSpeech = self.objectStorage.speech.read_audio()
+            recognize_speech = self.objectStorage.speech.read_audio()
 
-            if recognizeSpeech is None:
+            if recognize_speech is None:
                 self.objectStorage.speakSpeech.play(
                     "Я не расслышал, повторите, пожалуйста еще.", cache=True)
                 return
 
-            text = recognizeSpeech.recognize()
+            text = recognize_speech.recognize()
             if text is None:
                 self.objectStorage.speakSpeech.play(
                     "Я не расслышал, повторите, пожалуйста еще.", cache=True)

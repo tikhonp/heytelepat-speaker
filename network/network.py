@@ -1,5 +1,5 @@
 """
-Provides network checking and wireliss connection for raspberrypi
+Provides network checking and wireless connection for raspberrypi
 
 Connection to network with this instruction:
     https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md
@@ -63,7 +63,8 @@ class Network:
         for i in data:
             subprocess.run(['sudo', './network/add_network.sh', i])
 
-    def connect(self):
+    @staticmethod
+    def connect(_):
         result = subprocess.run(['sudo', './network/connect_network.sh'],
                                 stdout=subprocess.PIPE)
         subprocess_return = result.stdout.decode('utf-8')
@@ -72,15 +73,6 @@ class Network:
             return True
         else:
             return False
-
-
-def check_connection_hardware():
-    IPaddress = socket.gethostbyname(socket.gethostname())
-    logging.debug("IPaddress %s", IPaddress)
-    if IPaddress == '127.0.0.1':
-        return False
-    else:
-        return True
 
 
 def check_really_connection(host='http://google.com'):

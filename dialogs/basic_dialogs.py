@@ -6,18 +6,19 @@ try:
     import alsaaudio
 except ImportError:
     logging.warning(
-        "AlsaAudio import error, make shure development mode is active")
+        "AlsaAudio import error, make sure development mode is active")
+    alsaaudio = None
 
 
 locale.setlocale(locale.LC_TIME, "ru_RU")
 
 
 class TimeDialog(Dialog):
-    def first(self, _input):
-        timestr = datetime.datetime.now().astimezone().strftime(
+    def first(self, text):
+        str_formatted_time = datetime.datetime.now().astimezone().strftime(
             "%A, %-d %B, %H:%M")
-        timestr = "Сейчас " + timestr + "."
-        self.objectStorage.speakSpeech.play(timestr)
+        str_formatted_time = "Сейчас " + str_formatted_time + "."
+        self.objectStorage.speakSpeech.play(str_formatted_time)
 
     cur = first
     name = 'Время'
@@ -25,26 +26,27 @@ class TimeDialog(Dialog):
 
 
 class SetVolumeDialog(Dialog):
-    def first(self, _input):
+    def first(self, text):
+        if alsaaudio is None:
+            return
         self.objectStorage.speakSpeech.play(
                 "Какую громкость вы хотите поставить?", cache=True)
         self.cur = self.second
         self.need_permanent_answer = True
 
-    def second(self, _input):
-        if not _input.isdigit():
+    def second(self, text):
+        if not (value := self.to_integer(text)):
             self.objectStorage.speakSpeech.play(
                     "Необходимо указать числовое значение", cache=True)
             return
 
-        v = int(_input)
-        if v < 1 or v > 100:
+        if value < 1 or value > 100:
             self.objectStorage.speakSpeech.play(
                 "Необходимо значение в промежутке от 1 до 100", cache=True)
             return
 
         m = alsaaudio.Mixer(control='Speaker', cardindex=1)
-        m.setvolume(v)
+        m.setvolume(value)
 
         self.objectStorage.speakSpeech.play(
                 "Громкость установлена", cache=True)
@@ -55,9 +57,9 @@ class SetVolumeDialog(Dialog):
 
 
 class HelpDialog(Dialog):
-    def first(self, _input):
+    def first(self, text):
         self.objectStorage.speakSpeech.play(
-            "Я знаю очень много вещей, например 'который час' и умею общаться с вашим врачём. "
+            "Я знаю очень много вещей, например 'который час' и умею общаться с вашим врачом. "
             "Попросите меня отправить сообщение врачу или спросите: "
             "'Расскажи о непрочитанных сообщениях', и я прочитаю новые сообщения от врача. "
             "Я напомню о необходимых опросниках, которые нужно направить врачу, "

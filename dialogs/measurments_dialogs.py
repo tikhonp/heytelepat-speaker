@@ -10,7 +10,7 @@ categories = [
         "name": "pulse",
         "description": "Пульс в покое",
         "unit": "удары в минуту",
-        "type": "integer",
+        "request_type": "integer",
         "default_representation": "scatter",
         "is_legacy": False,
         "subcategory": "Измерения"
@@ -22,7 +22,7 @@ dry_categories = [
         "name": "symptom",
         "description": "Симптом заболевания",
         "unit": "",
-        "type": "string",
+        "request_type": "string",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Общее",
@@ -32,7 +32,7 @@ dry_categories = [
         "name": "action",
         "description": "Действие",
         "unit": "",
-        "type": "string",
+        "request_type": "string",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Общее",
@@ -42,7 +42,7 @@ dry_categories = [
         "name": "waist_circumference",
         "description": "Окружность талии",
         "unit": "см",
-        "type": "float",
+        "request_type": "float",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Измерения",
@@ -52,7 +52,7 @@ dry_categories = [
         "name": "diastolic_pressure",
         "description": "Диастолическое (нижнее) артериальное давление",
         "unit": "мм рт. ст.",
-        "type": "integer",
+        "request_type": "integer",
         "default_representation": "scatter",
         "is_legacy": False,
         "subcategory": "Измерения",
@@ -62,7 +62,7 @@ dry_categories = [
         "name": "pulse",
         "description": "Пульс в покое",
         "unit": "удары в минуту",
-        "type": "integer",
+        "request_type": "integer",
         "default_representation": "scatter",
         "is_legacy": False,
         "subcategory": "Измерения",
@@ -72,7 +72,7 @@ dry_categories = [
         "name": "weight",
         "description": "Вес",
         "unit": "кг",
-        "type": "float",
+        "request_type": "float",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Измерения",
@@ -82,7 +82,7 @@ dry_categories = [
         "name": "height",
         "description": "Рост",
         "unit": "см",
-        "type": "integer",
+        "request_type": "integer",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Измерения",
@@ -92,7 +92,7 @@ dry_categories = [
         "name": "systolic_pressure",
         "description": "Систолическое (верхнее) артериальное давление в покое",
         "unit": "мм рт. ст.",
-        "type": "integer",
+        "request_type": "integer",
         "default_representation": "scatter",
         "is_legacy": False,
         "subcategory": "Измерения",
@@ -102,7 +102,7 @@ dry_categories = [
         "name": "temperature",
         "description": "Температура",
         "unit": "град Цельсия",
-        "type": "float",
+        "request_type": "float",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Измерения",
@@ -112,7 +112,7 @@ dry_categories = [
         "name": "glukose",
         "description": "Глюкоза",
         "unit": "моль/литр",
-        "type": "float",
+        "request_type": "float",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Измерения",
@@ -122,7 +122,7 @@ dry_categories = [
         "name": "pain_assessment",
         "description": "Оценка боли",
         "unit": "балл(а)(ов)",
-        "type": "integer",
+        "request_type": "integer",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Ощущения",
@@ -132,7 +132,7 @@ dry_categories = [
         "name": "leg_circumference_right",
         "description": "Обхват правой голени",
         "unit": "см",
-        "type": "float",
+        "request_type": "float",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Измерения",
@@ -142,7 +142,7 @@ dry_categories = [
         "name": "medicine",
         "description": "Принятое лекарство",
         "unit": "",
-        "type": "string",
+        "request_type": "string",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Общее",
@@ -152,7 +152,7 @@ dry_categories = [
         "name": "leg_circumference_left",
         "description": "Обхват левой голени",
         "unit": "см",
-        "type": "float",
+        "request_type": "float",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Измерения",
@@ -162,7 +162,7 @@ dry_categories = [
         "name": "spo2",
         "description": "Насыщение крови кислородом",
         "unit": "%",
-        "type": "integer",
+        "request_type": "integer",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Измерения",
@@ -172,7 +172,7 @@ dry_categories = [
         "name": "side_effect",
         "description": "Побочный эффект",
         "unit": "",
-        "type": "string",
+        "request_type": "string",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Общее",
@@ -182,7 +182,7 @@ dry_categories = [
         "name": "health",
         "description": "Субъективное самочувствие",
         "unit": "",
-        "type": "integer",
+        "request_type": "integer",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Ощущения",
@@ -192,7 +192,7 @@ dry_categories = [
         "name": "activity",
         "description": "Физическая активность",
         "unit": "минуты",
-        "type": "integer",
+        "request_type": "integer",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Общее",
@@ -202,7 +202,7 @@ dry_categories = [
         "name": "information",
         "description": "Общая информация",
         "unit": "",
-        "type": "string",
+        "request_type": "string",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Общее",
@@ -212,7 +212,7 @@ dry_categories = [
         "name": "steps",
         "description": "Количество пройденных шагов",
         "unit": "шаги",
-        "type": "integer",
+        "request_type": "integer",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Данные с мобильных устройств",
@@ -222,7 +222,7 @@ dry_categories = [
         "name": "glukose_fasting",
         "description": "Глюкоза натощак",
         "unit": "ммоль/л",
-        "type": "float",
+        "request_type": "float",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Эндокринология",
@@ -232,7 +232,7 @@ dry_categories = [
         "name": "peak_flow",
         "description": "Предельная скорость выдоха",
         "unit": "л/мин",
-        "type": "integer",
+        "request_type": "integer",
         "default_representation": "values",
         "is_legacy": False,
         "subcategory": "Пульмонология",
@@ -241,15 +241,17 @@ dry_categories = [
 
 
 class AddValueDialog(Dialog):
-    def first(self, _input):
+    category = None
+
+    def first(self, text):
         self.objectStorage.speakSpeech.play(
             "Какое значение вы хотите отправить?", cache=True)
         self.cur = self.second
         self.need_permanent_answer = True
 
-    def second(self, _input):
+    def second(self, text):
         self.category = None
-        text = _input.lower()
+        text = text.lower()
 
         for i in categories:
             for phrase in i[0]:
@@ -270,7 +272,7 @@ class AddValueDialog(Dialog):
                     break
 
         if self.category is None:
-            self.objectStorage.speak.play(
+            self.objectStorage.speakSpeach.play(
                 "Категория нераспознана, "
                 "пожалуйста, назовите категорию еще раз", cache=True)
             self.cur = self.second
@@ -281,51 +283,43 @@ class AddValueDialog(Dialog):
         self.cur = self.third
         self.need_permanent_answer = True
 
-    def third(self, _input):
-        type_m = self.category.get('type', '') \
+    def third(self, text):
+        type_m = self.category.get('request_type', '') \
             + self.category.get('value_type', '')
         if type_m == "integer":
-            if not _input.isdigit():
-                self.objectStorage.speakSpeech.play(
-                    "Значение не распознано, пожалуйста,"
-                    " произнесите его еще раз", cache=True)
-                return
+            value = self.to_integer(text)
         elif type_m == "float":
-            if _input.isdigit():
-                value = int(_input)
-            elif 'и' in _input.lower():
-                d = [i.strip() for i in _input.lower().split('и')]
-                if sum([i.isdigit() for i in d]) and len(d) == 2:
-                    value = float(".".join(d))
-                else:
-                    self.objectStorage.speakSpeech.play(
-                        "Значение не распознано, пожалуйста,"
-                        " произнесите его еще раз", cache=True)
+            value = self.to_float(text)
         elif type_m == 'textarea':
-            value = _input.strip()
+            value = text
             if self.category.get('category', '') == 'information':
-                if _input.strip().lower() == 'нет':
+                if text.strip().lower() == 'нет':
                     value = ''
             if prefix := self.category.get('prefix', False):
                 value = prefix + ' ' + value
         else:
-            logging.error("Unknown type %s" % self.category["type"])
+            logging.error("Unknown request_type %s" % self.category["request_type"])
             return
 
-        if value is not None:
-            if self.fetch_data(
-                    'post',
-                    self.objectStorage.host+'/speakerapi/pushvalue/',
-                    json={
-                        'token': self.objectStorage.token,
-                        'values': [{
-                            'category_name': self.category.get('name', '')
-                            + self.category.get('category', ''),
-                            'value': value
-                        }]
-                    }):
-                self.objectStorage.speakSpeech.play(
-                    "Значение успешно отправлено.", cache=True)
+        if value is None:
+            self.objectStorage.speakSpeech.play(
+                "Значение не распознано, пожалуйста,"
+                " произнесите его еще раз", cache=True)
+            return
+
+        if self.fetch_data(
+                'post',
+                self.objectStorage.host+'/speakerapi/pushvalue/',
+                json={
+                    'token': self.objectStorage.token,
+                    'values': [{
+                        'category_name': self.category.get('name', '')
+                        + self.category.get('category', ''),
+                        'value': value
+                    }]
+                }):
+            self.objectStorage.speakSpeech.play(
+                "Значение успешно отправлено.", cache=True)
 
         if hasattr(self, 'data') and len(self.data['fields']) > 0:
             return self.yes_no('да')
@@ -343,7 +337,11 @@ class AddValueDialog(Dialog):
 
 
 class CommitFormsDialog(Dialog):
-    def first(self, _input):
+    data = None
+    current = None
+    category = None
+
+    def first(self, text):
         if answer := self.fetch_data(
                 'get',
                 self.objectStorage.host+'/speakerapi/measurements/',
@@ -353,12 +351,12 @@ class CommitFormsDialog(Dialog):
                 }):
 
             self.data = answer
-            self.first_t(_input)
+            self.first_t(text)
         elif isinstance(answer, list):
             self.objectStorage.speakSpeech.play(
                 "Нет незаплоненных опросников", cache=True)
 
-    def first_t(self, _input):
+    def first_t(self, text):
         if hasattr(self, 'current'):
             self.fetch_data(
                 'patch',
@@ -389,69 +387,65 @@ class CommitFormsDialog(Dialog):
             self.objectStorage.speakSpeech.play(
                 "Спасибо за заполнение опросника", cache=True)
 
-    def yes_no(self, _input):
-        if 'да' in _input.lower():
+    def yes_no(self, text):
+        if self.is_positive(text):
             self.category = self.current['fields'].pop(0)
             self.objectStorage.speakSpeech.play(
                 "Произнесите значение {}".format(self.category.get('text')))
             self.cur = self.third
             self.need_permanent_answer = True
             return
-        else:
+        elif self.is_negative(text):
             self.objectStorage.speakSpeech.play(
                 "Введите значение позже с помощию"
                 " команды 'запистать значение'", cache=True)
+        else:
+            self.objectStorage.speakSpeech.play(
+                "Извините, я вас не очень поняла", cashe=True
+            )
 
-    def third(self, _input):
-        type_m = self.category.get('type', '') \
+    def third(self, text):
+        type_m = self.category.get('request_type', '') \
             + self.category.get('value_type', '')
         if type_m == "integer":
-            if not _input.isdigit():
-                self.objectStorage.speakSpeech.play(
-                    "Значение не распознано, пожалуйста,"
-                    " произнесите его еще раз", cache=True)
-                return
+            value = self.to_integer(text)
         elif type_m == "float":
-            if _input.isdigit():
-                value = int(_input)
-            elif 'и' in _input.lower():
-                d = [i.strip() for i in _input.lower().split('и')]
-                if sum([i.isdigit() for i in d]) and len(d) == 2:
-                    value = float(".".join(d))
-                else:
-                    self.objectStorage.speakSpeech.play(
-                        "Значение не распознано, пожалуйста,"
-                        " произнесите его еще раз", cache=True)
+            value = self.to_float(text)
         elif type_m == 'textarea':
-            value = _input.strip()
+            value = text
             if self.category.get('category', '') == 'information':
-                if _input.strip().lower() == 'нет':
+                if text.strip().lower() == 'нет':
                     value = ''
             if prefix := self.category.get('prefix', False):
                 value = prefix + ' ' + value
         else:
-            logging.error("Unknown type %s" % self.category["type"])
+            logging.error("Unknown request_type %s" % self.category["request_type"])
             return
 
-        if value is not None:
-            if self.fetch_data(
-                    'post',
-                    self.objectStorage.host+'/speakerapi/pushvalue/',
-                    json={
-                        'token': self.objectStorage.token,
-                        'values': [{
-                            'category_name': self.category.get('name', '')
-                            + self.category.get('category', ''),
-                            'value': value
-                        }]
-                    }):
-                self.objectStorage.speakSpeech.play(
-                    "Значение успешно отправлено.", cache=True)
+        if value is None:
+            self.objectStorage.speakSpeech.play(
+                "Значение не распознано, пожалуйста,"
+                " произнесите его еще раз", cache=True)
+            return
+
+        if self.fetch_data(
+                'post',
+                self.objectStorage.host+'/speakerapi/pushvalue/',
+                json={
+                    'token': self.objectStorage.token,
+                    'values': [{
+                        'category_name': self.category.get('name', '')
+                        + self.category.get('category', ''),
+                        'value': value
+                    }]
+                }):
+            self.objectStorage.speakSpeech.play(
+                "Значение успешно отправлено.", cache=True)
 
         if len(self.current['fields']) > 0:
             return self.yes_no('да')
         else:
-            return self.first_t(_input)
+            return self.first_t(text)
 
     cur = first
     name = 'Заполнить незаполненные опросники'

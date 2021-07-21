@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import json
-
+from abc import ABC
 
 from dialogs.measurments_dialogs import (
     AddValueDialog,
@@ -28,18 +28,18 @@ class MeasurementNotificationDialog(AddValueDialog):
         self.cur = self.yes_no
 
     def yes_no(self, _input):
-        if 'да' in _input.lower():
+        if self.is_positive(text):
             self.category = self.data['fields'].pop(0)
             self.objectStorage.speakSpeech.play(
                 "Произнесите значение {}".format(self.category.get('text')))
             self.cur = self.third
             self.need_permanent_answer = True
             return
-        else:
+        elif self.is_negative(text):
             self.objectStorage.speakSpeech.play(
                 "Введите значение позже с помощию"
                 " команды 'заполнить опросники'", cache=True)
-            # dialog = self.__class__(self.objectStorage)
+            # dialog = self.__class__(self.object_storage)
             # dialog.data = self.data
             # dialog.ws = self.ws
             # dialog.dialog_time = self.dialog_time
@@ -47,14 +47,19 @@ class MeasurementNotificationDialog(AddValueDialog):
             # self.dialog_time.append(
             # (datetime.datetime.now() + datetime.timedelta(minutes=5),
             # dialog))
+        else:
+            self.objectStorage.speakSpeech.play(
+                "Извините, я вас не очень поняла", cashe=True
+            )
 
     cur = first
 
 
-class MeasurementNotificationEvent(Event):
+class MeasurementNotificationEvent(Event, ABC):
     name = "Уведомление об измерении"
     dialog_class = MeasurementNotificationDialog
     dialog_time = []
+    data = None
 
     def on_message(self, message):
         self.data = json.loads(message)

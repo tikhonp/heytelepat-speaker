@@ -2,6 +2,7 @@ import logging
 from collections import deque
 import time
 import requests
+from typing import Union
 
 
 class Dialog:
@@ -35,27 +36,28 @@ class Dialog:
 
         self.objectStorage = object_storage
 
-    def _process_input(self, input_str: str):
+    def process_input(self, text: str):
         """Processes input text with current dialog or stops dialog"""
 
+        text = str(text).lower().strip()
         if not callable(self.cur):
             raise TypeError("`self.cur` must be function")
 
         self.need_permanent_answer = False
-        if any(word in input_str.lower() for word in self.stop_words):
+        if any(word in text.lower() for word in self.stop_words):
             self.cur = None
             return
 
         logging.debug(
             "Processing input in dialog {}, with input {}".format(
-                self.__str__(), input_str))
+                self.__str__(), text))
 
         f = self.cur
         self.cur = None
-        f(input_str)
+        f(text)
 
     @property
-    def _is_done(self):
+    def is_done(self):
         """Indicates if dialog empty"""
 
         return True if self.cur is None else False
@@ -80,6 +82,78 @@ class Dialog:
             logging.error(
                 "Error in requests, status code: '{}', answer: '{}'".format(
                     answer.status_code, answer.text[:100]))
+
+    @staticmethod
+    def to_integer(text: str) -> int:
+        """Validate raw input to integer"""
+
+        if text.isdigit():
+            return int(text)
+
+        parts = str(text).split()
+        integers = [int(i) for i in parts if i.isdigit()]
+
+        return integers[0] if integers else None
+
+    @staticmethod
+    def to_float(text: str) -> Union[float, None]:
+        """Validate raw input to float"""
+
+        delimiter = ' и '
+        if delimiter in text:
+            parts = str(text).split(delimiter)
+            for i, part in enumerate(parts):
+                if i == (len(parts) - 1):
+                    continue
+
+                if not (left_part := Dialog.to_integer(part.split()[-1])):
+                    left_part = ''
+                    for letter in range(len(part)-1, -1, -1):
+                        if letter.isdigit():
+                            left_part = letter + left_part
+                        else:
+                            break
+                    if left_part == '':
+                        return
+                    left_part = int(left_part)
+
+                if not (right_part := Dialog.to_integer(parts[i+1].split()[0])):
+                    right_part = ''
+                    for letter in parts[i+1]:
+                        if letter.isdigit():
+                            right_part += letter
+                        else:
+                            break
+                    if right_part == '':
+                        return
+                    right_part = int(right_part)
+
+                return float('.'.join([str(left_part), str(right_part)]))
+
+        elif integer := Dialog.to_integer(text):
+            return float(integer)
+
+    @staticmethod
+    def is_positive(text: str) -> bool:
+        """Check if phrase is positive"""
+
+        positive_keywords = [
+            'да', 'разумеется', 'ага', 'безусловно', 'конечно', 'несомненно', 'действительно',
+            'плюс', 'так', 'точно', 'угу', 'как же', 'так', 'йес', 'легко', 'ладно', 'согласен',
+            'хорошо',
+        ]
+
+        return any(word in text.lower() for word in positive_keywords)
+
+    @staticmethod
+    def is_negative(text: str) -> bool:
+        """Check if phrase is negative"""
+
+        negative_keywords = [
+            'не', 'несть', 'дуд', 'дожидайся', 'избавь', 'уволь', 'ничего', 'ни', 'фигушки',
+        ]
+
+        return any(word in text.lower() for word in negative_keywords)
 
 
 class DialogEngine:
@@ -133,12 +207,12 @@ class DialogEngine:
         logging.debug(
             "Got text and chased dialog {}".format(self.currentDialog))
         with self.objectStorage.lock_obj:
-            self.currentDialog._process_input(text)
+            self.currentDialog.process_input(text)
 
         logging.debug("Current dialog {} is done {}".format(
-            self.currentDialog, self.currentDialog._is_done))
+            self.currentDialog, self.currentDialog.is_done))
 
-        if self.currentDialog._is_done:
+        if self.currentDialog.is_done:
             self.currentDialog = None
         else:
             self.cur_dialog_time = time.time()

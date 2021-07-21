@@ -5,7 +5,7 @@ class CheckMedicinesDialog(Dialog):
     current = None
     data = None
 
-    def first(self, _input):
+    def first(self, text):
         if answer := self.fetch_data(
                 'get',
                 self.objectStorage.host+'/speakerapi/medicine/',
@@ -15,12 +15,12 @@ class CheckMedicinesDialog(Dialog):
                 }):
 
             self.data = answer
-            self.first_t(_input)
+            self.first_t(text)
         elif isinstance(answer, list):
             self.objectStorage.speakSpeech.play(
                 "Нет препаратов которые необходимо принять", cache=True)
 
-    def first_t(self, _input):
+    def first_t(self, text):
         if self.data:
             self.current = self.data.pop(0)
             self.objectStorage.speakSpeech.play(
@@ -36,18 +36,18 @@ class CheckMedicinesDialog(Dialog):
                 "Спасибо за заполнение уведомление о выпитых препаратах", cache=True
             )
 
-    def commit_medicine_status(self, type: str):
+    def commit_medicine_status(self, request_type: str):
         self.fetch_data(
             'patch',
             self.objectStorage.host + '/speakerapi/medicine/',
             json={
                 'token': self.objectStorage.token,
-                'request_type': type,
+                'request_type': request_type,
                 'measurement_id': self.current.get('id')
             })
 
-    def yes_no(self, _input):
-        if 'да' in _input.lower():
+    def yes_no(self, text):
+        if self.is_positive(text):
             self.fetch_data(
                 'post',
                 self.objectStorage.host+'/speakerapi/medicine/commit/',
@@ -58,10 +58,14 @@ class CheckMedicinesDialog(Dialog):
             )
             self.commit_medicine_status('is_done')
             self.objectStorage.speakSpeech.play("Отлично!", cache=True)
-            return self.first_t(_input)
-        else:
+            return self.first_t(text)
+        elif self.is_negative(text):
             self.objectStorage.speakSpeech.play(
                 "Подтвердите прием позже с помощью комманды 'какие лекарства необходимо принять'", cache=True
+            )
+        else:
+            self.objectStorage.speakSpeech.play(
+                "Извините, я вас не очень поняла", cashe=True
             )
 
     cur = first
@@ -70,15 +74,15 @@ class CheckMedicinesDialog(Dialog):
 
 
 class CommitMedicineDialog(Dialog):
-    def first(self, _input):
+    def first(self, text):
         self.objectStorage.speakSpeech.play(
             "Какое лекарство вы приняли?", cache=True
         )
-        self.cur = self.yes_no
+        self.cur = self.second
         self.need_permanent_answer = True
 
-    def yes_no(self, _input):
-        value = _input.strip()
+    def second(self, text):
+        value = text
         if self.fetch_data(
                 'post',
                 self.objectStorage.host+'/speakerapi/medicine/commit/',

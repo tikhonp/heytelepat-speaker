@@ -20,11 +20,11 @@ parser.add_argument('-symd', '--systemd',
                     help="Option for running as systemd service",
                     action='store_true')
 parser.add_argument(
-    '-infunc', '--inputfunction', default='simple',
+    '-in_func', '--input_function', default='simple',
     help=(
         "Provide input function. "
-        "Options: ['simple', 'rpibutton', 'wakeupword'] "
-        "Example: -infunc=rpibutton, default='simple'"
+        "Options: ['simple', 'rpi_button', 'wake_up_word'] "
+        "Example: -in_func=rpi_button, default='simple'"
     )
 )
 parser.add_argument(
@@ -78,16 +78,16 @@ if not args.development:
 else:
     logging.warning("AlsaAudio is not used, development mode")
 
-if args.development and args.inputfunction == 'rpibutton':
+if args.development and args.input_function == 'rpi_button':
     raise Exception("Rpi Button can't be used with development mode")
 
 
 config_filename = os.path.join(
     Path(__file__).resolve().parent, 'speaker_config.json')
 
-objectStorage = configGate.ConfigGate(
+objectStorage = configGate.config_gate(
     config_filename=config_filename,
-    inputfunction=args.inputfunction,
+    input_function=args.input_function,
     debug_mode=True if args.loglevel.lower() == 'debug' else False,
     reset=args.reset,
     clean_cash=args.clean_cash,
@@ -98,7 +98,7 @@ if args.systemd:
     notify(Notification.READY)
     notify(Notification.STATUS, "Connection Gate...")
 
-connectionGate.ConnectionGate(objectStorage, args.systemd)
+connectionGate.connection_gate(objectStorage, args.systemd)
 
 if args.store_cash:
     logging.info("Store cash active")

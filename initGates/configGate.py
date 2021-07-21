@@ -8,57 +8,38 @@ import os.path
 
 
 class ObjectStorage:
-    def __init__(
-        self,
-        config,
-        inputFunction,
-        config_filename,
-        development,
-        **kwargs
-    ):
+    """Stores all objects for speaker functioning"""
+
+    def __init__(self, config, input_function, config_filename, **kwargs):
         """
-        kwargs:
-            - lock_obj
-            - event_obj
-            - speech_cls
-            - playaudiofunction
-            - speakSpeech_cls
+        :param dict config: Data from speaker_config.json file
+        :param function input_function: Function that captures voice action
+        :param string config_filename: File path to config
+
+        :param boolean development: If development mode, default `False`
+        :param boolean debug_mode: Debug mode status, default `None`
+        :param string cash_filename: File path of cash file, default get from config
+        :param pixels.Pixels pixels: Object of pixels class default initialises
+        :param function play_audio_function: Function to play audio BytesIO, default `None`
+        :param threading.Event event_obj: Event object for threading events, default initialises
+        :param threading.RLock lock_obj: Lock object for threading Locks, default initialises
+        :param speech.Speech speech_cls: Object of Speech class, default initialises (`play_audio_function` required)
+        :param speech.SpeakSpeech speakSpeech_cls: Object of SpeakSpeech class, default initialises
+
+        :return None:
         """
         self.BASE_DIR = Path(__file__).resolve().parent.parent
         self.config = config
-        self.inputFunction = inputFunction
+        self.inputFunction = input_function
         self.config_filename = config_filename
 
-        if 'debug_mode' in kwargs:
-            self.debug_mode = kwargs['debug_mode']
-        else:
-            self.debug_mode = None
-
-        if 'cash_filename' in kwargs:
-            self.cash_filename = kwargs['cash_filename']
-        else:
-            self.cash_filename = os.path.join(
-                self.BASE_DIR, self.config['cash_filename'])
-
-        if 'pixels' in kwargs:
-            self.pixels = kwargs['pixels']
-        else:
-            self.pixels = pixels.Pixels(development)
-
-        if 'play_audio_function' in kwargs:
-            self.play_audio_function = kwargs['play_audio_function']
-        else:
-            self.play_audio_function = None
-
-        if 'event_obj' in kwargs:
-            self.event_obj = kwargs['event_obj']
-        else:
-            self.event_obj = threading.Event()
-
-        if 'lock_obj' in kwargs:
-            self.lock_obj = kwargs['lock_obj']
-        else:
-            self.lock_obj = threading.RLock()
+        self.development = kwargs.get('development', False)
+        self.debug_mode = kwargs.get('debug_mode')
+        self.cash_filename = kwargs.get('cash_filename', os.path.join(self.BASE_DIR, self.config['cash_filename']))
+        self.pixels = kwargs.get('pixels', pixels.Pixels(self.development))
+        self.play_audio_function = kwargs.get('play_audio_function')
+        self.event_obj = kwargs.get('event_obj', threading.Event())
+        self.lock_obj = kwargs.get('lock_obj', threading.RLock())
 
         if 'speech_cls' in kwargs:
             self.speech = kwargs['speech_cls']
@@ -67,12 +48,9 @@ class ObjectStorage:
                 raise Exception("You must provide play_audio_function")
             self.speech = speech.Speech(self)
 
-        if 'speakSpeech_cls' in kwargs:
-            self.speakSpeech = kwargs['speakSpeech_cls']
-        else:
-            self.speakSpeech = speech.SpeakSpeech(
-                self.speech, self.cash_filename,
-                self.pixels)
+        self.speakSpeech = kwargs.get(
+            'speakSpeech_cls', speech.SpeakSpeech(self.speech, self.cash_filename, self.pixels)
+        )
 
     @property
     def api_key(self):
@@ -84,16 +62,16 @@ class ObjectStorage:
 
     @property
     def host(self):
-        return self.config['domen']
+        return self.config['host']
 
     @property
     def token(self):
         return self.config['token']
 
 
-def ConfigGate(
+def config_gate(
         config_filename,
-        inputfunction,
+        input_function,
         debug_mode=False,
         reset=False,
         clean_cash=False,
@@ -109,31 +87,31 @@ def ConfigGate(
         with open(config_filename, 'w') as f:
             json.dump(config, f)
 
-    if inputfunction == 'rpibutton':
+    if input_function == 'rpi_button':
         logging.info("Setup input function as Button")
-        inputFunc = soundProcessor.raspberryInputFunction
-    elif inputfunction == 'wakeupword':
-        logging.info("Setup wakeupword input finction")
-        inputFunc = soundProcessor.wakeupWordInputFunction
-    elif inputfunction == 'simple':
+        input_function = soundProcessor.raspberry_input_function
+    elif input_function == 'wake_up_word':
+        logging.info("Setup wake_up_word input function")
+        input_function = soundProcessor.wakeup_word_input_function
+    elif input_function == 'simple':
         logging.info("Setup input simple input function")
-        inputFunc = soundProcessor.simpleInputFunction
+        input_function = soundProcessor.simple_input_function
     else:
         raise ValueError(
-            "Invalid inputfiction '{}'. ".format(inputfunction) +
-            "Avalible options: ['simple', 'rpibutton', 'wakeupword']")
+            "Invalid input fiction '{}'. ".format(input_function) +
+            "Available options: ['simple', 'rpi_button', 'wake_up_word']")
 
-    objectStorage = ObjectStorage(
+    object_storage = ObjectStorage(
         config,
-        inputFunc,
+        input_function,
         config_filename,
-        development,
+        development=development,
         play_audio_function=speech.play_audio_function,
         debug_mode=debug_mode,
     )
 
     if clean_cash:
         logging.info("Cleanup cash")
-        objectStorage.speakSpeech.reset_cash()
+        object_storage.speakSpeech.reset_cash()
 
-    return objectStorage
+    return object_storage

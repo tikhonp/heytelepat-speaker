@@ -3,22 +3,23 @@ from dateutil import parser
 
 
 class SendMessageDialog(Dialog):
-    def first(self, _input):
+    message = None
+    
+    def first(self, text):
         self.objectStorage.speakSpeech.play(
             "Какое сообщение вы хотите отправить?", cache=True)
         self.cur = self.get_message
         self.need_permanent_answer = True
 
-    def get_message(self, _input):
+    def get_message(self, text):
         self.objectStorage.speakSpeech.play(
-            "Вы написали: " + _input + ". Отправить сообщение?")
+            "Вы написали: " + text + ". Отправить сообщение?")
         self.cur = self.submit
-        self.message = _input
+        self.message = text.title()
         self.need_permanent_answer = True
 
-    def submit(self, _input):
-        text = _input.lower().strip()
-        if 'да' in text:
+    def submit(self, text):
+        if self.is_positive(text):
             if self.fetch_data(
                     'post',
                     self.objectStorage.host+"/speakerapi/sendmessage/",
@@ -35,10 +36,13 @@ class SendMessageDialog(Dialog):
             self.cur = self.repeat
             self.need_permanent_answer = True
 
-    def repeat(self, _input):
-        text = _input.lower().strip()
-        if 'да' in text:
-            return self.first(_input)
+    def repeat(self, text):
+        if self.is_positive(text):
+            return self.first(text)
+        elif not self.is_negative(text):
+            self.objectStorage.speakSpeech.play(
+                "Извините, я вас не очень поняла", cashe=True
+            )
 
     cur = first
     name = 'Отправить Сообщение'
@@ -46,7 +50,7 @@ class SendMessageDialog(Dialog):
 
 
 class NewMessagesDialog(Dialog):
-    def first(self, _input):
+    def first(self, text):
         if (answer := self.fetch_data(
                     'get',
                     self.objectStorage.host+'/speakerapi/incomingmessage/',

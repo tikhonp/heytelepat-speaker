@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from abc import ABC
 
 from dialogs.dialog import Dialog
 from events.event import Event
@@ -24,7 +25,7 @@ class MedicineNotificationDialog(Dialog):
         self.cur = self.yes_no
 
     def yes_no(self, _input):
-        if 'да' in _input.lower():
+        if self.is_positive(text):
             asyncio.new_event_loop().run_until_complete(
                 self.ws.send(json.dumps({
                     'token': self.objectStorage.token,
@@ -38,16 +39,20 @@ class MedicineNotificationDialog(Dialog):
                     'measurement_id': self.data['id'],
                 })))
             self.objectStorage.speakSpeech.play("Отлично!", cache=True)
-        else:
+        elif self.is_negative(text):
             self.objectStorage.speakSpeech.play(
                 "Подтвердите прием позже с помощью комманды 'какие лекарства необходимо принять'", cache=True
+            )
+        else:
+            self.objectStorage.speakSpeech.play(
+                "Извините, я вас не очень поняла", cashe=True
             )
 
     cur = first
     name = 'Уведомление о принятии лекарства'
 
 
-class MedicineNotificationEvent(Event):
+class MedicineNotificationEvent(Event, ABC):
     name = "Уведомление о лекарствах"
     dialog_class = MedicineNotificationDialog
     data = None

@@ -1,3 +1,5 @@
+from abc import ABC
+
 from events.event import Event
 from dialogs.dialog import Dialog
 import logging
@@ -26,7 +28,7 @@ class MessageNotificationDialog(Dialog):
         self.need_permanent_answer = True
 
     def second(self, _input):
-        if 'да' in _input.lower():
+        if self.is_positive(text):
             asyncio.new_event_loop().run_until_complete(
                 self.ws.send(json.dumps({
                     "token": self.objectStorage.token,
@@ -35,16 +37,21 @@ class MessageNotificationDialog(Dialog):
                 })))
             self.objectStorage.speakSpeech.play(
                 "Отлично!", cache=True)
-        else:
+        elif self.is_negative(text):
             self.objectStorage.speakSpeech.play(
                 "Сообщение не помечено как прочитанное", cache=True)
+        else:
+            self.objectStorage.speakSpeech.play(
+                "Извините, я вас не очень поняла", cashe=True
+            )
 
     cur = first
     name = 'Уведомление о новом сообщении'
 
 
-class MessageNotificationEvent(Event):
+class MessageNotificationEvent(Event, ABC):
     dialog_class = MessageNotificationDialog
+    data = None
 
     def on_message(self, message):
         try:
