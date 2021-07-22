@@ -1,9 +1,17 @@
 #!/usr/bin/env python
 
-import logging
+"""
+`speaker.py`
+Input point for Telepat Speaker
+OOO Telepat, All Rights Reserved
+"""
+
+__version__ = '0.0.1'
+__author__ = 'Tikhon Petrishchev'
+__credits__ = 'TelePat LLC'
+
 import argparse
-import os.path
-from pathlib import Path
+import logging
 
 parser = argparse.ArgumentParser(description="Speaker for telepat.")
 parser.add_argument('-r', '--reset', help="reset speaker token and init",
@@ -55,7 +63,7 @@ logging.info("Started! OOO Telepat, all rights reserved.")
 try:
     from initGates import authGate, connectionGate, configGate
     from dialogs import dialog, dialogList
-    from soundProcessor import SoundProcessor
+    from utils.soundProcessor import SoundProcessor
     from events import event, eventsList
 except ImportError as e:
     logging.error("Error with importing modules {}".format(e))
@@ -63,7 +71,6 @@ except ImportError as e:
 
 if args.systemd:
     from cysystemd.daemon import notify, Notification
-
 
 if not args.development:
     try:
@@ -81,17 +88,13 @@ else:
 if args.development and args.input_function == 'rpi_button':
     raise Exception("Rpi Button can't be used with development mode")
 
-
-config_filename = os.path.join(
-    Path(__file__).resolve().parent, 'speaker_config.json')
-
 objectStorage = configGate.config_gate(
-    config_filename=config_filename,
     input_function=args.input_function,
     debug_mode=True if args.loglevel.lower() == 'debug' else False,
     reset=args.reset,
     clean_cash=args.clean_cash,
     development=args.development,
+    version=__version__,
 )
 
 if args.systemd:
@@ -110,8 +113,8 @@ if args.systemd:
 objectStorage = authGate.auth_gate(objectStorage)
 
 dialogEngineInstance = dialog.DialogEngine(
-                        objectStorage,
-                        dialogList.dialogs_list)
+    objectStorage,
+    dialogList.dialogs_list)
 
 if args.systemd:
     notify(Notification.STATUS, "Loading main processes...")

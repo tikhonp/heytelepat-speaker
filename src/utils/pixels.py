@@ -3,12 +3,12 @@ LED light pattern like Google Home
 """
 
 import logging
-import time
 import threading
+import time
 from queue import Queue
 
 try:
-    from utils import apa102
+    from src.utils import apa102
 except ImportError:
     logging.warning("Pixels unavailable spi_dev error")
     apa102 = None
@@ -151,7 +151,7 @@ class Pixels:
             return
         for i in range(self.PIXELS_N):
             self.dev.set_pixel(
-                i, int(colors[3*i]), int(colors[3*i + 1]), int(colors[3*i + 2])
+                i, int(colors[3 * i]), int(colors[3 * i + 1]), int(colors[3 * i + 2])
             )
 
         self.dev.show()

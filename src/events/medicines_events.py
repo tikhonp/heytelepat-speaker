@@ -11,7 +11,7 @@ class MedicineNotificationDialog(Dialog):
     data = None
     ws = None
 
-    def first(self, _input):
+    def first(self, text):
         self.objectStorage.speakSpeech.play(
             "Вам необходимо принять препарат {}. {}. ".format(self.data['title'], self.data['rules']) +
             "Подтвердите, вы приняли препарат?"
@@ -24,7 +24,7 @@ class MedicineNotificationDialog(Dialog):
             })))
         self.cur = self.yes_no
 
-    def yes_no(self, _input):
+    def yes_no(self, text):
         if self.is_positive(text):
             asyncio.new_event_loop().run_until_complete(
                 self.ws.send(json.dumps({
@@ -68,7 +68,7 @@ class MedicineNotificationEvent(Event, ABC):
         while True:
             loop.run_until_complete(
                 self.web_socket_connect(
-                    'ws/speakerapi/medicines/',
+                    '/ws/speakerapi/medicines/',
                     {
                         "token": self.objectStorage.token,
                         "request_type": "init"

@@ -1,12 +1,11 @@
-import pickle
 import logging
+import os
+import pickle
+
 import requests
-
-import speech_recognition as sr
 import simpleaudio as sa
+import speech_recognition as sr
 import speechkit
-
-from utils import pixels
 
 
 def play_audio_function(io_vaw, num_channels=1, bytes_per_sample=2, sample_rate=48000):
@@ -137,9 +136,9 @@ class Speech:
             raise Exception("speechkit already initialised")
 
         self.synthesizeAudio = speechkit.SynthesizeAudio(
-                self.api_key)
+            self.api_key)
         self.recognizeShortAudio = speechkit.RecognizeShortAudio(
-                self.api_key)
+            self.api_key)
 
     def create_speech(self, text: str) -> SynthesizedSpeech:
         """Creates instance of SynthesizedSpeech to be used for synth later"""
@@ -199,6 +198,7 @@ class SpeakSpeech:
 
     def __store_data__(self):
         logging.debug("Storing data, data: {}".format(self.data))
+        os.makedirs(os.path.dirname(self.cashed_data_filename), exist_ok=True)
         with open(self.cashed_data_filename, 'wb') as f:
             pickle.dump(self.data, f)
 
@@ -223,7 +223,7 @@ class SpeakSpeech:
             else:
                 logging.debug("Cashed data was not found, synthesizing, "
                               "text: '{}', keywords: '{}'".format(
-                                text, self.data.keys()))
+                    text, self.data.keys()))
                 synthesized_speech = self.speech.create_speech(text)
                 synthesized_speech.synthesize()
                 self.data[text] = synthesized_speech

@@ -1,14 +1,15 @@
-from dialogs.dialog import Dialog
 import datetime
 import locale
 import logging
+
+from dialogs.dialog import Dialog
+
 try:
     import alsaaudio
 except ImportError:
     logging.warning(
         "AlsaAudio import error, make sure development mode is active")
     alsaaudio = None
-
 
 locale.setlocale(locale.LC_TIME, "ru_RU")
 
@@ -30,14 +31,14 @@ class SetVolumeDialog(Dialog):
         if alsaaudio is None:
             return
         self.objectStorage.speakSpeech.play(
-                "Какую громкость вы хотите поставить?", cache=True)
+            "Какую громкость вы хотите поставить?", cache=True)
         self.cur = self.second
         self.need_permanent_answer = True
 
     def second(self, text):
         if not (value := self.to_integer(text)):
             self.objectStorage.speakSpeech.play(
-                    "Необходимо указать числовое значение", cache=True)
+                "Необходимо указать числовое значение", cache=True)
             return
 
         if value < 1 or value > 100:
@@ -49,7 +50,7 @@ class SetVolumeDialog(Dialog):
         m.setvolume(value)
 
         self.objectStorage.speakSpeech.play(
-                "Громкость установлена", cache=True)
+            "Громкость установлена", cache=True)
 
     cur = first
     name = 'Громкость'
@@ -68,6 +69,7 @@ class HelpDialog(Dialog):
             "Чтобы не забыть о лекарствах, спросите 'Какие лекарства мне нужно принять?', "
             "А чтобы подтвердить прием лекарства скажите 'Подтверди прием.'", cache=True
         )
+
     cur = first
     name = 'Помощь'
     keywords = ['умеешь']

@@ -1,10 +1,9 @@
 from dialogs import (
-    basic_dialogs,
-    messages_dialogs,
     measurments_dialogs,
     medicine_dialogs,
+    messages_dialogs,
+    basic_dialogs
 )
-
 
 dialogs_list = [
     basic_dialogs.TimeDialog,

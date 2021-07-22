@@ -8,10 +8,10 @@ class CheckMedicinesDialog(Dialog):
     def first(self, text):
         if answer := self.fetch_data(
                 'get',
-                self.objectStorage.host+'/speakerapi/medicine/',
+                self.objectStorage.host_http + 'medicine/',
                 json={
-                    "token": self.objectStorage.token,
-                    "request_type": "get"
+                    'token': self.objectStorage.token,
+                    'request_type': 'get'
                 }):
 
             self.data = answer
@@ -39,7 +39,7 @@ class CheckMedicinesDialog(Dialog):
     def commit_medicine_status(self, request_type: str):
         self.fetch_data(
             'patch',
-            self.objectStorage.host + '/speakerapi/medicine/',
+            self.objectStorage.host_http + 'medicine/',
             json={
                 'token': self.objectStorage.token,
                 'request_type': request_type,
@@ -50,7 +50,7 @@ class CheckMedicinesDialog(Dialog):
         if self.is_positive(text):
             self.fetch_data(
                 'post',
-                self.objectStorage.host+'/speakerapi/medicine/commit/',
+                self.objectStorage.host_http + 'medicine/commit/',
                 json={
                     "token": self.objectStorage.token,
                     "medicine": self.current.get('title')
@@ -85,7 +85,7 @@ class CommitMedicineDialog(Dialog):
         value = text
         if self.fetch_data(
                 'post',
-                self.objectStorage.host+'/speakerapi/medicine/commit/',
+                self.objectStorage.host_http + 'medicine/commit/',
                 json={
                     "token": self.objectStorage.token,
                     "medicine": value

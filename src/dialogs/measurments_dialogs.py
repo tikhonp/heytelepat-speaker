@@ -1,8 +1,8 @@
-from dialogs.dialog import Dialog
-import logging
 import asyncio
 import json
+import logging
 
+from dialogs.dialog import Dialog
 
 categories = [
     [['пульс'], {
@@ -285,7 +285,7 @@ class AddValueDialog(Dialog):
 
     def third(self, text):
         type_m = self.category.get('request_type', '') \
-            + self.category.get('value_type', '')
+                 + self.category.get('value_type', '')
         if type_m == "integer":
             value = self.to_integer(text)
         elif type_m == "float":
@@ -309,12 +309,12 @@ class AddValueDialog(Dialog):
 
         if self.fetch_data(
                 'post',
-                self.objectStorage.host+'/speakerapi/pushvalue/',
+                self.objectStorage.host_http + 'measurement/push/',
                 json={
                     'token': self.objectStorage.token,
                     'values': [{
                         'category_name': self.category.get('name', '')
-                        + self.category.get('category', ''),
+                                         + self.category.get('category', ''),
                         'value': value
                     }]
                 }):
@@ -344,7 +344,7 @@ class CommitFormsDialog(Dialog):
     def first(self, text):
         if answer := self.fetch_data(
                 'get',
-                self.objectStorage.host+'/speakerapi/measurements/',
+                self.objectStorage.host_http + 'measurement/',
                 json={
                     'token': self.objectStorage.token,
                     'request_type': 'get'
@@ -360,7 +360,7 @@ class CommitFormsDialog(Dialog):
         if hasattr(self, 'current'):
             self.fetch_data(
                 'patch',
-                self.objectStorage.host+'/speakerapi/measurements/',
+                self.objectStorage.host_http + 'measurement/',
                 json={
                     'token': self.objectStorage.token,
                     'request_type': 'is_done',
@@ -375,7 +375,7 @@ class CommitFormsDialog(Dialog):
             if not self.current['is_sent']:
                 self.fetch_data(
                     'patch',
-                    self.objectStorage.host+'/speakerapi/measurements/',
+                    self.objectStorage.host_http + 'measurement/',
                     json={
                         'token': self.objectStorage.token,
                         'request_type': 'is_sent',
@@ -406,7 +406,7 @@ class CommitFormsDialog(Dialog):
 
     def third(self, text):
         type_m = self.category.get('request_type', '') \
-            + self.category.get('value_type', '')
+                 + self.category.get('value_type', '')
         if type_m == "integer":
             value = self.to_integer(text)
         elif type_m == "float":
@@ -430,12 +430,12 @@ class CommitFormsDialog(Dialog):
 
         if self.fetch_data(
                 'post',
-                self.objectStorage.host+'/speakerapi/pushvalue/',
+                self.objectStorage.host_http + 'measurement/push/',
                 json={
                     'token': self.objectStorage.token,
                     'values': [{
                         'category_name': self.category.get('name', '')
-                        + self.category.get('category', ''),
+                                         + self.category.get('category', ''),
                         'value': value
                     }]
                 }):

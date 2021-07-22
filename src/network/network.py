@@ -5,10 +5,10 @@ Connection to network with this instruction:
     https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md
 """
 
-import subprocess
-import socket
-import requests
 import logging
+import subprocess
+
+import requests
 
 
 class Network:

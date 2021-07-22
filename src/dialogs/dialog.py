@@ -1,8 +1,9 @@
 import logging
-from collections import deque
 import time
-import requests
+from collections import deque
 from typing import Union
+
+import requests
 
 
 class Dialog:
@@ -74,7 +75,7 @@ class Dialog:
             raise ValueError("`request_type` must be `requests` method, like `get` or `post`")
 
         answer = getattr(requests, request_type)(*args, **kwargs)
-        if answer.status_code == 200:
+        if answer.ok:
             return answer.json()
         else:
             self.objectStorage.speakSpeech.play(
@@ -108,7 +109,7 @@ class Dialog:
 
                 if not (left_part := Dialog.to_integer(part.split()[-1])):
                     left_part = ''
-                    for letter in range(len(part)-1, -1, -1):
+                    for letter in range(len(part) - 1, -1, -1):
                         if letter.isdigit():
                             left_part = letter + left_part
                         else:
@@ -117,9 +118,9 @@ class Dialog:
                         return
                     left_part = int(left_part)
 
-                if not (right_part := Dialog.to_integer(parts[i+1].split()[0])):
+                if not (right_part := Dialog.to_integer(parts[i + 1].split()[0])):
                     right_part = ''
-                    for letter in parts[i+1]:
+                    for letter in parts[i + 1]:
                         if letter.isdigit():
                             right_part += letter
                         else:

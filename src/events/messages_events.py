@@ -1,17 +1,17 @@
+import asyncio
+import json
+import logging
 from abc import ABC
 
-from events.event import Event
 from dialogs.dialog import Dialog
-import logging
-import json
-import asyncio
+from events.event import Event
 
 
 class MessageNotificationDialog(Dialog):
     data = None
     ws = None
 
-    def first(self, _input):
+    def first(self, text):
         self.objectStorage.speakSpeech.play(
             "{} вам, только что написал: {}.".format(
                 self.data.get('sender'), self.data.get('text'))
@@ -27,7 +27,7 @@ class MessageNotificationDialog(Dialog):
         self.cur = self.second
         self.need_permanent_answer = True
 
-    def second(self, _input):
+    def second(self, text):
         if self.is_positive(text):
             asyncio.new_event_loop().run_until_complete(
                 self.ws.send(json.dumps({
@@ -67,7 +67,7 @@ class MessageNotificationEvent(Event, ABC):
         while True:
             loop.run_until_complete(
                 self.web_socket_connect(
-                    'ws/speakerapi/incomingmessage/',
+                    '/ws/speakerapi/incomingmessage/',
                     {"token": self.objectStorage.token},
                     self.on_message,
                 ))

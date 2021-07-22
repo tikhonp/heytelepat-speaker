@@ -1,9 +1,10 @@
-from network import network
+import json
+import logging
+import time
+
 import ggwave
 import pyaudio
-import json
-import time
-import logging
+from network import network
 
 
 def get_ggwave_input():

@@ -1,7 +1,9 @@
-from threading import Thread
-import pyaudio
 import logging
 import struct
+from threading import Thread
+
+import pyaudio
+
 try:
     import RPi.GPIO as GPIO
 except ImportError:

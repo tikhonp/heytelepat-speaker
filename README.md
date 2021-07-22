@@ -37,6 +37,12 @@ optional arguments:
                         Provide logging level. Example -log=debug, default='warning'
 ```
 
+# Packaging
+
+```bash
+$ tar czf firmware_0.0.2.tar.gz src
+```
+
 # Todo 
 - Инструкции и картинки на экранах подключения
 - рассылка заданий и опрос их

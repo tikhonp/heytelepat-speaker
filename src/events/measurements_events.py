@@ -1,6 +1,6 @@
 import asyncio
-import logging
 import json
+import logging
 from abc import ABC
 
 from dialogs.measurments_dialogs import (
@@ -15,7 +15,7 @@ class MeasurementNotificationDialog(AddValueDialog):
     dialog_time = None
     category = None
 
-    def first(self, _input):
+    def first(self, text):
         self.objectStorage.speakSpeech.play(
             self.data['patient_description']
             + " Вы готовы произнести ответ сейчас?")
@@ -27,7 +27,7 @@ class MeasurementNotificationDialog(AddValueDialog):
             })))
         self.cur = self.yes_no
 
-    def yes_no(self, _input):
+    def yes_no(self, text):
         if self.is_positive(text):
             self.category = self.data['fields'].pop(0)
             self.objectStorage.speakSpeech.play(
@@ -72,7 +72,7 @@ class MeasurementNotificationEvent(Event, ABC):
         while True:
             loop.run_until_complete(
                 self.web_socket_connect(
-                    'ws/speakerapi/measurements/',
+                    '/ws/speakerapi/measurements/',
                     {
                         "token": self.objectStorage.token,
                         "request_type": "init"

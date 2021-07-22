@@ -1,10 +1,12 @@
-import threading
-from utils import speech, pixels
-import soundProcessor
+import configparser
 import json
 import logging
+import os
+import threading
 from pathlib import Path
-import os.path
+from typing import Union
+
+from utils import speech, pixels, soundProcessor
 
 
 class ObjectStorage:
@@ -25,6 +27,7 @@ class ObjectStorage:
         :param threading.RLock lock_obj: Lock object for threading Locks, default initialises
         :param speech.Speech speech_cls: Object of Speech class, default initialises (`play_audio_function` required)
         :param speech.SpeakSpeech speakSpeech_cls: Object of SpeakSpeech class, default initialises
+        :param string version: Version of script like `major.minor.fix`, default `null`
 
         :return None:
         """
@@ -35,11 +38,12 @@ class ObjectStorage:
 
         self.development = kwargs.get('development', False)
         self.debug_mode = kwargs.get('debug_mode')
-        self.cash_filename = kwargs.get('cash_filename', os.path.join(self.BASE_DIR, self.config['cash_filename']))
+        self.cash_filename = kwargs.get('cash_filename', os.path.join(Path.home(), '.speaker/speech.cash'))
         self.pixels = kwargs.get('pixels', pixels.Pixels(self.development))
         self.play_audio_function = kwargs.get('play_audio_function')
         self.event_obj = kwargs.get('event_obj', threading.Event())
         self.lock_obj = kwargs.get('lock_obj', threading.RLock())
+        self.version = kwargs.get('version', 'null')
 
         if 'speech_cls' in kwargs:
             self.speech = kwargs['speech_cls']
@@ -54,38 +58,89 @@ class ObjectStorage:
 
     @property
     def api_key(self):
-        return self.config['api_key']
+        return self.config.get('api_key')
 
     @property
     def catalog(self):
-        return self.config['catalog']
+        return self.config.get('catalog')
 
     @property
     def host(self):
-        return self.config['host']
+        return self.config.get('host')
+
+    @property
+    def host_http(self):
+        return 'http://' + self.host + '/speaker/api/v1/' if self.host else None
+
+    @property
+    def host_ws(self):
+        return 'ws://' + self.host if self.host else None
 
     @property
     def token(self):
-        return self.config['token']
+        return self.config.get('token')
+
+
+def get_settings() -> dict:
+    """Load ini config and generates dictionary"""
+
+    logging.info("First loading from `settings.ini`")
+    settings_filename = 'settings.ini'
+
+    with open(settings_filename):
+        pass
+
+    config = configparser.ConfigParser()
+    config.read(settings_filename)
+
+    return {
+        'api_key': config['SPEECHKIT']['API_KEY'],
+        'catalog': config['SPEECHKIT']['CATALOG'],
+        'host': config['SERVER']['HOST'],
+        'version': config['GLOBAL']['VERSION'],
+    }
+
+
+def save_config(config: dict, file_path: str):
+    logging.info("Saving config to `{}`".format(file_path))
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, 'w') as f:
+        json.dump(config, f)
+
+
+def load_config(file_path: str) -> Union[dict, None]:
+    try:
+        with open(file_path) as f:
+            config = json.load(f)
+        logging.info("Loaded config with filename `{}`".format(file_path))
+        return config
+    except FileNotFoundError:
+        return
 
 
 def config_gate(
-        config_filename,
         input_function,
         debug_mode=False,
         reset=False,
         clean_cash=False,
-        development=False):
+        development=False,
+        version=None
+):
+    """Default config file stores in ~/.speaker/config.json"""
 
-    with open(config_filename) as f:
-        config = json.load(f)
-    logging.info("Loaded config with filename '%s'", config_filename)
+    config_file_path = os.path.join(Path.home(), '.speaker/config.json')
+
+    if not (config := load_config(config_file_path)):
+        config = get_settings()
+        config['token'] = None
+    else:
+        config.update(get_settings())
 
     if reset:
         logging.info("Resetting token")
         config['token'] = None
-        with open(config_filename, 'w') as f:
-            json.dump(config, f)
+
+    save_config(config, config_file_path)
 
     if input_function == 'rpi_button':
         logging.info("Setup input function as Button")
@@ -104,11 +159,16 @@ def config_gate(
     object_storage = ObjectStorage(
         config,
         input_function,
-        config_filename,
+        config_file_path,
         development=development,
         play_audio_function=speech.play_audio_function,
         debug_mode=debug_mode,
+        version=version
     )
+
+    if object_storage.version != config.get('version'):
+        raise ValueError("Main file version ({}) and config version ({}) didn't match!".format(
+            object_storage.version, config.get('version')))
 
     if clean_cash:
         logging.info("Cleanup cash")

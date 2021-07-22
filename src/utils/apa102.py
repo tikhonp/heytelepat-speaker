@@ -5,8 +5,9 @@ This is the main driver module for APA102 LEDs
 License: GPL V2
 """
 
-import spidev
 from math import ceil
+
+import spidev
 
 RGB_MAP = {
     'rgb': [3, 2, 1], 'rbg': [3, 1, 2], 'grb': [2, 3, 1],
@@ -162,7 +163,7 @@ class APA102:
         # Calculate pixel brightness as a percentage of the
         # defined global_brightness. Round up to nearest integer
         # as we expect some brightness unless set to 0
-        brightness = int(ceil(bright_percent*self.global_brightness/100.0))
+        brightness = int(ceil(bright_percent * self.global_brightness / 100.0))
 
         # LED start frame is three "1" bits, followed by 5 brightness bits
         led_start = (brightness & 0b00011111) | self.LED_START
@@ -183,7 +184,7 @@ class APA102:
         """
         self.set_pixel(
             led_num, (rgb_color & 0xFF0000) >> 16,
-            (rgb_color & 0x00FF00) >> 8, rgb_color & 0x0000FF,
+                     (rgb_color & 0x00FF00) >> 8, rgb_color & 0x0000FF,
             bright_percent
         )
 
@@ -227,7 +228,7 @@ class APA102:
 
         if wheel_pos > 255:
             wheel_pos = 255  # Safeguard
-        if wheel_pos < 85:   # Green -> Red
+        if wheel_pos < 85:  # Green -> Red
             return self.combine_color(wheel_pos * 3, 255 - wheel_pos * 3, 0)
         if wheel_pos < 170:  # Red -> Blue
             wheel_pos -= 85

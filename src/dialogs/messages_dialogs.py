@@ -1,10 +1,10 @@
-from dialogs.dialog import Dialog
 from dateutil import parser
+from dialogs.dialog import Dialog
 
 
 class SendMessageDialog(Dialog):
     message = None
-    
+
     def first(self, text):
         self.objectStorage.speakSpeech.play(
             "Какое сообщение вы хотите отправить?", cache=True)
@@ -22,12 +22,11 @@ class SendMessageDialog(Dialog):
         if self.is_positive(text):
             if self.fetch_data(
                     'post',
-                    self.objectStorage.host+"/speakerapi/sendmessage/",
+                    self.objectStorage.host_http + "message/send/",
                     json={
                         'token': self.objectStorage.token,
                         'message': self.message,
                     }):
-
                 self.objectStorage.speakSpeech.play(
                     "Сообщение успешно отправлено!", cache=True)
         else:
@@ -52,11 +51,11 @@ class SendMessageDialog(Dialog):
 class NewMessagesDialog(Dialog):
     def first(self, text):
         if (answer := self.fetch_data(
-                    'get',
-                    self.objectStorage.host+'/speakerapi/incomingmessage/',
-                    json={
-                        'token': self.objectStorage.token,
-                    })) is None:
+                'get',
+                self.objectStorage.host_http + 'message/',
+                json={
+                    'token': self.objectStorage.token,
+                })) is None:
             return
 
         if not answer:

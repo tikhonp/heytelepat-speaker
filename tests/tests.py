@@ -1,11 +1,10 @@
 import unittest
-from utils import speech
-import io
+from src.utils import speech
 
 
 class TestPlayaudiofunctions(unittest.TestCase):
     def check_playaudiofuction(self):
-        with open("tests_data/test_audio.wav", "rb") as f:
+        with open("test_audio.wav", "rb") as f:
             print(f)
             self.assertEqual(
                 speech.play_audio_function(f.read(), sample_rate=88200),

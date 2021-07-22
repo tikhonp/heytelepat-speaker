@@ -1,8 +1,9 @@
-from threading import Thread
-import logging
-import websockets
-import json
 import datetime
+import json
+import logging
+from threading import Thread
+
+import websockets
 
 
 class Event(Thread):
@@ -33,8 +34,7 @@ class Event(Thread):
         :param Union[dict, list] data_json: json serializable data to send to socket
         :param function on_message:  function that handles message with one parameter `msg`
         """
-        url = 'ws://{}/{}'.format(
-            self.objectStorage.host.split('/')[2], url)
+        url = self.objectStorage.host_ws + url
 
         # noinspection PyUnresolvedReferences
         try:
