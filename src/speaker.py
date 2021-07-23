@@ -58,7 +58,7 @@ logging.basicConfig(
     level=numeric_level
 )
 
-logging.info("Started! OOO Telepat, all rights reserved.")
+logging.info("Started! OOO Telepat, all rights reserved. [{}]".format(__version__))
 
 try:
     from initGates import authGate, connectionGate, configGate

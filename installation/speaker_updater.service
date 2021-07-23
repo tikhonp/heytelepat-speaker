@@ -1,0 +1,13 @@
+[Unit]
+Description = Update speaker firmware util
+
+[Service]
+Type = oneshot
+WorkingDirectory = {{ working_directory }}
+
+User = {{ user }}
+
+ExecStart = {{ python_env_path }} {{ script }} {{ args }}
+
+[Install]
+WantedBy = multi-user.target

@@ -1,7 +1,8 @@
-import ggwave
-import pyaudio
 import getpass
 import json
+
+import ggwave
+import pyaudio
 
 p = pyaudio.PyAudio()
 
@@ -19,7 +20,7 @@ while True:
     stream = p.open(
         format=pyaudio.paFloat32, channels=1, rate=48000,
         output=True, frames_per_buffer=4096)
-    stream.write(waveform, len(waveform)//4)
+    stream.write(waveform, len(waveform) // 4)
     stream.stop_stream()
     stream.close()
 

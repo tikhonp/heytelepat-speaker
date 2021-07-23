@@ -94,28 +94,37 @@ def update_firmware(version: str):
             for chunk in answer.iter_content():
                 f.write(chunk)
 
-    firmware_directory = os.path.join(BASE_DIR, 'updater', '.'.join(filename.split('.')[:-1]))
+    firmware_directory = os.path.join(BASE_DIR, 'updater', 'src')
     logging.info("Unpacking `{}` into `{}`...".format(filename, firmware_directory))
     with tarfile.open(tar_firmware_path) as tar:
-        tar.extractall(firmware_directory)
+        tar.extractall(os.path.join(BASE_DIR, 'updater'))
     os.remove(tar_firmware_path)
 
     source_firmware_path = os.path.join(BASE_DIR, 'src')
     logging.info("Removing old firmware...")
     shutil.rmtree(source_firmware_path, ignore_errors=True)
     logging.info("Moving new firmware to `src`.")
-    shutil.move(firmware_directory, BASE_DIR)
+    shutil.move(firmware_directory, source_firmware_path)
 
 
-def main():
-    # stop process speaker
+def main(update_only=False):
+    global BASE_DIR
+
     if not (version := check_if_new_version_available()):
         logging.info("New firmware not found, stopping...")
         return
     logging.info("New firmware available `{}`.".format(version))
+
+    if not update_only:
+        logging.info("Stopping speaker service...")
+        os.system('sudo {}'.format(os.path.join(BASE_DIR, 'updater', 'stop_speaker_service.sh')))
+
     update_firmware(version)
     logging.info("Done! Successfully updated to `{}`.".format(version))
-    # start process speaker
+
+    if not update_only:
+        logging.info("Starting speaker service...")
+        os.system('sudo {}'.format(os.path.join(BASE_DIR, 'updater', 'start_speaker_service.sh')))
 
 
 if __name__ == '__main__':
@@ -124,5 +133,9 @@ if __name__ == '__main__':
         datefmt='%Y-%m-%d %H:%M:%S',
         level=logging.INFO
     )
-    logging.info("Update speaker firmware util. `OOO Telepat` All Rights Reserved.")
-    main()
+    parser = argparse.ArgumentParser(description="Update speaker firmware util.")
+    parser.add_argument('-upd_only', '--update_only', help="run updates without restarting speaker service.",
+                        action='store_true')
+    args = parser.parse_args()
+    logging.info("Update speaker firmware util [{}]. `OOO Telepat` All Rights Reserved.".format(__version__))
+    main(update_only=args.update_only)

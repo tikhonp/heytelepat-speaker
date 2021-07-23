@@ -1,0 +1,9 @@
+[Unit]
+Description = Update speaker firmware util timer
+
+[Timer]
+OnUnitActiveSec = {{ restart_time_s }}s
+OnBootSec = 10s
+
+[Install]
+WantedBy = timers.target
