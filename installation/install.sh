@@ -147,11 +147,17 @@ fi
 echo -n "Enabling speaker service..."
 sudo systemctl enable speaker >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
 
-echo -n "Enabling speaker_updater service..."
-sudo systemctl enable speaker_updater >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
+echo -n "Enabling speaker_updater service and timer..."
+{
+  sudo systemctl enable speaker_updater
+  sudo systemctl enable speaker_updater.timer
+} >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
 
-echo -n "Starting speaker_updater service..."
-sudo systemctl start speaker_updater >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
+echo -n "Starting speaker_updater service and timer..."
+{
+  sudo systemctl start speaker_updater
+  sudo systemctl start speaker_updater.timer
+} >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
 
 # shellcheck disable=SC1073
 echo -e "${GREEN}Done!${NC} Please reboot system. To start speaker run \`sudo systemctl start speaker\`"
