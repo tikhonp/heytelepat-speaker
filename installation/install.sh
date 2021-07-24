@@ -4,14 +4,22 @@ cd .. # Exit to root directory `heytelepat-speaker`
 
 # Parse arguments
 SKIP_DEPENDENCIES=0
-while getopts "h?s" opt; do
+REQUIREMENTS="requirements.txt"
+DEVELOPMENT=0
+while getopts "h?sdr:" opt; do
   case "$opt" in
   h | \?)
-    echo "usage: ./install.sh [-h] [-s]"
+    echo "usage: ./install.sh [-h] [-s] [-d] [-r REQUIREMENTS]"
     exit 0
     ;;
   s)
     SKIP_DEPENDENCIES=1
+    ;;
+  d)
+    DEVELOPMENT=1
+    ;;
+  r)
+    REQUIREMENTS=$OPTARG
     ;;
   esac
 done
@@ -46,31 +54,46 @@ else
   } &>/dev/null
 
 fi
-exit
 
 # Creating python venv and installing pip dependencies
 
-python3 -m venv env
-. env/bin/activate
+echo "Setting up python environment..."
+{
+  python3 -m venv env
+  source env/bin/activate
+  env/bin/pip install -U pip
+} &>/dev/null
 
-pip install -U pip
-pip install -r installation/requirements.txt
+echo "Installing python requirements from \`$REQUIREMENTS\`..."
+{
+  env/bin/pip install -r "installation/$REQUIREMENTS" || exit
+} &>/dev/null
 
 # Creating systemd services --------
 
+echo "Creating systemd services..."
 cd installation || exit
 mkdir services
-python render_services.py "$USER" services || exit
-sudo mv -v services/* /etc/systemd/system/
-sudo systemctl daemon-reload || exit
-rm -rf services
+../env/bin/python render_services.py "$USER" services || exit
+if ((DEVELOPMENT == 1)); then
+  echo "Development mode. Skipping setting up services..."
+else
+  sudo mv -v services/* /etc/systemd/system/ || exit
+  sudo systemctl daemon-reload || exit
+  rm -rf services
+fi
 cd ..
 
 # Updating speaker to last version
 
-cd update || exit
-python update.py --update_only || exit
+cd updater || exit
+../env/bin/python update.py --update_only || exit
 cd ..
+
+if ((DEVELOPMENT == 1)); then
+  echo "Development mode. Skipping setting up script and enabling services..."
+  exit
+fi
 
 # Granting SUDO to python executable scripts
 

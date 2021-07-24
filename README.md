@@ -42,7 +42,7 @@ $ git clone https://github.com/TikhonP/heytelepat-speaker.git
 $ cd heytelepat-speaker
 $ python3 -m venv env
 $ . env/bin/activate
-$ pip install -r installation/req_macos.txt
+$ pip install -r installation/requirements_macos.txt
 ```
 Then just run:
 
