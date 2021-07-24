@@ -7,3 +7,4 @@ simpleaudio==1.0.4
 websockets==9.1
 requests==2.25.1
 python_dateutil==2.8.2
+pathlib-1.0.1

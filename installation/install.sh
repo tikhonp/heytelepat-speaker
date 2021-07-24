@@ -1,22 +1,52 @@
-#!/bin/sh
+#!/bin/bash
 
 cd .. # Exit to root directory `heytelepat-speaker`
 
-# Installing all apt-get dependencies -------------------------------------------------------
+# Parse arguments
+SKIP_DEPENDENCIES=0
+while getopts "h?s" opt; do
+  case "$opt" in
+  h | \?)
+    echo "usage: ./install.sh [-h] [-s]"
+    exit 0
+    ;;
+  s)
+    SKIP_DEPENDENCIES=1
+    ;;
+  esac
+done
 
-sudo apt update
-sudo apt install portaudio19-dev libatlas-base-dev build-essential libssl-dev libffi-dev -y
-sudo apt-get install libportaudio0 libportaudio2 libportaudiocpp0 -y
+shift $((OPTIND - 1))
 
-sudo apt install python3-dev python3-pip python3-venv -y
+[ "${1:-}" = "--" ] && shift
 
-# Installing voice card driver ---------------------------
+if ((SKIP_DEPENDENCIES == 1)); then
+  echo "Skipping apt-get dependencies installation..."
+else
+  # Installing all apt-get dependencies -------------------------------------------------------
 
-git clone https://github.com/respeaker/seeed-voicecard.git
-cd seeed-voicecard || exit
-sudo ./install.sh
-cd ..
-rm -rf seeed-voicecard
+  echo "Installing all apt-get dependencies..."
+  {
+    sudo apt update
+    sudo apt install portaudio19-dev libatlas-base-dev build-essential libssl-dev libffi-dev -y
+    sudo apt-get install libportaudio0 libportaudio2 libportaudiocpp0 -y
+
+    sudo apt install python3-dev python3-pip python3-venv -y
+  } &>/dev/null
+
+  # Installing voice card driver ---------------------------
+
+  echo "Installing voice card driver..."
+  {
+    git clone https://github.com/respeaker/seeed-voicecard.git
+    cd seeed-voicecard || exit
+    sudo ./install.sh
+    cd ..
+    rm -rf seeed-voicecard
+  } &>/dev/null
+
+fi
+exit
 
 # Creating python venv and installing pip dependencies
 
@@ -24,13 +54,16 @@ python3 -m venv env
 . env/bin/activate
 
 pip install -U pip
-pip install -r installer/requirements.txt
+pip install -r installation/requirements.txt
 
 # Creating systemd services --------
 
-cd installer || exit
-sudo python render_services.py "$USER" || exit
-sudo systemctl daemon-reload
+cd installation || exit
+mkdir services
+python render_services.py "$USER" services || exit
+sudo mv -v services/* /etc/systemd/system/
+sudo systemctl daemon-reload || exit
+rm -rf services
 cd ..
 
 # Updating speaker to last version
