@@ -48,7 +48,7 @@ Then just run:
 
 ```bash
 $ cd src
-$ ./speaker.py
+$ ./speaker.py -d
 ```
 
 You can set options, just type help:
