@@ -7,7 +7,7 @@ NC='\033[0m' # No Color
 echo -n "Stopping and deactivating speaker and speaker_updater services..."
 {
   sudo systemctl stop speaker
-  sudo systemctl stop speaker.timer
+  sudo systemctl stop speaker_updater.timer
   sudo systemctl stop speaker_updater
 
   sudo systemctl disable speaker

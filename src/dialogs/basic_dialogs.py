@@ -1,8 +1,15 @@
 import datetime
 import locale
 import logging
+import time
+
+try:
+    import RPi.GPIO as GPIO
+except ImportError:
+    logging.warning("RPi.GPIO is not available, button is disabled")
 
 from dialogs.dialog import Dialog
+from initGates.configGate import save_config
 
 try:
     import alsaaudio
@@ -73,3 +80,55 @@ class HelpDialog(Dialog):
     cur = first
     name = 'Помощь'
     keywords = ['умеешь']
+
+
+class ResetDialog(Dialog):
+    last_time_pressed = None
+    count_presses = 0
+    button_pin = 17
+    time_delay = 0.8
+
+    def callback(self, event=None):
+        current_time = int(time.time())
+        if self.last_time_pressed is None:
+            self.count_presses = 1
+            self.last_time_pressed = current_time
+        elif (current_time - self.last_time_pressed) < self.time_delay:
+            self.count_presses += 1
+            self.last_time_pressed = current_time
+        else:
+            self.last_time_pressed = None
+            self.count_presses = 0
+
+    def reset_speaker(self):
+        self.objectStorage.speakSpeech.play("Восстанавливаю заводские настройки.", cashed=True)
+        if not self.fetch_data(
+                'delete',
+                self.objectStorage.host_http + 'speaker/',
+                json={'token': self.objectStorage.token}
+        ):
+            return
+        config = self.objectStorage.config
+        config['token'] = None
+        save_config(config, self.objectStorage.config_filename)
+        self.objectStorage.speakSpeech.play("Успешно восстановлены заводские настройки.", cashed=True)
+        exit()
+
+    def first(self, text):
+        self.objectStorage.speakSpeech.play(
+            "Для поддтверждения сброса колонки нажмите трижды на кнопку или один раз для отмены.", cashed=True
+        )
+        GPIO.add_event_detect(self.button_pin, GPIO.FALLING, callback=self.callback, bouncetime=250)
+        while True:
+            if self.count_presses >= 3:
+                return self.reset_speaker()
+            if self.last_time_pressed and self.count_presses == 1 and \
+                    (int(time.time()) - self.last_time_pressed) > self.time_delay:
+                self.objectStorage.speakSpeech.play(
+                    "Отменено.", cashed=True
+                )
+                return
+
+    cur = first
+    name = 'Сброс до заводских настроек'
+    keywords = ['сброс', 'заводск']
