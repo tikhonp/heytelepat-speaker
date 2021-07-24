@@ -38,9 +38,10 @@ else
     sudo apt update
     sudo apt install portaudio19-dev libatlas-base-dev build-essential libssl-dev libffi-dev -y
     sudo apt-get install libportaudio0 libportaudio2 libportaudiocpp0 -y
-
-    sudo apt install python3-dev python3-pip python3-venv -y
   } &>/dev/null
+
+  echo "Installing python 3.9"
+  ./install_python3.9.sh
 
   # Installing voice card driver ---------------------------
 
@@ -59,7 +60,7 @@ fi
 
 echo "Setting up python environment..."
 {
-  python3 -m venv env
+  python3.9 -m venv env
   source env/bin/activate
   env/bin/pip install -U pip
 } &>/dev/null
