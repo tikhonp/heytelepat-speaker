@@ -108,7 +108,7 @@ if ((DEVELOPMENT == 1)); then
   echo -e "${YELLOW}Development mode. Skipping setting up services...${NC}"
 else
   echo -n "Putting generated units into \`/etc/systemd/system/\`..."
-  sudo mv -v services/* /etc/systemd/system/ && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
+  sudo mv -v services/* /etc/systemd/system/ >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
   echo -n "Running daemon-reload..."
   sudo systemctl daemon-reload && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
   rm -rf services
@@ -145,13 +145,13 @@ fi
 # Enabling system services ---------
 
 echo -n "Enabling speaker service..."
-sudo systemctl enable speaker && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
+sudo systemctl enable speaker >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
 
 echo -n "Enabling speaker_updater service..."
-sudo systemctl enable speaker_updater && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
+sudo systemctl enable speaker_updater >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
 
 echo -n "Starting speaker_updater service..."
-sudo systemctl start speaker_updater && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
+sudo systemctl start speaker_updater >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
 
 # shellcheck disable=SC1073
 echo -e "${GREEN}Done!${NC} Please reboot system. To start speaker run \`sudo systemctl start speaker\`"
