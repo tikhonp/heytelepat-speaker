@@ -8,7 +8,7 @@ import time
 from queue import Queue
 
 try:
-    from src.utils import apa102
+    from utils import apa102
 except ImportError:
     logging.warning("Pixels unavailable spi_dev error")
     apa102 = None

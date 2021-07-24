@@ -27,14 +27,15 @@ def init(object_storage):
         cache=True)
 
     answer = requests.post(object_storage.host_http + 'speaker/',
-                           json={'version': object_storage.version}).json()
+                           json={'version': object_storage.version})
     answer.raise_for_status()
+    answer = answer.json()
     config = object_storage.config
-    config['token'] = answer['token']
+    config['token'] = answer.get('token')
     save_config(config, object_storage.config_filename)
 
     object_storage.speakSpeech.play(
-        "Итак, твой код: {}".format(" - ".join(list(str(answer['code'])))))
+        "Итак, твой код: {}".format(" - ".join(list(str(answer.get('code'))))))
 
     object_storage.pixels.think()
 
@@ -64,10 +65,11 @@ def auth_gate(object_storage):
         answer.raise_for_status()
         if (server_version := answer.json().get('version')) != object_storage.version:
             logging.info("Updating server version `{}` -> `{}`".format(server_version, object_storage.version))
-            if not (answer := requests.put(object_storage.host_http + 'speaker/',
-                                           json={'token': object_storage.token,
-                                                 'version': object_storage.version})).ok:
+            answer = requests.put(object_storage.host_http + 'speaker/',
+                                  json={'token': object_storage.token,
+                                        'version': object_storage.version})
+            if not answer.ok:
                 logging.error(
-                    "Error updating version: statis code `{}`, text `{}`".format(answer.status_code, answer.text[:100]))
+                    "Error updating version: status code `{}`, text `{}`".format(answer.status_code, answer.text[:100]))
 
     return object_storage

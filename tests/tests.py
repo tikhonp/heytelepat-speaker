@@ -1,5 +1,5 @@
 import unittest
-from src.utils import speech
+from utils import speech
 
 
 class TestPlayaudiofunctions(unittest.TestCase):

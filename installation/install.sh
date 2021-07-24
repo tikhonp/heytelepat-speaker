@@ -67,6 +67,8 @@ else
     echo -e "   ${RED}[ FAILED ]${NC}"
   fi
 
+  echo -n "Patching alsa config..."
+  sudo mv installation/asound.conf /etc/asound.conf >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]"
 fi
 
 # Creating python venv and installing pip dependencies
@@ -78,25 +80,17 @@ if ((DEVELOPMENT == 1)); then
 else
   python=python3.9
 fi
-if {
+{
   # shellcheck disable=SC2091
   $python -m venv env
   source env/bin/activate
   env/bin/pip install -U pip
-} >/dev/null; then
-  echo -e "   ${GREEN}[ OK ]${NC}"
-else
-  echo -e "   ${RED}[ FAILED ]${NC}"
-fi
+} >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
 
 echo -n "Installing python requirements from \`$REQUIREMENTS\`, may take a while..."
-if {
+{
   env/bin/pip install -r "installation/$REQUIREMENTS" || exit
-} >/dev/null; then
-  echo -e "   ${GREEN}[ OK ]${NC}"
-else
-  echo -e "   ${RED}[ FAILED ]${NC}"
-fi
+} >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
 
 # Creating systemd services --------
 
@@ -131,17 +125,19 @@ echo -n "Granting SUDO to shell executable scripts..."
 # Scripts: src/network/add_network.sh, src/network/connect_network.sh,
 # updater/start_speaker_service.sh, updater/stop_speaker_service.sh,
 
-if {
+{
   sudo chown root:root src/network/add_network.sh src/network/connect_network.sh \
     updater/start_speaker_service.sh updater/stop_speaker_service.sh
   sudo chmod 700 src/network/add_network.sh src/network/connect_network.sh \
     updater/start_speaker_service.sh updater/stop_speaker_service.sh
-}; then
-  echo -e "   ${GREEN}[ OK ]${NC}"
-else
-  echo -e "   ${RED}[ FAILED ]${NC}"
-fi
+}>/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
 
+# Store cash for network connection
+
+echo -n "Storing cash audio for network connection..."
+cd src || exit
+../env/bin/python speaker.py --store_cash >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
+cd ..
 # Enabling system services ---------
 
 echo -n "Enabling speaker service..."

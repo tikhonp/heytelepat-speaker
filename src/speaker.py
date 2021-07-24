@@ -76,9 +76,10 @@ if not args.development:
     try:
         import alsaaudio
     except ImportError:
-        raise ImportError(
+        logging.error(
             "If you using development mode please turn it on '-d', or install"
             " alsaaudio module.")
+        exit()
 
     m = alsaaudio.Mixer(control='Speaker', cardindex=1)
     m.setvolume(90)
@@ -86,7 +87,8 @@ else:
     logging.warning("AlsaAudio is not used, development mode")
 
 if args.development and args.input_function == 'rpi_button':
-    raise Exception("Rpi Button can't be used with development mode")
+    logging.error("Rpi Button can't be used with development mode")
+    exit()
 
 objectStorage = configGate.config_gate(
     input_function=args.input_function,
@@ -106,6 +108,7 @@ connectionGate.connection_gate(objectStorage, args.systemd)
 if args.store_cash:
     logging.info("Store cash active")
     connectionGate.cash_phrases(objectStorage.speakSpeech)
+    exit()
 
 if args.systemd:
     notify(Notification.STATUS, "Auth Gate...")
