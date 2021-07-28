@@ -9,7 +9,7 @@ NC='\033[0m' # No Color
 
 # Parse arguments
 SKIP_DEPENDENCIES=0
-REQUIREMENTS="requirements.txt"
+REQUIREMENTS="src/requirements.txt"
 DEVELOPMENT=0
 while getopts "h?sdr:" opt; do
   case "$opt" in
@@ -89,7 +89,7 @@ fi
 
 echo -n "Installing python requirements from \`$REQUIREMENTS\`, may take a while..."
 {
-  env/bin/pip install -r "installation/$REQUIREMENTS" || exit
+  env/bin/pip install -r "$REQUIREMENTS" || exit
 } >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
 
 # Creating systemd services --------
@@ -130,7 +130,7 @@ echo -n "Granting SUDO to shell executable scripts..."
     updater/start_speaker_service.sh updater/stop_speaker_service.sh
   sudo chmod 700 src/network/add_network.sh src/network/connect_network.sh \
     updater/start_speaker_service.sh updater/stop_speaker_service.sh
-}>/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
+} >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
 
 # Store cash for network connection
 

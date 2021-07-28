@@ -2,47 +2,44 @@ import configparser
 import json
 import logging
 import os
-import threading
 from pathlib import Path
-from typing import Union
 
-from utils import speech, pixels, soundProcessor
+from core import speech, pixels, soundProcessor
 
 
 class ObjectStorage:
     """Stores all objects for speaker functioning"""
 
-    def __init__(self, config, input_function, config_filename, **kwargs):
+    def __init__(self, config, **kwargs):
         """
         :param dict config: Data from speaker_config.json file
-        :param function input_function: Function that captures voice action
         :param string config_filename: File path to config
 
+        :param function input_function: Function that captures voice action, default `lambda: input("Press enter.")`
+        :param string config_filename: Path to config file, default `~/.speaker/config.json`
         :param boolean development: If development mode, default `False`
         :param boolean debug_mode: Debug mode status, default `None`
         :param string cash_filename: File path of cash file, default get from config
         :param pixels.Pixels pixels: Object of pixels class default initialises
-        :param function play_audio_function: Function to play audio BytesIO, default `None`
-        :param threading.Event event_obj: Event object for threading events, default initialises
-        :param threading.RLock lock_obj: Lock object for threading Locks, default initialises
+        :param function play_audio_function: Function to play audio BytesIO, default `speech.play_audio_function`
         :param speech.Speech speech_cls: Object of Speech class, default initialises (`play_audio_function` required)
         :param speech.SpeakSpeech speakSpeech_cls: Object of SpeakSpeech class, default initialises
         :param string version: Version of script like `major.minor.fix`, default `null`
 
-        :return None:
+        :return: __init__ should return None
+        :rtype: None
         """
+
         self.BASE_DIR = Path(__file__).resolve().parent.parent
         self.config = config
-        self.inputFunction = input_function
-        self.config_filename = config_filename
 
+        self.inputFunction = kwargs.get('input_function', lambda: input("Press enter."))
+        self.config_filename = kwargs.get('config_filename', os.path.join(Path.home(), '.speaker/config.json'))
         self.development = kwargs.get('development', False)
         self.debug_mode = kwargs.get('debug_mode')
         self.cash_filename = kwargs.get('cash_filename', os.path.join(Path.home(), '.speaker/speech.cash'))
         self.pixels = kwargs.get('pixels', pixels.Pixels(self.development))
-        self.play_audio_function = kwargs.get('play_audio_function')
-        self.event_obj = kwargs.get('event_obj', threading.Event())
-        self.lock_obj = kwargs.get('lock_obj', threading.RLock())
+        self.play_audio_function = kwargs.get('play_audio_function', speech.play_audio_function)
         self.version = kwargs.get('version', 'null')
 
         if 'speech_cls' in kwargs:
@@ -108,7 +105,14 @@ def save_config(config: dict, file_path: str):
         json.dump(config, f)
 
 
-def load_config(file_path: str) -> Union[dict, None]:
+def load_config(file_path):
+    """Load config file if exists
+
+    :param string file_path: Path to config file
+    :return: Optional python dict with config
+    :rtype: dict | None
+    """
+
     try:
         with open(file_path) as f:
             config = json.load(f)
@@ -150,7 +154,7 @@ def config_gate(
         input_function = soundProcessor.wakeup_word_input_function
     elif input_function == 'simple':
         logging.info("Setup input simple input function")
-        input_function = soundProcessor.simple_input_function
+        input_function = soundProcessor.async_simple_input_function
     else:
         raise ValueError(
             "Invalid input fiction '{}'. ".format(input_function) +
@@ -158,8 +162,8 @@ def config_gate(
 
     object_storage = ObjectStorage(
         config,
-        input_function,
-        config_file_path,
+        input_function=input_function,
+        config_filename=config_file_path,
         development=development,
         play_audio_function=speech.play_audio_function,
         debug_mode=debug_mode,

@@ -4,7 +4,7 @@ import logging
 
 import requests
 import websockets
-from initGates.configGate import save_config
+from init_gates.config_gate import save_config
 
 
 async def web_socket_auth(host: str, token: str):

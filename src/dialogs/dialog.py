@@ -1,7 +1,6 @@
 import logging
 import time
 from collections import deque
-from typing import Union
 
 import requests
 
@@ -97,8 +96,12 @@ class Dialog:
         return integers[0] if integers else None
 
     @staticmethod
-    def to_float(text: str) -> Union[float, None]:
-        """Validate raw input to float"""
+    def to_float(text):
+        """Validate raw input to float
+
+        :param string text: Text as input
+        :rtype: float | None
+        """
 
         delimiter = ' и '
         if delimiter in text:
@@ -200,15 +203,11 @@ class DialogEngine:
             self.currentDialog = self._chose_dialog_processor(text)
 
         if self.currentDialog is None:
-            with self.objectStorage.lock_obj:
-                self.objectStorage.speakSpeech.play(
-                    "К сожалению, я не знаю что ответить", cache=True)
+            self.objectStorage.speakSpeech.play("К сожалению, я не знаю что ответить", cache=True)
             return
 
-        logging.debug(
-            "Got text and chased dialog {}".format(self.currentDialog))
-        with self.objectStorage.lock_obj:
-            self.currentDialog.process_input(text)
+        logging.debug("Got text and chased dialog {}".format(self.currentDialog))
+        self.currentDialog.process_input(text)
 
         logging.debug("Current dialog {} is done {}".format(
             self.currentDialog, self.currentDialog.is_done))

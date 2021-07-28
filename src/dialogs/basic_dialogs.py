@@ -9,7 +9,7 @@ except ImportError:
     logging.warning("RPi.GPIO is not available, button is disabled")
 
 from dialogs.dialog import Dialog
-from initGates.configGate import save_config
+from init_gates.config_gate import save_config
 
 try:
     import alsaaudio

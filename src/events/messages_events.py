@@ -10,13 +10,14 @@ from events.event import Event
 class MessageNotificationDialog(Dialog):
     data = None
     ws = None
+    loop = None
 
     def first(self, text):
         self.objectStorage.speakSpeech.play(
             "{} вам, только что написал: {}.".format(
                 self.data.get('sender'), self.data.get('text'))
         )
-        asyncio.new_event_loop().run_until_complete(
+        self.loop.create_task(
             self.ws.send(json.dumps({
                 "token": self.objectStorage.token,
                 "notified_message": True,
@@ -29,7 +30,7 @@ class MessageNotificationDialog(Dialog):
 
     def second(self, text):
         if self.is_positive(text):
-            asyncio.new_event_loop().run_until_complete(
+            self.loop.create_task(
                 self.ws.send(json.dumps({
                     "token": self.objectStorage.token,
                     "red_message": True,
@@ -50,32 +51,18 @@ class MessageNotificationDialog(Dialog):
 
 
 class MessageNotificationEvent(Event, ABC):
-    dialog_class = MessageNotificationDialog
-    data = None
+    name = 'Уведомление о новом сообщении'
 
-    def on_message(self, message):
-        try:
-            self.data = json.loads(message)
-        except json.decoder.JSONDecodeError:
-            logging.error("Error decoding message '%s'", message)
-            return
-        self.event_happened = True
+    async def loop_item(self):
+        await self.web_socket_connect(
+            '/ws/speakerapi/incomingmessage/',
+            {"token": self.object_storage.token},
+        )
 
-    def run(self):
-        logging.debug("Running EventDialog '{}'".format(self.name))
-        loop = asyncio.new_event_loop()
-        while True:
-            loop.run_until_complete(
-                self.web_socket_connect(
-                    '/ws/speakerapi/incomingmessage/',
-                    {"token": self.objectStorage.token},
-                    self.on_message,
-                ))
-
-    def return_dialog(self, *args, **kwargs):
-        dialog = self.get_dialog(self.objectStorage)
+    async def return_dialog(self):
+        self.dialog_class = MessageNotificationDialog
+        dialog = await self.get_dialog(self.object_storage)
         dialog.data = self.data
         dialog.ws = self.ws
+        dialog.loop = self.loop
         return dialog
-
-    name = 'Уведомление о новом сообщении'

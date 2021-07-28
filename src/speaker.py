@@ -11,6 +11,7 @@ __author__ = 'Tikhon Petrishchev'
 __credits__ = 'TelePat LLC'
 
 import argparse
+import asyncio
 import logging
 
 parser = argparse.ArgumentParser(description="Speaker for telepat.")
@@ -61,9 +62,9 @@ logging.basicConfig(
 logging.info("Started! OOO Telepat, all rights reserved. [{}]".format(__version__))
 
 try:
-    from initGates import authGate, connectionGate, configGate
+    from init_gates import auth_gate, connection_gate, config_gate
     from dialogs import dialog, dialogList
-    from utils.soundProcessor import SoundProcessor
+    from core.soundProcessor import SoundProcessor
     from events import event, eventsList
 except ImportError as e:
     logging.error("Error with importing modules {}".format(e))
@@ -90,7 +91,7 @@ if args.development and args.input_function == 'rpi_button':
     logging.error("Rpi Button can't be used with development mode")
     exit()
 
-objectStorage = configGate.config_gate(
+objectStorage = config_gate.config_gate(
     input_function=args.input_function,
     debug_mode=True if args.loglevel.lower() == 'debug' else False,
     reset=args.reset,
@@ -103,17 +104,17 @@ if args.systemd:
     notify(Notification.READY)
     notify(Notification.STATUS, "Connection Gate...")
 
-connectionGate.connection_gate(objectStorage, args.systemd)
+connection_gate.connection_gate(objectStorage, args.systemd)
 
 if args.store_cash:
     logging.info("Store cash active")
-    connectionGate.cash_phrases(objectStorage.speakSpeech)
+    connection_gate.cash_phrases(objectStorage.speakSpeech)
     exit()
 
 if args.systemd:
     notify(Notification.STATUS, "Auth Gate...")
 
-objectStorage = authGate.auth_gate(objectStorage)
+objectStorage = auth_gate.auth_gate(objectStorage)
 
 dialogEngineInstance = dialog.DialogEngine(
     objectStorage,
@@ -122,16 +123,39 @@ dialogEngineInstance = dialog.DialogEngine(
 if args.systemd:
     notify(Notification.STATUS, "Loading main processes...")
 
-soundProcessorInstance = SoundProcessor(objectStorage, dialogEngineInstance)
 
-eventsEngineInstance = event.EventsEngine(
-    objectStorage,
-    eventsList.events_list,
-    dialogEngineInstance
-)
-eventsEngineInstance.start()
+async def main(asyncio_loop):
+    sound_processor_instance = SoundProcessor(objectStorage, dialogEngineInstance, asyncio_loop)
 
-soundProcessorInstance.start()
+    events_engine_instance = event.EventsEngine(
+        objectStorage,
+        eventsList.events_list,
+        dialogEngineInstance,
+        asyncio_loop,
+    )
 
-if args.systemd:
-    notify(Notification.STATUS, "Loaded all processes, running...")
+    sound_processor_task = asyncio_loop.create_task(sound_processor_instance.run())
+    events_engine_task = asyncio_loop.create_task(events_engine_instance.run())
+
+    if args.systemd:
+        notify(Notification.STATUS, "Loaded all processes, running...")
+
+    return [(sound_processor_task, events_engine_task), (sound_processor_instance, events_engine_instance)]
+
+
+async def stop(_tasks: list):
+    for obj in _tasks[1]:
+        await obj.kill()
+    await asyncio.gather(*_tasks[0])
+
+
+loop = asyncio.get_event_loop()
+tasks = loop.run_until_complete(main(loop))
+try:
+    loop.run_until_complete(
+        asyncio.gather(*tasks[0])
+    )
+except KeyboardInterrupt as e:
+    logging.info("Stopping...")
+    loop.run_until_complete(stop(tasks))
+    loop.close()

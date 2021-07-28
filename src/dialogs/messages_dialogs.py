@@ -1,4 +1,5 @@
 from dateutil import parser
+
 from dialogs.dialog import Dialog
 
 
@@ -72,7 +73,6 @@ class NewMessagesDialog(Dialog):
                 i.get('sender'), date_str, i.get('text')
             )
             self.objectStorage.speakSpeech.play(text)
-            self.objectStorage.event_obj.wait(0.5)
 
     cur = first
     name = 'Непрочитанные сообщения'

@@ -8,7 +8,7 @@ import time
 from queue import Queue
 
 try:
-    from utils import apa102
+    from core import apa102
 except ImportError:
     logging.warning("Pixels unavailable spi_dev error")
     apa102 = None
@@ -22,6 +22,7 @@ class Pixels:
         if development:
             logging.info("Pixels in development mode")
             return
+
         self.basis = [0] * 3 * self.PIXELS_N
         self.basis[0] = 2
         self.basis[3] = 1

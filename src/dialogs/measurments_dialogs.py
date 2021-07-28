@@ -324,7 +324,7 @@ class AddValueDialog(Dialog):
         if hasattr(self, 'data') and len(self.data['fields']) > 0:
             return self.yes_no('да')
         if hasattr(self, 'ws'):
-            asyncio.new_event_loop().run_until_complete(
+            self.loop.create_task(
                 self.ws.send(json.dumps({
                     'token': self.objectStorage.token,
                     'request_type': 'is_done',

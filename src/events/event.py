@@ -1,144 +1,218 @@
-import datetime
+import asyncio
 import json
 import logging
-from threading import Thread
 
 import websockets
 
 
-class Event(Thread):
+class Event:
     """Provides attributes and methods for event using in event engine."""
 
-    event_happened = False
-    dialog_class = None
-
-    def __init__(self, object_storage):
+    def __init__(self, object_storage, loop):
         """
-        :param ObjectStorage object_storage: ObjectStorage instance
+        :param init_gates.config_gate.ObjectStorage object_storage: ObjectStorage instance
+        :param asyncio.AbstractEventLoop loop: Asyncio event asyncio_loop
+        :return: __init__ should return None
+        :rtype: None
         """
-        Thread.__init__(self)
 
-        self.objectStorage = object_storage
+        self.event_happened = False
+        self.dialog_class = None
+        self.object_storage = object_storage
         self.ws = None
-        logging.debug("Creating EventDialog '{}'".format(self.name))
+        self.stop = False
+        self.loop = loop
+        self.data = None
+        logging.debug("Creating EventDialog '{}'".format(self.get_name))
 
-    def on_message(self, msg: str):
-        """Default message handler"""
+    async def on_message(self, message):
+        """Default async message handler
 
-        logging.warning("Default websocket message handler handled '{}'".format(msg))
-
-    async def web_socket_connect(self, url, data_json, on_message):
-        """Creates websocket, stores it in `Event.ws` and sends data `data_json`
-
-        :param string url: url to connect without domain
-        :param Union[dict, list] data_json: json serializable data to send to socket
-        :param function on_message:  function that handles message with one parameter `msg`
+        :param dict | list message: Data with message from server
+        :rtype: None
         """
-        url = self.objectStorage.host_ws + url
 
-        # noinspection PyUnresolvedReferences
+        logging.debug("Default websocket message handler handled '{}'".format(message))
+        self.data = message
+        self.event_happened = True
+
+    async def kill(self):
+        """Kill event async"""
+
+        self.stop = True
+
+    async def web_socket_connect(self, url, data_json, on_message=None):
+        """Creates websocket, stores it in `Event.ws` and sends data `data_json` (async)
+
+        :param string data_json: Json serializable string data to send after connect
+        :param string url: url to connect without domain :param dict data_json: json serializable data to send to
+        socket
+        :param function on_message:  async function that handles message with one parameter `msg`,
+        default `.on_message()`
+        :rtype: None
+        """
+
+        url = self.object_storage.host_ws + url
+
         try:
             async with websockets.connect(url) as self.ws:
                 await self.ws.send(json.dumps(data_json))
                 while True:
-                    msg = await self.ws.recv()
-                    on_message(msg)
-
+                    if message := self.decode_json(await self.ws.recv()):
+                        if on_message:
+                            await on_message(message)
+                        else:
+                            await self.on_message(message)
         except websockets.exceptions.ConnectionClosedError:
-            return None
+            return
 
-    def _loop_item(self):
-        """You must provide ._loop_item method if using default .run()"""
+    async def loop_item(self):
+        """Async function that uses in asyncio_loop"""
 
-        raise NotImplementedError("You must provide ._loop_item() method if using default .run()")
+        raise NotImplementedError("You must provide `.loop_item()` method if using default `.run()`.")
 
-    def run(self):
-        """Default run method for loop running ._loop_item()"""
+    async def run(self):
+        """Default async run method for asyncio_loop running `.loop_item()`"""
 
-        logging.debug("Running EventDialog '{}'".format(self.name))
-        while not self.event_happened:
-            self._loop_item()
-            self.objectStorage.event_obj.wait(5)
+        logging.debug("Running EventDialog '{}'".format(self.get_name))
 
-    def get_dialog(self, *args, **kwargs):
+        task = self.loop.create_task(self.loop_item())
+        while True:
+            if task.done():
+                task = self.loop.create_task(self.loop_item())
+            if self.stop:
+                if not task.cancelled():
+                    task.cancel()
+                break
+            await asyncio.sleep(2)
+
+    async def get_dialog(self, *args, **kwargs):
         """Default get dialog method, that implements getting dialog on event happened"""
+
+        if not self.event_happened:
+            raise RuntimeError("You can't call `.get_dialog()` if not `.happened`.")
 
         if self.dialog_class is None:
             raise NotImplementedError("You must provide dialog class")
+
         return self.dialog_class(*args, **kwargs)
 
-    def return_dialog(self, *args, **kwargs):
-        """You must provide return dialog method"""
+    async def return_dialog(self):
+        """Get complete dialog instance
 
-        raise NotImplementedError("You must provide return dialog method")
+        :return: Dialog Instance
+        :rtype: dialogs.dialog.Dialog
+        """
+
+        raise NotImplementedError("You must provide `.return_dialog()` method if using default `.run()`.")
+
+    @property
+    def get_name(self):
+        """Name of event.
+
+        :rtype: string
+        """
+
+        if hasattr(self, 'name'):
+            return str(self.name)
+        else:
+            return 'Base Event'
 
     @staticmethod
-    def get_time_dialog():
-        """You must provide return dialog method and then override it"""
+    def decode_json(data):
+        """Decode data to python dict
 
-        return False
+        :param string data: Json serializable string
+        :return: Python object from data
+        :rtype: dict | list
+        """
+
+        try:
+            return json.loads(data)
+        except json.decoder.JSONDecodeError:
+            logging.error("Error decoding message '%s'", data)
+            return
 
 
-class EventsEngine(Thread):
-    def __init__(self, object_storage, events_dialog_list, dialog_engine_instance):
-        super().__init__()
-        self.objectStorage = object_storage
-        self.eventsDialogList = events_dialog_list
-        self.runningEvents = list()
-        self.timeDialogs = list()
-        self.dialogEngineInstance = dialog_engine_instance
-        logging.info("Creating events engine Thread with %d events", len(events_dialog_list))
+class EventsEngine:
+    """Provides async methods for run lifecycle of event's."""
 
-    def _put_dialog_to_time(self, datetime_dialog, dialog):
-        self.timeDialogs.append(
-            (datetime_dialog.timestamp(), dialog))
+    def __init__(self, object_storage, events_dialog_list, dialog_engine_instance, loop):
+        """
+        :param init_gates.config_gate.ObjectStorage object_storage: ObjectStorage instance
+        :param list[Event] events_dialog_list: List of events classes to run
+        :param dialogs.dialog.DialogEngine dialog_engine_instance: DialogEngine instance
+        :param asyncio.AbstractEventLoop loop: Asyncio event asyncio_loop
+        :return: __init__ should return None
+        :rtype: None
+        """
 
-    def _put_event_to_running(self, event):
-        e = event(self.objectStorage)
-        e.start()
-        self.runningEvents.append(e)
+        self.object_storage = object_storage
+        self.events_dialog_list = events_dialog_list
+        self.dialog_engine_instance = dialog_engine_instance
+        self.loop = loop
 
-    def _first_run(self):
-        for event in self.eventsDialogList:
-            self._put_event_to_running(event)
+        self.stop = False
+        self.running_events = list()  # list of tuples [(`Event instance`, `running task`)]
 
-    def _run_time_item(self):
-        to_delete = list()
-        now = datetime.datetime.now().timestamp()
-        for i, dialog_time in enumerate(self.timeDialogs):
-            if now >= dialog_time[0]:
-                self.dialogEngineInstance.add_dialog_to_queue(
-                    dialog_time[1])
-                to_delete.append(i)
+        logging.info("Creating events engine with %d events", len(events_dialog_list))
 
-        for i in to_delete:
-            self.timeDialogs.pop(i)
+    async def kill(self):
+        """Kill event async"""
 
-    def _run_item(self):
-        for event in self.runningEvents:
+        self.stop = True
+
+    async def _put_event_to_running(self, event):
+        """Initialise event and put it to events list.
+
+        :param Event event: Event class
+        """
+
+        e = event(self.object_storage, self.loop)
+        task = self.loop.create_task(e.run())
+        self.running_events.append((e, task))
+
+    async def _first_run(self):
+        """Initialise all events."""
+
+        for event in self.events_dialog_list:
+            await self._put_event_to_running(event)
+
+    async def _run_item(self):
+        """Async method to run single item of running events iteration"""
+
+        for event, t in self.running_events:
             if event.event_happened:
-                self.dialogEngineInstance.add_dialog_to_queue(
-                    event.return_dialog())
+                self.dialog_engine_instance.add_dialog_to_queue(
+                    await event.return_dialog())
                 event.event_happened = False
 
-            if time_dialog := event.get_time_dialog():
-                self._put_dialog_to_time(*time_dialog)
+    async def _stop_events(self):
+        """Run kill() on all events."""
 
-    def run(self):
-        logging.info("Starting events engine Thread")
-        self._first_run()
+        tasks = list()
+        for event, t in self.running_events:
+            await event.kill()
+            tasks.append(t)
+
+        await asyncio.gather(*tasks)
+
+    async def run(self):
+        """Async method runs events engine initialises events and provides it's lifecycle."""
+
+        logging.info("Starting events engine.")
+        await self._first_run()
 
         while True:
             try:
-                self._run_item()
+                await self._run_item()
             except Exception as e:
                 logging.error("There is error in event engine: %s", e)
-                if self.objectStorage.debug_mode:
+                if self.object_storage.debug_mode or self.object_storage.development:
                     raise e
-            try:
-                self._run_time_item()
-            except Exception as e:
-                logging.error(
-                    "There is error in dialog time in event engine: %s", e)
-                if self.objectStorage.debug_mode:
-                    raise e
+
+            if self.stop:
+                await self._stop_events()
+                break
+
+            await asyncio.sleep(1)

@@ -10,16 +10,16 @@ __version__ = '0.0.0'
 __author__ = 'Tikhon Petrishchev'
 __credits__ = 'TelePat LLC'
 
+import argparse
 import configparser
 import json
 import logging
 import os
-import re
 import shutil
+import subprocess
+import sys
 import tarfile
 from pathlib import Path
-from typing import Union
-import argparse
 
 import requests
 
@@ -27,6 +27,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 settings_filename = os.path.join(BASE_DIR, 'src/settings.ini')
 config_filename = os.path.join(Path.home(), '.speaker/config.json')
+
+
+def install_pip_req(requirements_file):
+    logging.info("Installing pip requirements...")
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-r', requirements_file])
 
 
 def get_settings():
@@ -42,7 +47,13 @@ def get_settings():
     return config
 
 
-def get_token() -> Union[str, None]:
+def get_token():
+    """Load token if exists
+
+    :return: string token if exists
+    :rtype: str | None
+    """
+
     global config_filename
     try:
         with open(config_filename) as f:
@@ -53,7 +64,13 @@ def get_token() -> Union[str, None]:
         return
 
 
-def check_if_new_version_available() -> Union[str, None]:
+def check_if_new_version_available():
+    """Get new version if exists
+
+    :return: String version if exists
+    :rtype: str | None
+    """
+
     if not (token := get_token()):
         logging.warning("Token does not exists.")
         return
@@ -121,6 +138,16 @@ def main(update_only=False):
         os.system('sudo {}'.format(os.path.join(BASE_DIR, 'updater', 'stop_speaker_service.sh')))
 
     update_firmware(version)
+    install_pip_req(os.path.join(BASE_DIR, 'src', 'requirements.txt'))
+
+    logging.info("Removing cash...")
+    os.remove(os.path.join(Path.home(), '.speaker/speech.cash'))
+
+    logging.info("Storing init cash...")
+    subprocess.check_call(['cd', '../src'])
+    subprocess.check_call(
+        [os.path.join(BASE_DIR, 'env', 'bin', 'python'), os.path.join(BASE_DIR, 'src', 'speaker.py'), '--store_cash'])
+
     logging.info("Done! Successfully updated to `{}`.".format(version))
 
     if not update_only:
