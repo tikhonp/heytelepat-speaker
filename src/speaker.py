@@ -13,6 +13,7 @@ __credits__ = 'TelePat LLC'
 import argparse
 import asyncio
 import logging
+import sys
 
 parser = argparse.ArgumentParser(description="Speaker for telepat.")
 parser.add_argument('-r', '--reset', help="reset speaker token and init",
@@ -80,7 +81,7 @@ if not args.development:
         logging.error(
             "If you using development mode please turn it on '-d', or install"
             " alsaaudio module.")
-        exit()
+        sys.exit()
 
     m = alsaaudio.Mixer(control='Speaker', cardindex=1)
     m.setvolume(90)
@@ -89,7 +90,7 @@ else:
 
 if args.development and args.input_function == 'rpi_button':
     logging.error("Rpi Button can't be used with development mode")
-    exit()
+    sys.exit()
 
 objectStorage = config_gate.config_gate(
     input_function=args.input_function,
@@ -109,7 +110,7 @@ connection_gate.connection_gate(objectStorage, args.systemd)
 if args.store_cash:
     logging.info("Store cash active")
     connection_gate.cash_phrases(objectStorage.speakSpeech)
-    exit()
+    sys.exit()
 
 if args.systemd:
     notify(Notification.STATUS, "Auth Gate...")

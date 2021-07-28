@@ -125,7 +125,7 @@ def update_firmware(version: str):
     shutil.move(firmware_directory, source_firmware_path)
 
 
-def main(update_only=False):
+def main(dev=False):
     global BASE_DIR
 
     if not (version := check_if_new_version_available()):
@@ -133,24 +133,31 @@ def main(update_only=False):
         return
     logging.info("New firmware available `{}`.".format(version))
 
-    if not update_only:
+    if not dev:
         logging.info("Stopping speaker service...")
         os.system('sudo {}'.format(os.path.join(BASE_DIR, 'updater', 'stop_speaker_service.sh')))
 
     update_firmware(version)
-    install_pip_req(os.path.join(BASE_DIR, 'src', 'requirements.txt'))
 
-    logging.info("Removing cash...")
-    os.remove(os.path.join(Path.home(), '.speaker/speech.cash'))
+    if not dev:
+        install_pip_req(os.path.join(BASE_DIR, 'src', 'requirements.txt'))
+
+    cash_path = os.path.join(Path.home(), '.speaker/speech.cash')
+    if Path(cash_path).resolve().is_file():
+        logging.info("Removing cash...")
+        os.remove(cash_path)
 
     logging.info("Storing init cash...")
-    subprocess.check_call(['cd', '../src'])
-    subprocess.check_call(
-        [os.path.join(BASE_DIR, 'env', 'bin', 'python'), os.path.join(BASE_DIR, 'src', 'speaker.py'), '--store_cash'])
+    subprocess.call(['cd', '../src'])
+    command = [os.path.join(BASE_DIR, 'env', 'bin', 'python'), os.path.join(BASE_DIR, 'src', 'speaker.py'),
+               '--store_cash']
+    if dev:
+        command.append('-d')
+    subprocess.check_call(command)
 
     logging.info("Done! Successfully updated to `{}`.".format(version))
 
-    if not update_only:
+    if not dev:
         logging.info("Starting speaker service...")
         os.system('sudo {}'.format(os.path.join(BASE_DIR, 'updater', 'start_speaker_service.sh')))
 
@@ -162,8 +169,8 @@ if __name__ == '__main__':
         level=logging.INFO
     )
     parser = argparse.ArgumentParser(description="Update speaker firmware util.")
-    parser.add_argument('-upd_only', '--update_only', help="run updates without restarting speaker service.",
+    parser.add_argument('-d', '--development', help="Dev mode, run updates without restarting speaker service.",
                         action='store_true')
     args = parser.parse_args()
     logging.info("Update speaker firmware util [{}]. `OOO Telepat` All Rights Reserved.".format(__version__))
-    main(update_only=args.update_only)
+    main(dev=args.development)

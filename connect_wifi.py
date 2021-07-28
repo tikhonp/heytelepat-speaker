@@ -13,6 +13,7 @@ __credits__ = 'TelePat LLC'
 import argparse
 import getpass
 import json
+import sys
 
 import ggwave
 import pyaudio
@@ -61,7 +62,7 @@ while True:
     while True:
         s = input("Хотите воспроизвести еще раз [Y/n]? ").strip()
         if s == 'n':
-            exit()
+            sys.exit()
         elif s == 'Y':
             break
         else:

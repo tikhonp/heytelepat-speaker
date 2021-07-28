@@ -2,6 +2,7 @@ import datetime
 import locale
 import logging
 import time
+import sys
 
 try:
     import RPi.GPIO as GPIO
@@ -112,7 +113,7 @@ class ResetDialog(Dialog):
         config['token'] = None
         save_config(config, self.objectStorage.config_filename)
         self.objectStorage.speakSpeech.play("Успешно восстановлены заводские настройки.", cashed=True)
-        exit()
+        sys.exit()
 
     def first(self, text):
         self.objectStorage.speakSpeech.play(

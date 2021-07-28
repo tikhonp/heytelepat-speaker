@@ -78,14 +78,17 @@ class ObjectStorage:
         return self.config.get('token')
 
 
-def get_settings() -> dict:
-    """Load ini config and generates dictionary"""
+def get_settings():
+    """Load ini config and generates dictionary
+
+    :rtype: dict
+    """
 
     logging.info("First loading from `settings.ini`")
-    settings_filename = 'settings.ini'
+    settings_filename = os.path.join(Path(__file__).resolve().parent.parent, 'settings.ini')
 
-    with open(settings_filename):
-        pass
+    if not Path(settings_filename).resolve().is_file():
+        raise FileNotFoundError("No such file or directory: '{}'".format(settings_filename))
 
     config = configparser.ConfigParser()
     config.read(settings_filename)
