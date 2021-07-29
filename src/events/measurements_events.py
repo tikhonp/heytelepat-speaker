@@ -1,30 +1,21 @@
-import asyncio
-import json
-import logging
 from abc import ABC
 
-from dialogs.measurments_dialogs import (
-    AddValueDialog,
-)
-from events.event import Event
+from dialogs.measurments_dialogs import AddValueDialog
+from events.event import Event, EventDialog
 
 
-class MeasurementNotificationDialog(AddValueDialog):
-    data = None
-    ws = None
+class MeasurementNotificationDialog(AddValueDialog, EventDialog):
     category = None
-    loop = None
 
     def first(self, text):
         self.objectStorage.speakSpeech.play(
             self.data['patient_description']
             + " Вы готовы произнести ответ сейчас?")
-        self.loop.create_task(
-            self.ws.send(json.dumps({
-                'token': self.objectStorage.token,
-                'request_type': 'is_sent',
-                'measurement_id': self.data['id'],
-            })))
+        self.send_ws_data({
+            'token': self.objectStorage.token,
+            'request_type': 'is_sent',
+            'measurement_id': self.data['id'],
+        })
         self.cur = self.yes_no
 
     def yes_no(self, text):
@@ -36,9 +27,11 @@ class MeasurementNotificationDialog(AddValueDialog):
             self.need_permanent_answer = True
             return
         elif self.is_negative(text):
-            self.objectStorage.speakSpeech.play(
-                "Введите значение позже с помощию"
-                " команды 'заполнить опросники'", cache=True)
+            self.objectStorage.speakSpeech.play("Хотите отложить напоминание на 15 минут?", cache=True)
+            self.call_later_delay = 15
+            self.call_later_yes_no_fail_text = "Введите значение позже с помощию команды 'заполнить опросники'."
+            self.cur = self.call_later_yes_no
+            self.need_permanent_answer = True
         else:
             self.objectStorage.speakSpeech.play(
                 "Извините, я вас не очень поняла", cashe=True
@@ -59,10 +52,6 @@ class MeasurementNotificationEvent(Event, ABC):
             },
         )
 
-    async def return_dialog(self, *args, **kwargs):
+    async def return_dialog(self, dialog_engine_instance):
         self.dialog_class = MeasurementNotificationDialog
-        dialog = await self.get_dialog(self.object_storage)
-        dialog.data = self.data
-        dialog.ws = self.ws
-        dialog.loop = self.loop
-        return dialog
+        return await self.get_dialog(self.object_storage, self.data, self.ws, self.loop, dialog_engine_instance)

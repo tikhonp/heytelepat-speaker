@@ -1,11 +1,10 @@
-import asyncio
 import os
 from pathlib import Path
 from unittest import IsolatedAsyncioTestCase
 
+from dialogs.dialog import Dialog
 from events.event import Event
 from init_gates.config_gate import ObjectStorage, load_config
-from dialogs.dialog import Dialog
 
 config_file_path = os.path.join(Path.home(), '.speaker/config.json')
 config = load_config(config_file_path)

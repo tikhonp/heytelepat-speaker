@@ -4,6 +4,94 @@ import logging
 
 import websockets
 
+from dialogs.dialog import Dialog
+
+
+class EventDialog(Dialog):
+    """Expand dialog for events usage"""
+
+    def __init__(self, object_storage, data, ws, loop, dialog_engine_instance):
+        """
+        :param ObjectStorage object_storage: ObjectStorage instance
+        :param object data: Python object data to use in dialog
+        :param websockets.legacy.client.WebSocketClientProtocol ws: Websocket instance
+        :param asyncio.AbstractEventLoop loop: Asyncio event asyncio_loop
+        :param dialogs.dialog.DialogEngine dialog_engine_instance: DialogEngine instance
+        :return: __init__ should return None
+        :rtype: None
+        """
+
+        super().__init__(object_storage)
+
+        self.data = data
+        self.ws = ws
+        self.loop = loop
+        self.dialog_engine_instance = dialog_engine_instance
+
+        self.call_later_delay = None
+        self.call_later_yes_no_fail_text = None
+
+    def send_ws_data(self, data):
+        """Send data with websocket
+
+        :param dict | list data: Json serializable python object
+        :return: Nothing
+        :rtype: None
+        """
+
+        self.loop.create_task(
+            self.ws.send(
+                json.dumps(data)
+            )
+        )
+
+    def call_dialog_later(self, delay, dialog):
+        """Call `dialog_engine_instance.add_dialog_to_queue` with given dialog instance after given number of seconds
+
+        :param int | float delay: Number of minutes that will be called add dialog
+        :param dialogs.dialog.Dialog dialog: Instance if dialog
+        :return: An instance of `asyncio.TimerHandle` is returned which can be used to cancel the callback
+        :rtype: asyncio.TimerHandle
+        """
+
+        return self.loop.call_later(delay * 60, self.dialog_engine_instance.add_dialog_to_queue, dialog)
+
+    def call_later_yes_no(self, text):
+        """Dialog engine function handles yes/no/null input and calls `.call_dialog_later()` if yes
+        with number of minutes delay in `.self.call_later_delay` (int or float)
+        with fail text in `.call_later_yes_no_fail_text` (string)
+
+        :param string text: Default dialog engine param
+        :return: None
+        :rtype: None
+        """
+
+        if self.call_later_delay is None:
+            raise NotImplementedError("To call `.call_later_yes_no()` you must pass delay into `.call_later_delay`.")
+        elif not isinstance(self.call_later_delay, (int, float)):
+            raise ValueError(
+                "`.call_later_delay` must be `int` or `float`, but got `{}`".format(type(self.call_later_delay))
+            )
+
+        if self.call_later_yes_no_fail_text is None:
+            raise NotImplementedError(
+                "To call `.call_later_yes_no()` you must pass fail text into `.call_later_yes_no_fail_text`."
+            )
+        elif not isinstance(self.call_later_yes_no_fail_text, str):
+            raise ValueError(
+                "`.call_later_yes_no_fail_text` must be `str`, but got `{}`".format(
+                    type(self.call_later_yes_no_fail_text))
+            )
+
+        if self.is_positive(text):
+            dialog = self.__class__(self.objectStorage, self.data, self.ws, self.loop, self.dialog_engine_instance)
+            self.call_dialog_later(self.call_later_delay, dialog)
+            self.objectStorage.speakSpeech.play("Напомню через {} минут.".format(self.call_later_delay))
+        elif self.is_negative(text):
+            self.objectStorage.speakSpeech.play(self.call_later_yes_no_fail_text, cache=True)
+        else:
+            self.objectStorage.speakSpeech.play("Извините, я вас не очень поняла", cashe=True)
+
 
 class Event:
     """Provides attributes and methods for event using in event engine."""
@@ -44,7 +132,7 @@ class Event:
     async def web_socket_connect(self, url, data_json, on_message=None):
         """Creates websocket, stores it in `Event.ws` and sends data `data_json` (async)
 
-        :param string data_json: Json serializable string data to send after connect
+        :param dict | list data_json: Json serializable python object data to send after connect
         :param string url: url to connect without domain :param dict data_json: json serializable data to send to
         socket
         :param function on_message:  async function that handles message with one parameter `msg`,
@@ -76,18 +164,27 @@ class Event:
 
         logging.debug("Running EventDialog '{}'".format(self.get_name))
 
-        task = self.loop.create_task(self.loop_item())
+        loop_item_task = self.loop.create_task(self.loop_item())
+
         while True:
-            if task.done():
-                task = self.loop.create_task(self.loop_item())
+            if loop_item_task.done():
+                loop_item_task = self.loop.create_task(self.loop_item())
+
             if self.stop:
-                if not task.cancelled():
-                    task.cancel()
+                if not loop_item_task.cancelled():
+                    loop_item_task.cancel()
+                if self.ws:
+                    await self.ws.close()
                 break
+
             await asyncio.sleep(2)
 
     async def get_dialog(self, *args, **kwargs):
-        """Default get dialog method, that implements getting dialog on event happened"""
+        """Default get dialog method, that implements getting dialog on event happened
+
+        :return: DialogEvent Instance
+        :rtype: EventDialog
+        """
 
         if not self.event_happened:
             raise RuntimeError("You can't call `.get_dialog()` if not `.happened`.")
@@ -97,9 +194,10 @@ class Event:
 
         return self.dialog_class(*args, **kwargs)
 
-    async def return_dialog(self):
+    async def return_dialog(self, dialog_engine_instance):
         """Get complete dialog instance
 
+        :param dialogs.dialog.DialogEngine dialog_engine_instance: DialogEngine instance
         :return: Dialog Instance
         :rtype: dialogs.dialog.Dialog
         """
@@ -184,7 +282,7 @@ class EventsEngine:
         for event, t in self.running_events:
             if event.event_happened:
                 self.dialog_engine_instance.add_dialog_to_queue(
-                    await event.return_dialog())
+                    await event.return_dialog(self.dialog_engine_instance))
                 event.event_happened = False
 
     async def _stop_events(self):
@@ -204,12 +302,7 @@ class EventsEngine:
         await self._first_run()
 
         while True:
-            try:
-                await self._run_item()
-            except Exception as e:
-                logging.error("There is error in event engine: %s", e)
-                if self.object_storage.debug_mode or self.object_storage.development:
-                    raise e
+            await self._run_item()
 
             if self.stop:
                 await self._stop_events()

@@ -1,28 +1,19 @@
-import asyncio
-import json
-import logging
 from abc import ABC
 
-from dialogs.dialog import Dialog
-from events.event import Event
+from events.event import Event, EventDialog
 
 
-class MessageNotificationDialog(Dialog):
-    data = None
-    ws = None
-    loop = None
-
-    def first(self, text):
+class MessageNotificationDialog(EventDialog):
+    def first(self, _):
         self.objectStorage.speakSpeech.play(
             "{} вам, только что написал: {}.".format(
                 self.data.get('sender'), self.data.get('text'))
         )
-        self.loop.create_task(
-            self.ws.send(json.dumps({
-                "token": self.objectStorage.token,
-                "notified_message": True,
-                "message_id": self.data.get('id')
-            })))
+        self.send_ws_data({
+            "token": self.objectStorage.token,
+            "notified_message": True,
+            "message_id": self.data.get('id')
+        })
         self.objectStorage.speakSpeech.play(
             "Пометить сообщение как прочитанное?", cache=True)
         self.cur = self.second
@@ -30,12 +21,11 @@ class MessageNotificationDialog(Dialog):
 
     def second(self, text):
         if self.is_positive(text):
-            self.loop.create_task(
-                self.ws.send(json.dumps({
-                    "token": self.objectStorage.token,
-                    "red_message": True,
-                    "message_id": self.data.get('id')
-                })))
+            self.send_ws_data({
+                "token": self.objectStorage.token,
+                "red_message": True,
+                "message_id": self.data.get('id')
+            })
             self.objectStorage.speakSpeech.play(
                 "Отлично!", cache=True)
         elif self.is_negative(text):
@@ -59,10 +49,6 @@ class MessageNotificationEvent(Event, ABC):
             {"token": self.object_storage.token},
         )
 
-    async def return_dialog(self):
+    async def return_dialog(self, dialog_engine_instance):
         self.dialog_class = MessageNotificationDialog
-        dialog = await self.get_dialog(self.object_storage)
-        dialog.data = self.data
-        dialog.ws = self.ws
-        dialog.loop = self.loop
-        return dialog
+        return await self.get_dialog(self.object_storage, self.data, self.ws, self.loop, dialog_engine_instance)

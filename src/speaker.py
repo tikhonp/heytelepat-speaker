@@ -156,7 +156,9 @@ try:
     loop.run_until_complete(
         asyncio.gather(*tasks[0])
     )
-except KeyboardInterrupt as e:
+except KeyboardInterrupt:
     logging.info("Stopping...")
+finally:
     loop.run_until_complete(stop(tasks))
     loop.close()
+    sys.exit()

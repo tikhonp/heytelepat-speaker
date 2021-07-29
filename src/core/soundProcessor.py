@@ -72,10 +72,10 @@ def raspberry_input_function(gpio_pin=17):
             return
 
 
-async def async_simple_input_function() -> str:
+async def async_simple_input_function(loop) -> str:
     string = "Press enter and tell something!"
 
-    await asyncio.get_event_loop().run_in_executor(
+    await loop.run_in_executor(
         None, lambda s=string: sys.stdout.write(s))
     return await asyncio.get_event_loop().run_in_executor(
         None, sys.stdin.readline)
@@ -138,20 +138,16 @@ class SoundProcessor:
 
         logging.info("Started soundProcessorInstance")
 
-        input_func_task = self.loop.create_task(self.objectStorage.inputFunction())
+        input_func_task = self.loop.create_task(self.objectStorage.inputFunction(self.loop))
         run_item_task = None
+
         while True:
-            try:
-                if input_func_task and input_func_task.done():
-                    run_item_task = self.loop.create_task(self._run_item())
-                    input_func_task = None
-                if run_item_task and run_item_task.done():
-                    input_func_task = self.loop.create_task(self.objectStorage.inputFunction())
-                    run_item_task = None
-            except Exception as e:
-                logging.error("There is error in sound_processor: %s", e)
-                if self.objectStorage.debug_mode:
-                    raise e
+            if input_func_task and input_func_task.done():
+                run_item_task = self.loop.create_task(self._run_item())
+                input_func_task = None
+            if run_item_task and run_item_task.done():
+                input_func_task = self.loop.create_task(self.objectStorage.inputFunction(self.loop))
+                run_item_task = None
 
             if self.stop:
                 if input_func_task and not input_func_task.cancelled():

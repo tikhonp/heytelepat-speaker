@@ -16,11 +16,12 @@ class Dialog:
         stop_words (list[str])       List of strings with stop words for dialog
     """
 
+    # TODO: Rename .cur
     cur = None
     name = 'default'
     keywords = []
     need_permanent_answer = False
-    stop_words = ['хватит']
+    stop_words = ['хватит', 'стоп']
 
     def __init__(self, object_storage):
         """
@@ -171,7 +172,7 @@ class DialogEngine:
         self.dialogs = dialogs
         self.dialogQueue = deque()
         self.currentDialog = None
-        self.time_delay = 30
+        self.time_delay = 50
         self.cur_dialog_time = None
 
     def _execute_next_dialog(self):
