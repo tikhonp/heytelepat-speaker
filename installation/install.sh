@@ -61,14 +61,14 @@ else
     sudo ./install.sh
     cd ..
     rm -rf seeed-voicecard
-  } >/dev/null; then
+  }; then
     echo -e "   ${GREEN}[ OK ]${NC}"
   else
     echo -e "   ${RED}[ FAILED ]${NC}"
   fi
 
-  echo -n "Patching alsa config..."
-  sudo mv installation/asound.conf /etc/asound.conf >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]"
+  #echo -n "Patching alsa config..."
+  #sudo mv installation/asound.conf /etc/asound.conf >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]"
 fi
 
 # Creating python venv and installing pip dependencies
