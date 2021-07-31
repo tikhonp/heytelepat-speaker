@@ -1,8 +1,11 @@
 import configparser
+import functools
 import json
 import logging
 import os
 from pathlib import Path
+
+import requests
 
 from core import speech, pixels, soundProcessor
 
@@ -53,29 +56,57 @@ class ObjectStorage:
             'speakSpeech_cls', speech.SpeakSpeech(self.speech, self.cash_filename, self.pixels)
         )
 
-    @property
+    @staticmethod
+    def _get_location_data():
+        answer = requests.get('http://ipinfo.io/json')
+        if answer.ok:
+            return answer.json()
+        else:
+            return {}
+
+    @functools.cached_property
     def api_key(self):
         return self.config.get('api_key')
 
-    @property
+    @functools.cached_property
     def catalog(self):
         return self.config.get('catalog')
 
-    @property
+    @functools.cached_property
     def host(self):
         return self.config.get('host')
 
-    @property
+    @functools.cached_property
     def host_http(self):
         return 'http://' + self.host + '/speaker/api/v1/' if self.host else None
 
-    @property
+    @functools.cached_property
     def host_ws(self):
         return 'ws://' + self.host if self.host else None
 
-    @property
+    @functools.cached_property
     def token(self):
         return self.config.get('token')
+
+    @functools.cached_property
+    def weather_token(self):
+        return self.config.get('weather_token')
+
+    @functools.cached_property
+    def city(self):
+        return self._get_location_data().get('city')
+
+    @functools.cached_property
+    def region(self):
+        return self._get_location_data().get('region')
+
+    @functools.cached_property
+    def country(self):
+        return self._get_location_data().get('country')
+
+    @functools.cached_property
+    def timezone(self):
+        return self._get_location_data().get('timezone')
 
 
 def get_settings():
@@ -98,6 +129,7 @@ def get_settings():
         'catalog': config['SPEECHKIT']['CATALOG'],
         'host': config['SERVER']['HOST'],
         'version': config['GLOBAL']['VERSION'],
+        'weather_token': config['WEATHER']['TOKEN']
     }
 
 

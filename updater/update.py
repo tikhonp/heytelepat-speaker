@@ -6,7 +6,7 @@ Update speaker firmware util
 OOO Telepat, All Rights Reserved
 """
 
-__version__ = '0.0.0'
+__version__ = '0.0.1'
 __author__ = 'Tikhon Petrishchev'
 __credits__ = 'TelePat LLC'
 
@@ -148,7 +148,6 @@ def main(dev=False):
         os.remove(cash_path)
 
     logging.info("Storing init cash...")
-    subprocess.call(['cd', '../src'])
     command = [os.path.join(BASE_DIR, 'env', 'bin', 'python'), os.path.join(BASE_DIR, 'src', 'speaker.py'),
                '--store_cash']
     if dev:

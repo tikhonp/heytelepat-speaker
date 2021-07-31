@@ -4,6 +4,7 @@ import logging
 import sys
 import time
 
+import pymorphy2
 import requests
 from bs4 import BeautifulSoup
 
@@ -37,7 +38,7 @@ class TimeDialog(Dialog):
 
     cur = first
     name = 'Время'
-    keywords = ['время', 'час']
+    keywords = ['время', 'который']
 
 
 class SetVolumeDialog(Dialog):
@@ -160,3 +161,41 @@ class AnekDialog(Dialog):
     cur = first
     name = "Анекдот"
     keywords = ["анек"]
+
+
+class WeatherDialog(Dialog):
+    def get_weather_data(self):
+        payload = {
+            'q': self.objectStorage.city, 'appid': self.objectStorage.weather_token, 'lang': 'RU', 'units': 'metric'
+        }
+        answer = requests.get('https://api.openweathermap.org/data/2.5/weather', params=payload)
+        if answer.ok:
+            return answer.json()
+
+    def generate_phrase(self):
+        if not (weather_data := self.get_weather_data()):
+            return
+        morph = pymorphy2.MorphAnalyzer()
+
+        city = morph.parse(weather_data.get('name'))[0].inflect({'loct'}).word
+        int_degrees = int(weather_data.get('main', {}).get('temp'))
+        degrees = morph.parse('градус')[0].make_agree_with_number(int_degrees).word
+        int_degrees_max = int(weather_data.get('main', {}).get('temp_max'))
+        degrees_max = morph.parse('градус')[0].make_agree_with_number(int_degrees_max).word
+        description = weather_data.get('weather')[0].get('description')
+
+        return "В {city} сейчас {description}, {int_degrees} ".format(
+            city=city, description=description, int_degrees=int_degrees
+        ) + "{degrees}, максимальная температура воздуха сегодня {int_degrees_max} {degrees_max}.".format(
+            degrees=degrees, int_degrees_max=int_degrees_max, degrees_max=degrees_max
+        )
+
+    def first(self, _):
+        if phrase := self.generate_phrase():
+            self.objectStorage.speakSpeech.play(phrase)
+        else:
+            self.objectStorage.speakSpeech.play("Ошибка соединения с сервером.", cache=True)
+
+    cur = first
+    name = "Погода"
+    keywords = ['погод']

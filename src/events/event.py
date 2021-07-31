@@ -1,4 +1,5 @@
 import asyncio
+import functools
 import json
 import logging
 
@@ -204,7 +205,7 @@ class Event:
 
         raise NotImplementedError("You must provide `.return_dialog()` method if using default `.run()`.")
 
-    @property
+    @functools.cached_property
     def get_name(self):
         """Name of event.
 

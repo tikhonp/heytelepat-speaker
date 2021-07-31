@@ -11,6 +11,7 @@ dialogs_list = [
     basic_dialogs.HelpDialog,
     basic_dialogs.ResetDialog,
     basic_dialogs.AnekDialog,
+    basic_dialogs.WeatherDialog,
     messages_dialogs.NewMessagesDialog,
     messages_dialogs.SendMessageDialog,
     measurments_dialogs.AddValueDialog,
