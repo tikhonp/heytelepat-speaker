@@ -86,6 +86,12 @@ $ tar czf firmware_<version major.minor.fix>.tar.gz src
 
 # Todo
 
+Add to install:
+
+```bash
+$ sudo apt-get install libasound2-plugins
+```
+
 # License
 
 Copyright 2021 OOO Telepat, Tikhon Petrishchev

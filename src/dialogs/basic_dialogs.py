@@ -19,11 +19,11 @@ except ImportError:
         "AlsaAudio import error, make sure development mode is active")
     alsaaudio = None
 
-locale.setlocale(locale.LC_TIME, "ru_RU")
+locale.setlocale(locale.LC_TIME, "ru_RU.utf8")
 
 
 class TimeDialog(Dialog):
-    def first(self, text):
+    def first(self, _):
         str_formatted_time = datetime.datetime.now().astimezone().strftime(
             "%A, %-d %B, %H:%M")
         str_formatted_time = "Сейчас " + str_formatted_time + "."
@@ -35,7 +35,7 @@ class TimeDialog(Dialog):
 
 
 class SetVolumeDialog(Dialog):
-    def first(self, text):
+    def first(self, _):
         if alsaaudio is None:
             return
         self.objectStorage.speakSpeech.play(
@@ -66,7 +66,7 @@ class SetVolumeDialog(Dialog):
 
 
 class HelpDialog(Dialog):
-    def first(self, text):
+    def first(self, _):
         self.objectStorage.speakSpeech.play(
             "Я знаю очень много вещей, например 'который час' и умею общаться с вашим врачом. "
             "Попросите меня отправить сообщение врачу или спросите: "
@@ -89,7 +89,7 @@ class ResetDialog(Dialog):
     button_pin = 17
     time_delay = 0.8
 
-    def callback(self, event=None):
+    def callback(self, _):
         current_time = int(time.time())
         if self.last_time_pressed is None:
             self.count_presses = 1
@@ -115,7 +115,7 @@ class ResetDialog(Dialog):
         self.objectStorage.speakSpeech.play("Успешно восстановлены заводские настройки.", cashed=True)
         sys.exit()
 
-    def first(self, text):
+    def first(self, _):
         self.objectStorage.speakSpeech.play(
             "Для поддтверждения сброса колонки нажмите трижды на кнопку или один раз для отмены.", cashed=True
         )

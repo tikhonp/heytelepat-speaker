@@ -17,15 +17,14 @@ except ImportError:
 
 # TODO: Make all input functions async
 
-def wakeup_word_input_function(k=2, sensitivity=0.6):
+async def wakeup_word_input_function(k=2, sensitivity=0.6, async_delay=0.1):
     keywords = [
         'alexa', 'bumblebee', 'computer', 'hey google', 'hey siri',
         'jarvis', 'picovoice', 'porcupine', 'terminator'
     ]
     keyword = keywords[k]
 
-    porcupine = pvporcupine.create(
-        keywords=[keyword], sensitivities=[sensitivity])
+    porcupine = pvporcupine.create(keywords=[keyword], sensitivities=[sensitivity])
 
     pa = None
     audio_stream = None
@@ -49,6 +48,7 @@ def wakeup_word_input_function(k=2, sensitivity=0.6):
             keyword_index = porcupine.process(pcm)
             if keyword_index >= 0:
                 break
+            await asyncio.sleep(async_delay)
     finally:
         if audio_stream is not None:
             audio_stream.close()
@@ -57,19 +57,23 @@ def wakeup_word_input_function(k=2, sensitivity=0.6):
         porcupine.delete()
 
 
-def simple_input_function():
-    input("Press enter and tell something!")
+async def raspberry_input_function(gpio_pin=17, async_delay=0.08):
+    """Async raspberrypi input button
 
+    :param gpio_pin:
+    :param async_delay:
+    :return: None
+    :rtype: None
+    """
 
-def raspberry_input_function(gpio_pin=17):
-    logging.info("Waiting button...")
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(gpio_pin, GPIO.IN, GPIO.PUD_UP)
-
+    logging.info("Waiting button...")
     while True:
         if GPIO.input(gpio_pin) == GPIO.LOW:
             logging.info("Button was pushed!")
             return
+        await asyncio.sleep(async_delay)
 
 
 async def async_simple_input_function(loop) -> str:
