@@ -17,7 +17,7 @@ except ImportError:
 
 # TODO: Make all input functions async
 
-async def wakeup_word_input_function(k=2, sensitivity=0.6, async_delay=0.1):
+async def wakeup_word_input_function(loop, k=2, sensitivity=0.6, async_delay=0.1):
     keywords = [
         'alexa', 'bumblebee', 'computer', 'hey google', 'hey siri',
         'jarvis', 'picovoice', 'porcupine', 'terminator'
@@ -57,9 +57,10 @@ async def wakeup_word_input_function(k=2, sensitivity=0.6, async_delay=0.1):
         porcupine.delete()
 
 
-async def raspberry_input_function(gpio_pin=17, async_delay=0.08):
+async def raspberry_input_function(loop, gpio_pin=17, async_delay=0.08):
     """Async raspberrypi input button
 
+    :param asyncio.AbstractEventLoop loop: Asyncio event asyncio_loop
     :param gpio_pin:
     :param async_delay:
     :return: None
@@ -76,12 +77,19 @@ async def raspberry_input_function(gpio_pin=17, async_delay=0.08):
         await asyncio.sleep(async_delay)
 
 
-async def async_simple_input_function(loop) -> str:
+async def async_simple_input_function(loop):
+    """Async equivalent of `input()`
+
+    :param asyncio.AbstractEventLoop loop: Asyncio event asyncio_loop
+    :return: Inputted string
+    :rtype: string
+    """
+
     string = "Press enter and tell something!"
 
     await loop.run_in_executor(
         None, lambda s=string: sys.stdout.write(s))
-    return await asyncio.get_event_loop().run_in_executor(
+    return await loop.run_in_executor(
         None, sys.stdin.readline)
 
 
