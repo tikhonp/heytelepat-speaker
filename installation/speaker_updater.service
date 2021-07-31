@@ -10,4 +10,4 @@ User = {{ user }}
 ExecStart = {{ python_env_path }} {{ script }} {{ args }}
 
 [Install]
-WantedBy = multi-user.target
+WantedBy = network-online.target

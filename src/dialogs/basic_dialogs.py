@@ -4,6 +4,9 @@ import logging
 import sys
 import time
 
+import requests
+from bs4 import BeautifulSoup
+
 try:
     import RPi.GPIO as GPIO
 except ImportError:
@@ -19,7 +22,10 @@ except ImportError:
         "AlsaAudio import error, make sure development mode is active")
     alsaaudio = None
 
-locale.setlocale(locale.LC_TIME, "ru_RU.utf8")
+try:
+    locale.setlocale(locale.LC_TIME, "ru_RU.utf8")
+except locale.Error:
+    locale.setlocale(locale.LC_TIME, "ru_RU")
 
 
 class TimeDialog(Dialog):
@@ -102,7 +108,7 @@ class ResetDialog(Dialog):
             self.count_presses = 0
 
     def reset_speaker(self):
-        self.objectStorage.speakSpeech.play("Восстанавливаю заводские настройки.", cashed=True)
+        self.objectStorage.speakSpeech.play("Восстанавливаю заводские настройки.", cache=True)
         if not self.fetch_data(
                 'delete',
                 self.objectStorage.host_http + 'speaker/',
@@ -112,12 +118,12 @@ class ResetDialog(Dialog):
         config = self.objectStorage.config
         config['token'] = None
         save_config(config, self.objectStorage.config_filename)
-        self.objectStorage.speakSpeech.play("Успешно восстановлены заводские настройки.", cashed=True)
+        self.objectStorage.speakSpeech.play("Успешно восстановлены заводские настройки.", cache=True)
         sys.exit()
 
     def first(self, _):
         self.objectStorage.speakSpeech.play(
-            "Для поддтверждения сброса колонки нажмите трижды на кнопку или один раз для отмены.", cashed=True
+            "Для поддтверждения сброса колонки нажмите трижды на кнопку или один раз для отмены.", cache=True
         )
         GPIO.add_event_detect(self.button_pin, GPIO.FALLING, callback=self.callback, bouncetime=250)
         while True:
@@ -133,3 +139,24 @@ class ResetDialog(Dialog):
     cur = first
     name = 'Сброс до заводских настроек'
     keywords = ['сброс', 'заводск']
+
+
+class AnekDialog(Dialog):
+    @staticmethod
+    def get_anek():
+        answer = requests.get('https://baneks.ru/random')
+        if not answer.ok:
+            logging.error("Error load anek connection, {}, {}".format(answer.status_code, answer.text[:100]))
+            return
+
+        return BeautifulSoup(answer.text, 'html.parser').find_all('meta', attrs={'name': 'description'})[0]["content"]
+
+    def first(self, _):
+        if anek := self.get_anek():
+            self.objectStorage.speakSpeech.play(anek)
+        else:
+            self.objectStorage.speakSpeech.play("Ошибка соединения с сервером.", cache=True)
+
+    cur = first
+    name = "Анекдот"
+    keywords = ["анек"]

@@ -10,6 +10,7 @@ dialogs_list = [
     basic_dialogs.SetVolumeDialog,
     basic_dialogs.HelpDialog,
     basic_dialogs.ResetDialog,
+    basic_dialogs.AnekDialog,
     messages_dialogs.NewMessagesDialog,
     messages_dialogs.SendMessageDialog,
     measurments_dialogs.AddValueDialog,

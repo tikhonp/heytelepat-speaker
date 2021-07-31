@@ -43,18 +43,26 @@ else
     sudo apt update
     sudo apt install portaudio19-dev libatlas-base-dev build-essential libssl-dev libffi-dev -y
     sudo apt-get install libportaudio0 libportaudio2 libportaudiocpp0 -y
-  } >/dev/null; then
+  }; then
     echo -e "   ${GREEN}[ OK ]${NC}"
   else
     echo -e "   ${RED}[ FAILED ]${NC}"
   fi
 
-  echo -n "Installing python 3.9"
-  ./install_python3.9.sh && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
+  # Python 3.9
+
+  if python3.9 -V; then
+    echo "Python 3.9 already installed, version: $(python3.9 -V 2>&1 | grep -Po '(?<=Python )(.+)')"
+  else
+    echo "Installing python 3.9"
+    cd installation || exit
+    ./install_python3.9.sh && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
+    cd ..
+  fi
 
   # Installing voice card driver ---------------------------
 
-  echo -n "Installing voice card driver..."
+  echo "Installing voice card driver..."
   if {
     git clone https://github.com/respeaker/seeed-voicecard.git
     cd seeed-voicecard || exit
@@ -67,8 +75,7 @@ else
     echo -e "   ${RED}[ FAILED ]${NC}"
   fi
 
-  #echo -n "Patching alsa config..."
-  #sudo mv installation/asound.conf /etc/asound.conf >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]"
+  sudo apt-get install libasound2-plugins
 fi
 
 # Creating python venv and installing pip dependencies
