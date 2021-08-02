@@ -16,11 +16,14 @@ class MessageNotificationDialog(EventDialog):
         })
         self.objectStorage.speakSpeech.play(
             "Пометить сообщение как прочитанное?", cache=True)
-        self.cur = self.second
+        self.current_input_function = self.second
         self.need_permanent_answer = True
+        self.call_later_delay = 15
+        self.call_later_on_end = True
 
     def second(self, text):
         if self.is_positive(text):
+            self.call_later_on_end = False
             self.send_ws_data({
                 "token": self.objectStorage.token,
                 "red_message": True,
@@ -36,7 +39,7 @@ class MessageNotificationDialog(EventDialog):
                 "Извините, я вас не очень поняла", cashe=True
             )
 
-    cur = first
+    current_input_function = first
     name = 'Уведомление о новом сообщении'
 
 

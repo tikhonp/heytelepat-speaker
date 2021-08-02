@@ -14,10 +14,13 @@ class MedicineNotificationDialog(EventDialog):
             'request_type': 'is_sent',
             'measurement_id': self.data['id'],
         })
-        self.cur = self.second_yes_no
+        self.current_input_function = self.second_yes_no
+        self.call_later_delay = 15
+        self.call_later_on_end = True
 
     def second_yes_no(self, text):
         if self.is_positive(text):
+            self.call_later_on_end = False
             self.send_ws_data({
                 'token': self.objectStorage.token,
                 'request_type': 'pushvalue',
@@ -34,12 +37,12 @@ class MedicineNotificationDialog(EventDialog):
             self.call_later_delay = 15
             self.call_later_yes_no_fail_text = "Подтвердите прием позже с помощью комманды 'какие лекарства " \
                                                "необходимо принять' "
-            self.cur = self.call_later_yes_no
+            self.current_input_function = self.call_later_yes_no
             self.need_permanent_answer = True
         else:
             self.objectStorage.speakSpeech.play("Извините, я вас не очень поняла", cashe=True)
 
-    cur = first
+    current_input_function = first
     name = 'Уведомление о принятии лекарства'
 
 

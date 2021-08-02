@@ -1,4 +1,4 @@
-from dialogs.dialog import Dialog
+from dialogs import Dialog
 
 
 class CheckMedicinesDialog(Dialog):
@@ -20,7 +20,7 @@ class CheckMedicinesDialog(Dialog):
             self.objectStorage.speakSpeech.play(
                 "Нет препаратов которые необходимо принять", cache=True)
 
-    def first_t(self, text):
+    def first_t(self, _):
         if self.data:
             self.current = self.data.pop(0)
             self.objectStorage.speakSpeech.play(
@@ -29,7 +29,7 @@ class CheckMedicinesDialog(Dialog):
             )
             if not self.current['is_sent']:
                 self.commit_medicine_status('is_sent')
-            self.cur = self.yes_no
+            self.current_input_function = self.yes_no
             self.need_permanent_answer = True
         else:
             self.objectStorage.speakSpeech.play(
@@ -68,17 +68,17 @@ class CheckMedicinesDialog(Dialog):
                 "Извините, я вас не очень поняла", cashe=True
             )
 
-    cur = first
+    current_input_function = first
     name = 'Неприятные лекарства'
     keywords = ['лекарств', 'препарат', 'принят']
 
 
 class CommitMedicineDialog(Dialog):
-    def first(self, text):
+    def first(self, _):
         self.objectStorage.speakSpeech.play(
             "Какое лекарство вы приняли?", cache=True
         )
-        self.cur = self.second
+        self.current_input_function = self.second
         self.need_permanent_answer = True
 
     def second(self, text):
@@ -94,6 +94,6 @@ class CommitMedicineDialog(Dialog):
                 "Отлично, лекарство {} отмечено".format(value)
             )
 
-    cur = first
+    current_input_function = first
     name = 'Подтверждение лекарства'
     keywords = ['подтверд', 'лекарств']

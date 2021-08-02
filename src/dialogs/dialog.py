@@ -9,15 +9,14 @@ class Dialog:
     """Base class to build dialogs
 
     Attributes:
-        cur (function)               Stores function to execute next, if `None` dialog stops
+        current_input_function (function)               Stores function to execute next, if `None` dialog stops
         name (string)                Name for logging
         keywords (list[str])         List of strings that are keywords to start dialog by keyword
         need_permanent_answer (bool) If true sound processor listen will permanently activate after one dialog func
         stop_words (list[str])       List of strings with stop words for dialog
     """
 
-    # TODO: Rename .cur
-    cur = None
+    current_input_function = None
     name = 'default'
     keywords = []
     need_permanent_answer = False
@@ -41,27 +40,27 @@ class Dialog:
         """Processes input text with current dialog or stops dialog"""
 
         text = str(text).lower().strip()
-        if not callable(self.cur):
-            raise TypeError("`self.cur` must be function")
+        if not callable(self.current_input_function):
+            raise TypeError("`self.current_input_function` must be function")
 
         self.need_permanent_answer = False
         if any(word in text.lower() for word in self.stop_words):
-            self.cur = None
+            self.current_input_function = None
             return
 
         logging.debug(
             "Processing input in dialog {}, with input {}".format(
                 self.__str__(), text))
 
-        f = self.cur
-        self.cur = None
+        f = self.current_input_function
+        self.current_input_function = None
         f(text)
 
     @property
     def is_done(self):
         """Indicates if dialog empty"""
 
-        return True if self.cur is None else False
+        return True if self.current_input_function is None else False
 
     def __str__(self):
         return self.name

@@ -1,7 +1,7 @@
 import json
 import logging
 
-from dialogs.dialog import Dialog
+from dialogs import Dialog
 
 categories = [
     [['пульс'], {
@@ -245,7 +245,7 @@ class AddValueDialog(Dialog):
     def first(self, text):
         self.objectStorage.speakSpeech.play(
             "Какое значение вы хотите отправить?", cache=True)
-        self.cur = self.second
+        self.current_input_function = self.second
         self.need_permanent_answer = True
 
     def second(self, text):
@@ -274,12 +274,12 @@ class AddValueDialog(Dialog):
             self.objectStorage.speakSpeach.play(
                 "Категория нераспознана, "
                 "пожалуйста, назовите категорию еще раз", cache=True)
-            self.cur = self.second
+            self.current_input_function = self.second
             return
 
         self.objectStorage.speakSpeech.play(
             "Произнесите значение", cache=True)
-        self.cur = self.third
+        self.current_input_function = self.third
         self.need_permanent_answer = True
 
     def third(self, text):
@@ -312,8 +312,7 @@ class AddValueDialog(Dialog):
                 json={
                     'token': self.objectStorage.token,
                     'values': [{
-                        'category_name': self.category.get('name', '')
-                                         + self.category.get('category', ''),
+                        'category_name': self.category.get('name', '') + self.category.get('category', ''),
                         'value': value
                     }]
                 }):
@@ -330,7 +329,7 @@ class AddValueDialog(Dialog):
                     'measurement_id': self.data['id'],
                 })))
 
-    cur = first
+    current_input_function = first
     name = 'Отправить значение измерения'
     keywords = ['измерени', 'значени']
 
@@ -355,7 +354,7 @@ class CommitFormsDialog(Dialog):
             self.objectStorage.speakSpeech.play(
                 "Нет незаплоненных опросников", cache=True)
 
-    def first_t(self, text):
+    def first_t(self, _):
         if hasattr(self, 'current'):
             self.fetch_data(
                 'patch',
@@ -380,7 +379,7 @@ class CommitFormsDialog(Dialog):
                         'request_type': 'is_sent',
                         'measurement_id': self.current['id']
                     })
-            self.cur = self.yes_no
+            self.current_input_function = self.yes_no
             self.need_permanent_answer = True
         else:
             self.objectStorage.speakSpeech.play(
@@ -391,7 +390,7 @@ class CommitFormsDialog(Dialog):
             self.category = self.current['fields'].pop(0)
             self.objectStorage.speakSpeech.play(
                 "Произнесите значение {}".format(self.category.get('text')))
-            self.cur = self.third
+            self.current_input_function = self.third
             self.need_permanent_answer = True
             return
         elif self.is_negative(text):
@@ -433,8 +432,7 @@ class CommitFormsDialog(Dialog):
                 json={
                     'token': self.objectStorage.token,
                     'values': [{
-                        'category_name': self.category.get('name', '')
-                                         + self.category.get('category', ''),
+                        'category_name': self.category.get('name', '') + self.category.get('category', ''),
                         'value': value
                     }]
                 }):
@@ -446,6 +444,6 @@ class CommitFormsDialog(Dialog):
         else:
             return self.first_t(text)
 
-    cur = first
+    current_input_function = first
     name = 'Заполнить незаполненные опросники'
     keywords = ['заполни', 'опросник']

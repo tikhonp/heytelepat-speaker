@@ -1,21 +1,21 @@
 from dateutil import parser
 
-from dialogs.dialog import Dialog
+from dialogs import Dialog
 
 
 class SendMessageDialog(Dialog):
     message = None
 
-    def first(self, text):
+    def first(self, _):
         self.objectStorage.speakSpeech.play(
             "Какое сообщение вы хотите отправить?", cache=True)
-        self.cur = self.get_message
+        self.current_input_function = self.get_message
         self.need_permanent_answer = True
 
     def get_message(self, text):
         self.objectStorage.speakSpeech.play(
             "Вы написали: " + text + ". Отправить сообщение?")
-        self.cur = self.submit
+        self.current_input_function = self.submit
         self.message = text.title()
         self.need_permanent_answer = True
 
@@ -33,7 +33,7 @@ class SendMessageDialog(Dialog):
         else:
             self.objectStorage.speakSpeech.play(
                 "Хотите продиктовать сообщение повторно?", cache=True)
-            self.cur = self.repeat
+            self.current_input_function = self.repeat
             self.need_permanent_answer = True
 
     def repeat(self, text):
@@ -44,13 +44,13 @@ class SendMessageDialog(Dialog):
                 "Извините, я вас не очень поняла", cashe=True
             )
 
-    cur = first
+    current_input_function = first
     name = 'Отправить Сообщение'
     keywords = ['отправ', 'сообщение']
 
 
 class NewMessagesDialog(Dialog):
-    def first(self, text):
+    def first(self, _):
         if (answer := self.fetch_data(
                 'get',
                 self.objectStorage.host_http + 'message/',
@@ -74,6 +74,6 @@ class NewMessagesDialog(Dialog):
             )
             self.objectStorage.speakSpeech.play(text)
 
-    cur = first
+    current_input_function = first
     name = 'Непрочитанные сообщения'
     keywords = ['непрочитан', 'нов']

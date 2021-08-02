@@ -94,17 +94,16 @@ async def async_simple_input_function(loop):
 class SoundProcessor:
     """Processes sound input and waits for user input."""
 
-    def __init__(self, object_storage, dialog_engine_instance, loop):
+    def __init__(self, object_storage, dialog_engine_instance):
         """
         :param init_gates.config_gate.ObjectStorage object_storage: ObjectStorage instance
         :param dialogs.dialog.DialogEngine dialog_engine_instance: DialogEngine instance
-        :param asyncio.AbstractEventLoop loop: Asyncio event asyncio_loop
         :return: __init__ should return None
         :rtype: None
         """
         self.objectStorage = object_storage
         self.dialogEngineInstance = dialog_engine_instance
-        self.loop = loop
+        self.loop = object_storage.event_loop
 
         self.stop = False
         logging.info("Created SoundProcessor engine")

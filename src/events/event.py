@@ -32,6 +32,8 @@ class EventDialog(Dialog):
         self.call_later_delay = None
         self.call_later_yes_no_fail_text = None
 
+        self.call_later_on_end = False
+
     def send_ws_data(self, data):
         """Send data with websocket
 
@@ -88,10 +90,24 @@ class EventDialog(Dialog):
             dialog = self.__class__(self.objectStorage, self.data, self.ws, self.loop, self.dialog_engine_instance)
             self.call_dialog_later(self.call_later_delay, dialog)
             self.objectStorage.speakSpeech.play("Напомню через {} минут.".format(self.call_later_delay))
+            self.call_later_delay = False
         elif self.is_negative(text):
             self.objectStorage.speakSpeech.play(self.call_later_yes_no_fail_text, cache=True)
         else:
             self.objectStorage.speakSpeech.play("Извините, я вас не очень поняла", cashe=True)
+
+    def __del__(self):
+        if self.call_later_on_end:
+            if self.call_later_delay is None:
+                raise NotImplementedError(
+                    "To call `.call_later_yes_no()` you must pass delay into `.call_later_delay`.")
+            elif not isinstance(self.call_later_delay, (int, float)):
+                raise ValueError(
+                    "`.call_later_delay` must be `int` or `float`, but got `{}`".format(type(self.call_later_delay))
+                )
+
+            dialog = self.__class__(self.objectStorage, self.data, self.ws, self.loop, self.dialog_engine_instance)
+            self.call_dialog_later(self.call_later_delay, dialog)
 
 
 class Event:
@@ -236,12 +252,11 @@ class Event:
 class EventsEngine:
     """Provides async methods for run lifecycle of event's."""
 
-    def __init__(self, object_storage, events_dialog_list, dialog_engine_instance, loop):
+    def __init__(self, object_storage, events_dialog_list, dialog_engine_instance):
         """
         :param init_gates.config_gate.ObjectStorage object_storage: ObjectStorage instance
         :param list[Event] events_dialog_list: List of events classes to run
         :param dialogs.dialog.DialogEngine dialog_engine_instance: DialogEngine instance
-        :param asyncio.AbstractEventLoop loop: Asyncio event asyncio_loop
         :return: __init__ should return None
         :rtype: None
         """
@@ -249,7 +264,7 @@ class EventsEngine:
         self.object_storage = object_storage
         self.events_dialog_list = events_dialog_list
         self.dialog_engine_instance = dialog_engine_instance
-        self.loop = loop
+        self.loop = object_storage.event_loop
 
         self.stop = False
         self.running_events = list()  # list of tuples [(`Event instance`, `running task`)]

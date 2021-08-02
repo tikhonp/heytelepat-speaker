@@ -127,7 +127,7 @@ if ((DEVELOPMENT == 1)); then
   exit
 fi
 
-# Granting SUDO to python executable scripts
+# Granting SUDO to python executable scripts and wpa_supplicant
 echo -n "Granting SUDO to shell executable scripts..."
 # Scripts: src/network/add_network.sh, src/network/connect_network.sh,
 # updater/start_speaker_service.sh, updater/stop_speaker_service.sh,
@@ -137,6 +137,7 @@ echo -n "Granting SUDO to shell executable scripts..."
     updater/start_speaker_service.sh updater/stop_speaker_service.sh
   sudo chmod 700 src/network/add_network.sh src/network/connect_network.sh \
     updater/start_speaker_service.sh updater/stop_speaker_service.sh
+  sudo chmod u+w /etc/wpa_supplicant/wpa_supplicant.conf
 } >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
 
 # Store cash for network connection

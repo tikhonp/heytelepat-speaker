@@ -16,28 +16,31 @@ class MeasurementNotificationDialog(AddValueDialog, EventDialog):
             'request_type': 'is_sent',
             'measurement_id': self.data['id'],
         })
-        self.cur = self.yes_no
+        self.current_input_function = self.yes_no
+        self.call_later_delay = 15
+        self.call_later_on_end = True
 
     def yes_no(self, text):
         if self.is_positive(text):
+            self.call_later_on_end = False
             self.category = self.data['fields'].pop(0)
             self.objectStorage.speakSpeech.play(
                 "Произнесите значение {}".format(self.category.get('text')))
-            self.cur = self.third
+            self.current_input_function = self.third
             self.need_permanent_answer = True
             return
         elif self.is_negative(text):
             self.objectStorage.speakSpeech.play("Хотите отложить напоминание на 15 минут?", cache=True)
             self.call_later_delay = 15
             self.call_later_yes_no_fail_text = "Введите значение позже с помощию команды 'заполнить опросники'."
-            self.cur = self.call_later_yes_no
+            self.current_input_function = self.call_later_yes_no
             self.need_permanent_answer = True
         else:
             self.objectStorage.speakSpeech.play(
                 "Извините, я вас не очень поняла", cashe=True
             )
 
-    cur = first
+    current_input_function = first
 
 
 class MeasurementNotificationEvent(Event, ABC):

@@ -13,7 +13,7 @@ try:
 except ImportError:
     logging.warning("RPi.GPIO is not available, button is disabled")
 
-from dialogs.dialog import Dialog
+from dialogs import Dialog
 from init_gates.config_gate import save_config
 
 try:
@@ -36,7 +36,7 @@ class TimeDialog(Dialog):
         str_formatted_time = "Сейчас " + str_formatted_time + "."
         self.objectStorage.speakSpeech.play(str_formatted_time)
 
-    cur = first
+    current_input_function = first
     name = 'Время'
     keywords = ['время', 'который']
 
@@ -47,7 +47,7 @@ class SetVolumeDialog(Dialog):
             return
         self.objectStorage.speakSpeech.play(
             "Какую громкость вы хотите поставить?", cache=True)
-        self.cur = self.second
+        self.current_input_function = self.second
         self.need_permanent_answer = True
 
     def second(self, text):
@@ -67,7 +67,7 @@ class SetVolumeDialog(Dialog):
         self.objectStorage.speakSpeech.play(
             "Громкость установлена", cache=True)
 
-    cur = first
+    current_input_function = first
     name = 'Громкость'
     keywords = ['громкость']
 
@@ -85,7 +85,7 @@ class HelpDialog(Dialog):
             "А чтобы подтвердить прием лекарства скажите 'Подтверди прием.'", cache=True
         )
 
-    cur = first
+    current_input_function = first
     name = 'Помощь'
     keywords = ['умеешь']
 
@@ -137,7 +137,7 @@ class ResetDialog(Dialog):
                 )
                 return
 
-    cur = first
+    current_input_function = first
     name = 'Сброс до заводских настроек'
     keywords = ['сброс', 'заводск']
 
@@ -158,7 +158,7 @@ class AnekDialog(Dialog):
         else:
             self.objectStorage.speakSpeech.play("Ошибка соединения с сервером.", cache=True)
 
-    cur = first
+    current_input_function = first
     name = "Анекдот"
     keywords = ["анек"]
 
@@ -196,6 +196,6 @@ class WeatherDialog(Dialog):
         else:
             self.objectStorage.speakSpeech.play("Ошибка соединения с сервером.", cache=True)
 
-    cur = first
+    current_input_function = first
     name = "Погода"
     keywords = ['погод']

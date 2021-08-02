@@ -1,3 +1,4 @@
+import asyncio
 import configparser
 import functools
 import json
@@ -44,6 +45,7 @@ class ObjectStorage:
         self.pixels = kwargs.get('pixels', pixels.Pixels(self.development))
         self.play_audio_function = kwargs.get('play_audio_function', speech.play_audio_function)
         self.version = kwargs.get('version', 'null')
+        self.event_loop = kwargs.get('event_loop', asyncio.get_event_loop())
 
         if 'speech_cls' in kwargs:
             self.speech = kwargs['speech_cls']
