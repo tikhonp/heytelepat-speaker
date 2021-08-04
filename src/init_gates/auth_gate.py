@@ -61,6 +61,7 @@ def auth_gate(object_storage):
     if not object_storage.token:
         logging.info("Token does not exist, authentication")
         object_storage.config = init(object_storage)
+        del object_storage.token
     else:
         answer = requests.get(object_storage.host_http + 'speaker/', json={'token': object_storage.token})
         answer.raise_for_status()

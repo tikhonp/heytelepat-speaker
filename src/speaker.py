@@ -102,11 +102,14 @@ objectStorage = config_gate(
     version=__version__,
 )
 
+if objectStorage.token is None:
+    objectStorage.speakSpeech.play("Привет! Это колонка Telepat Medsenger.", cache=True)
+
 if args.systemd:
     notify(Notification.READY)
     notify(Notification.STATUS, "Connection Gate...")
 
-connection_gate(objectStorage, args.systemd)
+connection_gate(objectStorage)
 
 if args.store_cash:
     logging.info("Store cash active")

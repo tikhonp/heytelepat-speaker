@@ -5,7 +5,7 @@ import time
 import ggwave
 import pyaudio
 
-from network import network
+from network import Network, check_connection_ping
 
 
 def get_ggwave_input():
@@ -35,56 +35,51 @@ def get_ggwave_input():
 def wireless_network_init(object_storage, first=False):
     if first:
         object_storage.speakSpeech.play(
-            "Привет! Это колонка Telepat Medsenger. "
-            "Для начала работы необходимо подключение к сети. "
-            "Для этого сгенерируйте аудиокод с паролем от Wi-Fi.",
-            cache=True)
+            "Необходимо подключение к сети, для этого сгенерируйте аудиокод с паролем от Wi-Fi.", cache=True
+        )
     else:
         object_storage.speakSpeech.play(
-            "К сожалению, подключиться не удалось, "
-            "Попробуйте сгенерировать код еще раз.", cache=True)
+            "К сожалению, подключиться не удалось, попробуйте сгенерировать код еще раз.", cache=True
+        )
 
     object_storage.pixels.think()
-    data = get_ggwave_input()
-    data = json.loads(data)
 
-    n = network.Network(data['ssid'])
-    if not n.check_available():
+    data = json.loads(get_ggwave_input())
+    n = Network(data.get('ssid'))
+
+    if not n.available:
         logging.info("Network is unavailable")
         object_storage.speakSpeech.play(
-            "Пока что сеть недоступна, продолжается попытка подключения",
-            cache=True)
+            "Пока что сеть недоступна, продолжается попытка подключения.", cache=True
+        )
 
-    object_storage.pixels.think()
-    n.create(data['psk'])
+    n.create(data.get('psk'))
     if not n.connect():
         logging.error("Connection error when reconfigure")
 
 
-def connection_gate(object_storage, systemd=False):
+def connection_gate(object_storage):
     object_storage.pixels.wakeup()
     first = True
-    while not network.check_really_connection():
-        if systemd:
-            time.sleep(15)
-            systemd = False
-            continue
+    while not check_connection_ping(object_storage.host):
+        logging.info("Network unavailable, connection gate active.")
+        for _ in range(3):
+            if check_connection_ping(object_storage.host):
+                break
+            time.sleep(0.5)
+        else:
+            logging.warning("No connection detected")
+            wireless_network_init(object_storage, first)
 
-        logging.warning("No connection detected")
-        wireless_network_init(object_storage, first)
         first = False
-        time.sleep(15)
 
-    try:
-        object_storage.speech.init_speechkit()
-        logging.info("Successfully connected and initialized speechkit")
-        if not first:
-            object_storage.speakSpeech.play(
-                "Подключение к беспроводной сети произошло успешно", cache=True)
-    except Exception as e:
-        logging.warning(e)
-        pass
+    object_storage.speech.init_speechkit()
+    logging.info("Successfully connected and initialized speechkit")
 
+    if not first:
+        object_storage.speakSpeech.play(
+            "Подключение к беспроводной сети произошло успешно.", cache=True
+        )
     else:
         logging.info("Connection exists")
         object_storage.pixels.off()
@@ -92,13 +87,10 @@ def connection_gate(object_storage, systemd=False):
 
 def cash_phrases(speak_speech):
     data = [
-        "Привет! Это колонка Telepat Medsenger. "
-        "Для начала работы необходимо подключение к сети. "
-        "Для этого сгенерируйте аудиокод с паролем от Wi-Fi.",
-        "К сожалению, подключиться не удалось, "
-        "Попробуйте сгенерировать код еще раз.",
-        "Пока что сеть недоступна, продолжается попытка подключения",
-        "Подключение к беспроводной сети произошло успешно"
+        "Привет! Это колонка Telepat Medsenger.",
+        "Необходимо подключение к сети, для этого сгенерируйте аудиокод с паролем от Wi-Fi.",
+        "К сожалению, подключиться не удалось, попробуйте сгенерировать код еще раз.",
+        "Пока что сеть недоступна, продолжается попытка подключения.",
     ]
 
     for phrase in data:

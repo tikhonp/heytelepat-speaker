@@ -115,7 +115,6 @@ class Speech:
             self.recognizeShortAudio = speechkit.RecognizeShortAudio(
                 object_storage.api_key)
         except requests.exceptions.ConnectionError:
-            self.api_key = object_storage.api_key
             logging.warning("Network is unavailable, speechkit is None")
 
         self.recognizingSampleRateHertz = recognizing_sample_rate_hertz
@@ -125,15 +124,13 @@ class Speech:
 
         self.recognizer = sr.Recognizer()
 
+        self.api_key = object_storage.api_key
         self.catalog = object_storage.catalog
         self.timeout_speech = timeout_speech
         self.phrase_time_limit = phrase_time_limit
 
     def init_speechkit(self):
         """If speechkit was not initialized because network down, it init"""
-
-        if self.api_key is None:
-            raise Exception("speechkit already initialised")
 
         self.synthesizeAudio = speechkit.SynthesizeAudio(
             self.api_key)
@@ -237,7 +234,7 @@ class SpeakSpeech:
         self.pixels.off()
 
     def cash_only(self, text: str):
-        """Generate and store phrases without play it"""
+        """Generate and store phrases without play it."""
 
         if text in self.data:
             return

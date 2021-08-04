@@ -12,19 +12,34 @@ import requests
 
 
 class Network:
+    """Adding, deleting and connecting wireless network"""
+
     def __init__(self, ssid: str):
         self.ssid = ssid
         self.wpa_supplicant_filename = '/etc/wpa_supplicant/wpa_supplicant.conf'
 
-    def check_available(self) -> bool:
-        command = "sudo iwlist wlan0 scan"
+    @staticmethod
+    def _call_iw_scan() -> str:
+        command = ['sudo', 'iw', 'wlan0', 'scan', '|', 'grep', 'SSID\|Pairwise ciphers\|BSS']
         result = subprocess.run(command.split(), stdout=subprocess.PIPE)
-        subprocess_return = result.stdout.decode('utf-8')
+        return result.stdout.decode('utf-8')
 
-        if self.ssid in subprocess_return:
-            return True
-        else:
-            return False
+    @staticmethod
+    def _parse_iw_scan(iw_data: str) -> list:
+        networks = list()
+        for line in iw_data.split('\n'):
+            if line[:3] == 'BSS':
+                networks.append({'bssid', line.split()[1].split('(')[0]})
+            elif 'SSID' in line:
+                networks[-1]['ssid'] = line.strip().split[1]
+            elif 'Pairwise ciphers' in line:
+                networks[-1]['pairwise'] = line.split(':')[1].strip()
+
+        return networks
+
+    @property
+    def available(self) -> bool:
+        return True if self.ssid in self._call_iw_scan() else False
 
     def _delete_network_if_exist(self):
         with open(self.wpa_supplicant_filename) as f:
@@ -64,18 +79,19 @@ class Network:
             subprocess.run(['sudo', './network/add_network.sh', i])
 
     @staticmethod
-    def connect(_):
-        result = subprocess.run(['sudo', './network/connect_network.sh'],
-                                stdout=subprocess.PIPE)
+    def connect() -> bool:
+        result = subprocess.run(['sudo', './network/connect_network.sh'], stdout=subprocess.PIPE)
         subprocess_return = result.stdout.decode('utf-8')
 
-        if 'OK' in subprocess_return:
-            return True
-        else:
-            return False
+        return True if 'OK' in subprocess_return else False
 
 
-def check_really_connection(host='http://google.com'):
+def check_connection_ping(host='http://google.com'):
+    returned_data = subprocess.run(['ping', '-c', '1', host], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return True if returned_data.returncode == 0 else False
+
+
+def check_connection_get_request(host='http://google.com'):
     try:
         requests.get(host)
         return True
