@@ -87,8 +87,12 @@ class Network:
 
 
 def check_connection_ping(host='http://google.com'):
-    returned_data = subprocess.run(['ping', '-c', '1', host], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    return True if returned_data.returncode == 0 else False
+    subprocess_return = subprocess.run(
+        ['timeout', '1.5', 'ping', '-c', '1', host],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
+    return True if subprocess_return.returncode == 0 else False
 
 
 def check_connection_get_request(host='http://google.com'):
