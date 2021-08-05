@@ -6,7 +6,7 @@ Input point for Telepat Speaker
 OOO Telepat, All Rights Reserved
 """
 
-__version__ = '0.2.7'
+__version__ = '0.2.8'
 __author__ = 'Tikhon Petrishchev'
 __credits__ = 'TelePat LLC'
 
@@ -141,11 +141,8 @@ async def main():
 
 
 async def stop(tasks_to_stop: list, objects_to_kill: list) -> None:
-    await objectStorage.pixels.kill()
     for obj in objects_to_kill:
         await obj.kill()
-    if not args.development:
-        tasks_to_stop.append(objectStorage.pixels.event_loop_task)
     await asyncio.gather(*tasks_to_stop)
 
 

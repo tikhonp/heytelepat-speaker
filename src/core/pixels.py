@@ -1,9 +1,10 @@
 """
 LED light pattern like Google Home
 """
-import asyncio
+
 import logging
 import threading
+import time
 from queue import Queue
 
 try:
@@ -16,7 +17,7 @@ except ImportError:
 class Pixels:
     PIXELS_N = 3
 
-    def __init__(self, loop, development=False):
+    def __init__(self, development=False):
         self.development = development
         if development:
             logging.info("Pixels in development mode")
@@ -33,14 +34,9 @@ class Pixels:
 
         self.next = threading.Event()
         self.queue = Queue()
-        self.event_loop_task = loop.create_task(self._run())
-
-        self.stop = False
-
-    async def kill(self):
-        """Kill event async"""
-
-        self.stop = True
+        self.thread = threading.Thread(target=self._run)
+        self.thread.daemon = True
+        self.thread.start()
 
     def wakeup(self):
         if self.development:
@@ -57,7 +53,6 @@ class Pixels:
         if self.development:
             logging.info("Pixels in development mode, LISTEN")
             return
-
         self.next.set()
         self.queue.put(self._listen)
 
@@ -65,7 +60,6 @@ class Pixels:
         if self.development:
             logging.info("Pixels in development mode, THINK")
             return
-
         self.next.set()
         self.queue.put(self._think)
 
@@ -73,7 +67,6 @@ class Pixels:
         if self.development:
             logging.info("Pixels in development mode, SPEAK")
             return
-
         self.next.set()
         self.queue.put(self._speak)
 
@@ -81,57 +74,53 @@ class Pixels:
         if self.development:
             logging.info("Pixels in development mode, OFF")
             return
-
         self.next.set()
         self.queue.put(self._off)
 
-    async def _run(self):
+    def _run(self):
         while True:
             func = self.queue.get()
             func()
 
-            if self.stop:
-                break
-
-            await asyncio.sleep(0.01)
-
-    async def _wakeup(self):
+    def _wakeup(self):
         colors = [0] * 3 * self.PIXELS_N
         for i in range(1, 25):
             colors = [i * v for v in self.basis]
             self.write(colors)
-            await asyncio.sleep(0.01)
+            time.sleep(0.01)
 
         self.colors = colors
 
-    async def _listen(self):
+    def _listen(self):
         colors = [0] * 3 * self.PIXELS_N
         for i in range(1, 25):
             colors = [i * v for v in self.basis]
             self.write(colors)
-            await asyncio.sleep(0.01)
+            time.sleep(0.01)
 
         self.colors = colors
 
-    async def _think(self):
+    def _think(self):
         colors = self.colors
 
         self.next.clear()
         while not self.next.is_set():
             colors = colors[3:] + colors[:3]
             self.write(colors)
-            await asyncio.sleep(0.2)
+            time.sleep(0.2)
 
         t = 0.1
         for i in range(0, 5):
             colors = colors[3:] + colors[:3]
             self.write([(v * (4 - i) / 4) for v in colors])
-            await asyncio.sleep(t)
+            time.sleep(t)
             t /= 2
+
+        # time.sleep(0.5)
 
         self.colors = colors
 
-    async def _speak(self):
+    def _speak(self):
         colors = self.colors
         gradient = -1
         position = 24
@@ -143,16 +132,18 @@ class Pixels:
 
             if position == 24 or position == 4:
                 gradient = -gradient
-                await asyncio.sleep(0.2)
+                time.sleep(0.2)
             else:
-                await asyncio.sleep(0.01)
+                time.sleep(0.01)
 
         while position > 0:
             position -= 1
             self.write([(v * position / 24) for v in colors])
-            await asyncio.sleep(0.01)
+            time.sleep(0.01)
 
-    async def _off(self):
+        # self._off()
+
+    def _off(self):
         self.write([0] * 3 * self.PIXELS_N)
 
     def write(self, colors):
@@ -167,22 +158,22 @@ class Pixels:
         self.dev.show()
 
 
-# if __name__ == '__main__':
-#     pixels = Pixels()
-#
-#     while True:
-#
-#         try:
-#             pixels.wakeup()
-#             time.sleep(3)
-#             pixels.think()
-#             time.sleep(3)
-#             pixels.speak()
-#             time.sleep(3)
-#             pixels.off()
-#             time.sleep(3)
-#         except KeyboardInterrupt:
-#             break
-#
-#     pixels.off()
-#     time.sleep(1)
+if __name__ == '__main__':
+    pixels = Pixels()
+
+    while True:
+
+        try:
+            pixels.wakeup()
+            time.sleep(3)
+            pixels.think()
+            time.sleep(3)
+            pixels.speak()
+            time.sleep(3)
+            pixels.off()
+            time.sleep(3)
+        except KeyboardInterrupt:
+            break
+
+    pixels.off()
+    time.sleep(1)
