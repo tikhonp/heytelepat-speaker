@@ -61,16 +61,18 @@ class NewMessagesDialog(Dialog):
 
         if not answer:
             self.objectStorage.speakSpeech.play(
-                "Новых сообщений нет", cache=True)
+                "Новых сообщений нет.", cache=True)
             return
 
         for i in answer:
             date = parser.parse(i.get('date'))
-            date_str = date.astimezone().strftime(
-                "%A, %-d %B, %H:%M")
+            date_str = date.astimezone().strftime('%-d %B, %H:%M')
+            week_day = morph.parse(weather_data.get(
+                date.astimezone().strftime('%A')
+            ))[0].inflect({'accs'}).word
 
-            text = "{} - {} - написал: - {}".format(
-                i.get('sender'), date_str, i.get('text')
+            text = "{sender} - в {week_day}, {date_str} - написал: - {text}".format(
+                sender=i.get('sender'), week_day=week_day, date_str=date_str, text=i.get('text')
             )
             self.objectStorage.speakSpeech.play(text)
 

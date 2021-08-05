@@ -67,6 +67,9 @@ def wireless_network_init(object_storage, first=False):
 
     if not (result := network.connect()):
         logging.error("Connection error when reconfigure")
+
+    time.sleep(5)
+
     return result
 
 

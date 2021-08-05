@@ -355,7 +355,7 @@ class CommitFormsDialog(Dialog):
                 "Нет незаплоненных опросников", cache=True)
 
     def first_t(self, _):
-        if hasattr(self, 'current'):
+        if self.current is not None:
             self.fetch_data(
                 'patch',
                 self.objectStorage.host_http + 'measurement/',

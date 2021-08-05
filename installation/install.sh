@@ -140,6 +140,15 @@ echo -n "Granting SUDO to shell executable scripts..."
   sudo chmod u+w /etc/wpa_supplicant/wpa_supplicant.conf
 } >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
 
+# Configuring wpa_supplicant
+
+echo -n "Configuring wpa_supplicant..."
+{
+  echo "auto wlan0" | sudo tee -a /etc/network/interfaces
+  echo "iface wlan0 inet manual" | sudo tee -a /etc/network/interfaces
+  echo "wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf" | sudo tee -a /etc/network/interfaces
+} >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
+
 # Store cash for network connection
 
 echo -n "Storing cash audio for network connection..."
