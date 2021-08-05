@@ -86,6 +86,8 @@ class EventDialog(Dialog):
                     type(self.call_later_yes_no_fail_text))
             )
 
+        self.call_later_on_end = False
+
         if self.is_positive(text):
             dialog = self.__class__(self.objectStorage, self.data, self.ws, self.loop, self.dialog_engine_instance)
             self.call_dialog_later(self.call_later_delay, dialog)
@@ -128,7 +130,8 @@ class Event:
         self.stop = False
         self.loop = loop
         self.data = None
-        logging.debug("Creating EventDialog '{}'".format(self.get_name))
+        self.name = 'Base Event'
+        logging.debug("Creating EventDialog '{}'".format(self.name))
 
     async def on_message(self, message):
         """Default async message handler
@@ -179,7 +182,7 @@ class Event:
     async def run(self):
         """Default async run method for asyncio_loop running `.loop_item()`"""
 
-        logging.debug("Running EventDialog '{}'".format(self.get_name))
+        logging.debug("Running EventDialog '{}'".format(self.name))
 
         loop_item_task = self.loop.create_task(self.loop_item())
 
@@ -220,18 +223,6 @@ class Event:
         """
 
         raise NotImplementedError("You must provide `.return_dialog()` method if using default `.run()`.")
-
-    @functools.cached_property
-    def get_name(self):
-        """Name of event.
-
-        :rtype: string
-        """
-
-        if hasattr(self, 'name'):
-            return str(self.name)
-        else:
-            return 'Base Event'
 
     @staticmethod
     def decode_json(data):

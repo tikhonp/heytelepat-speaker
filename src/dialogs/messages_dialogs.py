@@ -1,3 +1,4 @@
+import pymorphy2
 from dateutil import parser
 
 from dialogs import Dialog
