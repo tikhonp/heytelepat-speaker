@@ -37,15 +37,15 @@ class ObjectStorage:
         self.BASE_DIR = Path(__file__).resolve().parent.parent
         self.config = config
 
+        self.event_loop = kwargs.get('event_loop', asyncio.get_event_loop())
         self.inputFunction = kwargs.get('input_function', lambda: input("Press enter."))
         self.config_filename = kwargs.get('config_filename', os.path.join(Path.home(), '.speaker/config.json'))
         self.development = kwargs.get('development', False)
         self.debug_mode = kwargs.get('debug_mode')
         self.cash_filename = kwargs.get('cash_filename', os.path.join(Path.home(), '.speaker/speech.cash'))
-        self.pixels = kwargs.get('pixels', pixels.Pixels(self.development))
+        self.pixels = kwargs.get('pixels', pixels.Pixels(self.event_loop, self.development))
         self.play_audio_function = kwargs.get('play_audio_function', speech.play_audio_function)
         self.version = kwargs.get('version', 'null')
-        self.event_loop = kwargs.get('event_loop', asyncio.get_event_loop())
 
         if 'speech_cls' in kwargs:
             self.speech = kwargs['speech_cls']
@@ -213,6 +213,7 @@ def config_gate(
 
     if input_function == 'rpi_button':
         logging.info("Setup input function as Button")
+        soundProcessor.init_raspberry_button()
         input_function = soundProcessor.raspberry_input_function
     elif input_function == 'wake_up_word':
         logging.info("Setup wake_up_word input function")

@@ -18,4 +18,5 @@ dialogs_list = [
     measurments_dialogs.CommitFormsDialog,
     medicine_dialogs.CheckMedicinesDialog,
     medicine_dialogs.CommitMedicineDialog,
+    basic_dialogs.HowAreYouDialog,
 ]

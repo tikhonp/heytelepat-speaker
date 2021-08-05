@@ -1,8 +1,8 @@
 import asyncio
 import logging
 import struct
-import sys
 
+import aioconsole
 import pyaudio
 
 try:
@@ -55,19 +55,22 @@ async def wakeup_word_input_function(_, k=2, sensitivity=0.6, async_delay=0.1):
         porcupine.delete()
 
 
+def init_raspberry_button(gpio_pin=17):
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(gpio_pin, GPIO.IN, GPIO.PUD_UP)
+
+
 # noinspection PyUnusedLocal
-async def raspberry_input_function(loop, gpio_pin=17, async_delay=0.08):
+async def raspberry_input_function(loop, gpio_pin=17, async_delay=0.1):
     """Async raspberrypi input button
 
     :param asyncio.AbstractEventLoop loop: Asyncio event asyncio_loop
-    :param gpio_pin:
-    :param async_delay:
+    :param integer gpio_pin: Pin which button connected to
+    :param async_delay: Delay in seconds that button updates
     :return: None
     :rtype: None
     """
 
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(gpio_pin, GPIO.IN, GPIO.PUD_UP)
     logging.info("Waiting button...")
     while True:
         if GPIO.input(gpio_pin) == GPIO.LOW:
@@ -76,20 +79,17 @@ async def raspberry_input_function(loop, gpio_pin=17, async_delay=0.08):
         await asyncio.sleep(async_delay)
 
 
-async def async_simple_input_function(loop):
+# noinspection PyUnusedLocal
+async def async_simple_input_function(loop, phrase="Press enter and tell something! "):
     """Async equivalent of `input()`
 
     :param asyncio.AbstractEventLoop loop: Asyncio event asyncio_loop
+    :param string phrase: Phrase that will be printed before input
     :return: Inputted string
     :rtype: string
     """
 
-    string = "Press enter and tell something!"
-
-    await loop.run_in_executor(
-        None, lambda s=string: sys.stdout.write(s))
-    return await loop.run_in_executor(
-        None, sys.stdin.readline)
+    return await aioconsole.ainput(phrase)
 
 
 class SoundProcessor:
@@ -102,11 +102,12 @@ class SoundProcessor:
         :return: __init__ should return None
         :rtype: None
         """
+
         self.objectStorage = object_storage
         self.dialogEngineInstance = dialog_engine_instance
-        self.loop = object_storage.event_loop
 
         self.stop = False
+
         logging.info("Created SoundProcessor engine")
 
     async def kill(self):
@@ -134,13 +135,17 @@ class SoundProcessor:
         return text
 
     async def _run_item(self):
-        """process sound input"""
+        """Process sound input"""
 
         self.objectStorage.pixels.wakeup()
-        text = self._get_voice_sr()
+        text = await self.objectStorage.event_loop.run_in_executor(
+            None, self._get_voice_sr
+        )
 
         if text is not None:
-            if self.dialogEngineInstance.process_input(text):
+            if await self.objectStorage.event_loop.run_in_executor(
+                    None, lambda t=text: self.dialogEngineInstance.process_input(t)
+            ):
                 await self._run_item()
 
     async def run(self):
@@ -148,15 +153,19 @@ class SoundProcessor:
 
         logging.info("Started soundProcessorInstance")
 
-        input_func_task = self.loop.create_task(self.objectStorage.inputFunction(self.loop))
+        input_func_task = self.objectStorage.event_loop.create_task(
+            self.objectStorage.inputFunction(self.objectStorage.event_loop)
+        )
         run_item_task = None
 
         while True:
             if input_func_task and input_func_task.done():
-                run_item_task = self.loop.create_task(self._run_item())
+                run_item_task = self.objectStorage.event_loop.create_task(self._run_item())
                 input_func_task = None
             if run_item_task and run_item_task.done():
-                input_func_task = self.loop.create_task(self.objectStorage.inputFunction(self.loop))
+                input_func_task = self.objectStorage.event_loop.create_task(
+                    self.objectStorage.inputFunction(self.objectStorage.event_loop)
+                )
                 run_item_task = None
 
             if self.stop:

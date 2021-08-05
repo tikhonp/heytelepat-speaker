@@ -14,7 +14,7 @@ config = load_config(config_file_path)
 class TestEventGeneric(IsolatedAsyncioTestCase):
     def setUp(self):
         self.object_storage = ObjectStorage(config, development=True)
-        self.event = Event(self.object_storage, asyncio.get_event_loop())
+        self.event = Event(self.object_storage)
 
     async def test_on_message(self):
         await self.event.on_message(['hello'])
@@ -51,7 +51,7 @@ class TestEventGeneric(IsolatedAsyncioTestCase):
 class TestEventRun(IsolatedAsyncioTestCase):
     def setUp(self):
         object_storage = ObjectStorage(config, development=True)
-        self.event = Event(object_storage, asyncio.get_event_loop())
+        self.event = Event(object_storage)
 
     # async def test_run_fails(self):
     #     with self.assertRaises(NotImplementedError):

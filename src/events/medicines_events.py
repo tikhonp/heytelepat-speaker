@@ -60,4 +60,4 @@ class MedicineNotificationEvent(Event, ABC):
 
     async def return_dialog(self, dialog_engine_instance):
         self.dialog_class = MedicineNotificationDialog
-        return await self.get_dialog(self.object_storage, self.data, self.ws, self.loop, dialog_engine_instance)
+        return await self.get_dialog(self.object_storage, self.data, self.ws, dialog_engine_instance)

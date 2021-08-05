@@ -322,7 +322,7 @@ class AddValueDialog(Dialog):
         if hasattr(self, 'data') and len(self.data['fields']) > 0:
             return self.yes_no('да')
         if hasattr(self, 'ws'):
-            self.loop.create_task(
+            self.objectStorage.event_loop.create_task(
                 self.ws.send(json.dumps({
                     'token': self.objectStorage.token,
                     'request_type': 'is_done',

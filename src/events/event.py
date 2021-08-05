@@ -1,5 +1,4 @@
 import asyncio
-import functools
 import json
 import logging
 
@@ -11,12 +10,11 @@ from dialogs.dialog import Dialog
 class EventDialog(Dialog):
     """Expand dialog for events usage"""
 
-    def __init__(self, object_storage, data, ws, loop, dialog_engine_instance):
+    def __init__(self, object_storage, data, ws, dialog_engine_instance):
         """
         :param ObjectStorage object_storage: ObjectStorage instance
         :param object data: Python object data to use in dialog
         :param websockets.legacy.client.WebSocketClientProtocol ws: Websocket instance
-        :param asyncio.AbstractEventLoop loop: Asyncio event asyncio_loop
         :param dialogs.dialog.DialogEngine dialog_engine_instance: DialogEngine instance
         :return: __init__ should return None
         :rtype: None
@@ -26,12 +24,10 @@ class EventDialog(Dialog):
 
         self.data = data
         self.ws = ws
-        self.loop = loop
         self.dialog_engine_instance = dialog_engine_instance
 
         self.call_later_delay = None
         self.call_later_yes_no_fail_text = None
-
         self.call_later_on_end = False
 
     def send_ws_data(self, data):
@@ -42,7 +38,7 @@ class EventDialog(Dialog):
         :rtype: None
         """
 
-        self.loop.create_task(
+        self.objectStorage.event_loop.create_task(
             self.ws.send(
                 json.dumps(data)
             )
@@ -57,7 +53,9 @@ class EventDialog(Dialog):
         :rtype: asyncio.TimerHandle
         """
 
-        return self.loop.call_later(delay * 60, self.dialog_engine_instance.add_dialog_to_queue, dialog)
+        return self.objectStorage.event_loop.call_later(
+            delay * 60, self.dialog_engine_instance.add_dialog_to_queue, dialog
+        )
 
     def call_later_yes_no(self, text):
         """Dialog engine function handles yes/no/null input and calls `.call_dialog_later()` if yes
@@ -89,7 +87,7 @@ class EventDialog(Dialog):
         self.call_later_on_end = False
 
         if self.is_positive(text):
-            dialog = self.__class__(self.objectStorage, self.data, self.ws, self.loop, self.dialog_engine_instance)
+            dialog = self.__class__(self.objectStorage, self.data, self.ws, self.dialog_engine_instance)
             self.call_dialog_later(self.call_later_delay, dialog)
             self.objectStorage.speakSpeech.play("Напомню через {} минут.".format(self.call_later_delay))
             self.call_later_delay = False
@@ -108,30 +106,32 @@ class EventDialog(Dialog):
                     "`.call_later_delay` must be `int` or `float`, but got `{}`".format(type(self.call_later_delay))
                 )
 
-            dialog = self.__class__(self.objectStorage, self.data, self.ws, self.loop, self.dialog_engine_instance)
+            dialog = self.__class__(self.objectStorage, self.data, self.ws, self.dialog_engine_instance)
             self.call_dialog_later(self.call_later_delay, dialog)
 
 
 class Event:
     """Provides attributes and methods for event using in event engine."""
 
-    def __init__(self, object_storage, loop):
+    def __init__(self, object_storage):
         """
         :param init_gates.ObjectStorage object_storage: ObjectStorage instance
-        :param asyncio.AbstractEventLoop loop: Asyncio event asyncio_loop
         :return: __init__ should return None
         :rtype: None
         """
 
+        self.object_storage = object_storage
+
         self.event_happened = False
         self.dialog_class = None
-        self.object_storage = object_storage
         self.ws = None
         self.stop = False
-        self.loop = loop
         self.data = None
         self.name = 'Base Event'
-        logging.debug("Creating EventDialog '{}'".format(self.name))
+
+        self.run_task = self.object_storage.event_loop.create_task(self.run())
+
+        logging.debug("Creating Event '{}'".format(self.name))
 
     async def on_message(self, message):
         """Default async message handler
@@ -184,11 +184,11 @@ class Event:
 
         logging.debug("Running EventDialog '{}'".format(self.name))
 
-        loop_item_task = self.loop.create_task(self.loop_item())
+        loop_item_task = self.object_storage.event_loop.create_task(self.loop_item())
 
         while True:
             if loop_item_task.done():
-                loop_item_task = self.loop.create_task(self.loop_item())
+                loop_item_task = self.object_storage.event_loop.create_task(self.loop_item())
 
             if self.stop:
                 if not loop_item_task.cancelled():
@@ -255,10 +255,9 @@ class EventsEngine:
         self.object_storage = object_storage
         self.events_dialog_list = events_dialog_list
         self.dialog_engine_instance = dialog_engine_instance
-        self.loop = object_storage.event_loop
 
         self.stop = False
-        self.running_events = list()  # list of tuples [(`Event instance`, `running task`)]
+        self.running_events = list()  # list of Events [`Event instance`]
 
         logging.info("Creating events engine with %d events", len(events_dialog_list))
 
@@ -274,9 +273,7 @@ class EventsEngine:
         """
 
         # noinspection PyCallingNonCallable
-        e = event(self.object_storage, self.loop)
-        task = self.loop.create_task(e.run())
-        self.running_events.append((e, task))
+        self.running_events.append(event(self.object_storage))
 
     async def _first_run(self):
         """Initialise all events."""
@@ -287,7 +284,7 @@ class EventsEngine:
     async def _run_item(self):
         """Async method to run single item of running events iteration"""
 
-        for event, t in self.running_events:
+        for event in self.running_events:
             if event.event_happened:
                 self.dialog_engine_instance.add_dialog_to_queue(
                     await event.return_dialog(self.dialog_engine_instance))
@@ -297,9 +294,9 @@ class EventsEngine:
         """Run kill() on all events."""
 
         tasks = list()
-        for event, t in self.running_events:
+        for event in self.running_events:
             await event.kill()
-            tasks.append(t)
+            tasks.append(event.run_task)
 
         await asyncio.gather(*tasks)
 
