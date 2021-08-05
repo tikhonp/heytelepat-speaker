@@ -12,7 +12,7 @@ def play_audio_function(io_vaw, num_channels=1, bytes_per_sample=2, sample_rate=
     """
     Function to play audio, that can be changed on different devices
 
-    :param io.BytesIO io_vaw: byte array vaw audio
+    :param bytes io_vaw: byte array vaw audio
     :param integer num_channels: Count of channels in audio, for stereo set `2`
     :param integer bytes_per_sample: number of bytes per second (16 bit = 2 bytes)
     :param integer sample_rate: Sample rate of audio, default `48000`
@@ -219,8 +219,7 @@ class SpeakSpeech:
                 synthesized_speech = self.data[text]
             else:
                 logging.debug("Cashed data was not found, synthesizing, "
-                              "text: '{}', keywords: '{}'".format(
-                    text, self.data.keys()))
+                              "text: '{}', keywords: '{}'".format(text, self.data.keys()))
                 synthesized_speech = self.speech.create_speech(text)
                 synthesized_speech.synthesize()
                 self.data[text] = synthesized_speech

@@ -70,7 +70,7 @@ def wireless_network_init(object_storage, first=False):
     return result
 
 
-def connection_gate(object_storage, check_connection_function=check_connection_ping, check_connection_retries=4):
+def connection_gate(object_storage, check_connection_function=check_connection_ping, check_connection_retries=7):
     """Gate provides internet connection if it does not exist
 
     :param init_gates.ObjectStorage object_storage: ObjectStorage instance
@@ -88,7 +88,7 @@ def connection_gate(object_storage, check_connection_function=check_connection_p
         for i in range(check_connection_retries):
             if check_connection_function(object_storage.host):
                 break
-            time.sleep(0.2)
+            time.sleep(1)
         else:
             logging.warning("No connection detected")
             wireless_network_init(object_storage, first)

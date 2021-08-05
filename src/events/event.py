@@ -282,6 +282,7 @@ class EventsEngine:
         :param Event event: Event class
         """
 
+        # noinspection PyCallingNonCallable
         e = event(self.object_storage, self.loop)
         task = self.loop.create_task(e.run())
         self.running_events.append((e, task))

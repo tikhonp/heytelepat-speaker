@@ -55,6 +55,7 @@ async def wakeup_word_input_function(_, k=2, sensitivity=0.6, async_delay=0.1):
         porcupine.delete()
 
 
+# noinspection PyUnusedLocal
 async def raspberry_input_function(loop, gpio_pin=17, async_delay=0.08):
     """Async raspberrypi input button
 

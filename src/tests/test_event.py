@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from unittest import IsolatedAsyncioTestCase
+import asyncio
 
 from dialogs.dialog import Dialog
 from events.event import Event
@@ -13,10 +14,10 @@ config = load_config(config_file_path)
 class TestEventGeneric(IsolatedAsyncioTestCase):
     def setUp(self):
         self.object_storage = ObjectStorage(config, development=True)
-        self.event = Event(self.object_storage)
+        self.event = Event(self.object_storage, asyncio.get_event_loop())
 
     async def test_on_message(self):
-        await self.event.on_message('hello')
+        await self.event.on_message(['hello'])
 
     async def test_get_dialog_raise_runtime(self):
         with self.assertRaises(RuntimeError):
@@ -50,7 +51,7 @@ class TestEventGeneric(IsolatedAsyncioTestCase):
 class TestEventRun(IsolatedAsyncioTestCase):
     def setUp(self):
         object_storage = ObjectStorage(config, development=True)
-        self.event = Event(object_storage)
+        self.event = Event(object_storage, asyncio.get_event_loop())
 
     # async def test_run_fails(self):
     #     with self.assertRaises(NotImplementedError):

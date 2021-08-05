@@ -6,7 +6,7 @@ Update speaker firmware util
 OOO Telepat, All Rights Reserved
 """
 
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 __author__ = 'Tikhon Petrishchev'
 __credits__ = 'TelePat LLC'
 
@@ -172,4 +172,7 @@ if __name__ == '__main__':
                         action='store_true')
     args = parser.parse_args()
     logging.info("Update speaker firmware util [{}]. `OOO Telepat` All Rights Reserved.".format(__version__))
-    main(dev=args.development)
+    try:
+        main(dev=args.development)
+    except requests.exceptions.ConnectionError:
+        logging.warning("Internet connection unavailable, stopping...")
