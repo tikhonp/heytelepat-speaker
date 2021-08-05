@@ -95,7 +95,7 @@ class ResetDialog(Dialog):
     last_time_pressed = None
     count_presses = 0
     button_pin = 17
-    time_delay = 0.8
+    time_delay = 1.1
 
     def callback(self, _):
         current_time = int(time.time())
@@ -126,6 +126,8 @@ class ResetDialog(Dialog):
         self.objectStorage.speakSpeech.play(
             "Для поддтверждения сброса колонки нажмите трижды на кнопку или один раз для отмены.", cache=True
         )
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.button_pin, GPIO.IN, GPIO.PUD_UP)
         GPIO.add_event_detect(self.button_pin, GPIO.FALLING, callback=self.callback, bouncetime=250)
         while True:
             if self.count_presses >= 3:

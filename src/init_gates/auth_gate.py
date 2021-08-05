@@ -9,7 +9,7 @@ from init_gates.config_gate import save_config
 
 
 async def web_socket_auth(host: str, token: str):
-    url = host + '/ws/speakerapi/init/checkauth/'
+    url = host + 'init/checkauth/'
 
     try:
         async with websockets.connect(url) as ws:

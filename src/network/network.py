@@ -71,7 +71,7 @@ class Network:
 
         self._delete_network_if_exist()
 
-        command = "wpa_passphrase {} {}".format(self.ssid, psk)
+        command = "wpa_passphrase {} \"{}\"".format(self.ssid, psk)
         result = subprocess.run(command.split(), stdout=subprocess.PIPE)
         subprocess_return = result.stdout.decode('utf-8')
 

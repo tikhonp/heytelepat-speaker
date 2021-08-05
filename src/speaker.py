@@ -101,6 +101,11 @@ objectStorage = config_gate(
     version=__version__,
 )
 
+if args.store_cash:
+    logging.info("Store cash active")
+    cash_phrases(objectStorage.speakSpeech)
+    sys.exit()
+
 if objectStorage.token is None:
     objectStorage.speakSpeech.play("Привет! Это колонка Telepat Medsenger.", cache=True)
 
@@ -109,11 +114,6 @@ if args.systemd:
     notify(Notification.STATUS, "Connection Gate...")
 
 connection_gate(objectStorage)
-
-if args.store_cash:
-    logging.info("Store cash active")
-    cash_phrases(objectStorage.speakSpeech)
-    sys.exit()
 
 if args.systemd:
     notify(Notification.STATUS, "Auth Gate...")
