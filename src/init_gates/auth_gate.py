@@ -43,7 +43,7 @@ def init(object_storage):
     authed = None
     while authed is None:
         authed = asyncio.get_event_loop().run_until_complete(
-            web_socket_auth(object_storage.host_ws, object_storage.token))
+            web_socket_auth(object_storage.host_ws, config['token']))
 
     if authed != 'OK':
         raise RuntimeError("Auth confirmation failed, '{}'".format(authed))

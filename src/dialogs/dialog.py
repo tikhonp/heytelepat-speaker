@@ -2,6 +2,7 @@ import logging
 import time
 from collections import deque
 import functools
+import json
 
 import requests
 
@@ -70,7 +71,7 @@ class Dialog:
         """Represents request to server and handles errors
 
         :param string request_type: Must be `requests` method, like `get` or `post`
-        :return: Answer json as python object or None if invalid json
+        :return: Answer json as python object or empty list if invalid json and None if request failed
         :rtype: dict | list | None
         """
         if not hasattr(requests, request_type):
@@ -81,7 +82,7 @@ class Dialog:
             try:
                 return answer.json()
             except json.decoder.JSONDecodeError:
-                return
+                return list()
         else:
             self.objectStorage.speakSpeech.play(
                 "Ошибка соединения с сетью.", cache=True)

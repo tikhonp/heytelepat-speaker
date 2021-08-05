@@ -110,11 +110,11 @@ class ResetDialog(Dialog):
 
     def reset_speaker(self):
         self.objectStorage.speakSpeech.play("Восстанавливаю заводские настройки.", cache=True)
-        if not self.fetch_data(
+        if self.fetch_data(
                 'delete',
                 self.objectStorage.host_http + 'speaker/',
                 json={'token': self.objectStorage.token}
-        ):
+        ) is None:
             return
         config = self.objectStorage.config
         config['token'] = None
@@ -123,6 +123,8 @@ class ResetDialog(Dialog):
         sys.exit()
 
     def first(self, _):
+        if self.objectStorage.development:
+            return self.reset_speaker()
         self.objectStorage.speakSpeech.play(
             "Для поддтверждения сброса колонки нажмите трижды на кнопку или один раз для отмены.", cache=True
         )

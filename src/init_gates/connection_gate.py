@@ -73,7 +73,7 @@ def wireless_network_init(object_storage, first=False):
     return result
 
 
-def connection_gate(object_storage, check_connection_function=check_connection_ping, check_connection_retries=7):
+def connection_gate(object_storage, check_connection_function=check_connection_ping, check_connection_retries=8):
     """Gate provides internet connection if it does not exist
 
     :param init_gates.ObjectStorage object_storage: ObjectStorage instance
