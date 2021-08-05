@@ -51,7 +51,7 @@ class MedicineNotificationEvent(Event, ABC):
 
     async def loop_item(self):
         await self.web_socket_connect(
-            '/ws/speakerapi/medicines/',
+            'medicines/',
             {
                 "token": self.object_storage.token,
                 "request_type": "init"

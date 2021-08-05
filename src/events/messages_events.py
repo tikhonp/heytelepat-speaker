@@ -48,7 +48,7 @@ class MessageNotificationEvent(Event, ABC):
 
     async def loop_item(self):
         await self.web_socket_connect(
-            '/ws/speakerapi/incomingmessage/',
+            'incomingmessage/',
             {"token": self.object_storage.token},
         )
 

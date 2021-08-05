@@ -53,7 +53,6 @@ if not isinstance(numeric_level, int):
     raise ValueError('Invalid log level: %s' % args.loglevel)
 
 logging.basicConfig(
-    # filename='/home/pi/heytelepat/Speaker/sp.log',
     format='%(asctime)s - %(levelname)s - '
            '[%(filename)s:%(lineno)d] - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',

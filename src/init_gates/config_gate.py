@@ -76,18 +76,46 @@ class ObjectStorage:
 
     @functools.cached_property
     def host(self):
+        """Host of heytelepat-server
+
+        :return: Host in format domain only like 'google.com'
+        :rtype: string | None
+        """
+
         return self.config.get('host')
 
     @functools.cached_property
-    def host_http(self):
-        return 'http://' + self.host + '/speaker/api/v1/' if self.host else None
+    def host_http(self, prefix='http://', postfix='/speaker/api/v1/'):
+        """URL for HTTP requests
+
+        :param string prefix: HTTP prefix, default `http://`
+        :param string postfix: Base API url, default `/speaker/api/v1/`
+        :return: Full URL for http request, like `http://domain.com/speaker/api/v1/`,
+        if `ObjectStorage.host` is not None
+        :rtype: string | None
+        """
+
+        return prefix + self.host + postfix if self.host else None
 
     @functools.cached_property
-    def host_ws(self):
-        return 'ws://' + self.host if self.host else None
+    def host_ws(self, prefix='ws://', postfix='/ws/speakerapi/'):
+        """URL for websockets requests
+
+        :param string prefix: HTTP prefix, default `ws://`
+        :param string postfix: Base API url, default `/ws/speakerapi/`
+        :return: Full URL for websocket request, like `ws://domain.com/`
+        :rtype: string
+        """
+
+        return prefix + self.host + postfix if self.host else None
 
     @functools.cached_property
     def token(self):
+        """Token of heytelepat-speaker server, to reset cash call `del ObjectStorage.token`
+
+        :rtype: string | None
+        """
+
         return self.config.get('token')
 
     @functools.cached_property

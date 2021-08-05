@@ -96,7 +96,7 @@ class SoundProcessor:
 
     def __init__(self, object_storage, dialog_engine_instance):
         """
-        :param init_gates.config_gate.ObjectStorage object_storage: ObjectStorage instance
+        :param init_gates.ObjectStorage object_storage: ObjectStorage instance
         :param dialogs.dialog.DialogEngine dialog_engine_instance: DialogEngine instance
         :return: __init__ should return None
         :rtype: None

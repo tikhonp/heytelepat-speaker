@@ -115,7 +115,7 @@ class Event:
 
     def __init__(self, object_storage, loop):
         """
-        :param init_gates.config_gate.ObjectStorage object_storage: ObjectStorage instance
+        :param init_gates.ObjectStorage object_storage: ObjectStorage instance
         :param asyncio.AbstractEventLoop loop: Asyncio event asyncio_loop
         :return: __init__ should return None
         :rtype: None
@@ -254,7 +254,7 @@ class EventsEngine:
 
     def __init__(self, object_storage, events_dialog_list, dialog_engine_instance):
         """
-        :param init_gates.config_gate.ObjectStorage object_storage: ObjectStorage instance
+        :param init_gates.ObjectStorage object_storage: ObjectStorage instance
         :param list[Event] events_dialog_list: List of events classes to run
         :param dialogs.dialog.DialogEngine dialog_engine_instance: DialogEngine instance
         :return: __init__ should return None
