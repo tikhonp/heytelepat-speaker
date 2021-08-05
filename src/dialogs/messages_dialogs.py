@@ -70,9 +70,9 @@ class NewMessagesDialog(Dialog):
         for i in answer:
             date = parser.parse(i.get('date'))
             date_str = date.astimezone().strftime('%-d %B, %H:%M')
-            week_day = morph.parse(weather_data.get(
+            week_day = morph.parse(
                 date.astimezone().strftime('%A')
-            ))[0].inflect({'accs'}).word
+            )[0].inflect({'accs'}).word
 
             text = "{sender} - в {week_day}, {date_str} - написал: - {text}".format(
                 sender=i.get('sender'), week_day=week_day, date_str=date_str, text=i.get('text')
