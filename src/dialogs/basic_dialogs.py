@@ -57,9 +57,9 @@ class SetVolumeDialog(Dialog):
                 "Необходимо указать числовое значение", cache=True)
             return
 
-        if value < 1 or value > 100:
+        if value < 1 or value > 300:
             self.objectStorage.speakSpeech.play(
-                "Необходимо значение в промежутке от 1 до 100", cache=True)
+                "Необходимо значение в промежутке от 1 до 300", cache=True)
             return
 
         m = alsaaudio.Mixer(control='Speaker', cardindex=1)
@@ -106,7 +106,6 @@ class ResetDialog(Dialog):
             self.count_presses += 1
             self.last_time_pressed = current_time
         else:
-            self.last_time_pressed = None
             self.count_presses = 0
 
     def reset_speaker(self):
@@ -133,8 +132,9 @@ class ResetDialog(Dialog):
                 return self.reset_speaker()
             if self.last_time_pressed and self.count_presses == 1 and \
                     (int(time.time()) - self.last_time_pressed) > self.time_delay:
+                GPIO.remove_event_detect(self.button_pin)
                 self.objectStorage.speakSpeech.play(
-                    "Отменено.", cashed=True
+                    "Отменено.", cache=True
                 )
                 return
 
