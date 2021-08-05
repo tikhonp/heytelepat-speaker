@@ -70,7 +70,7 @@ class CheckMedicinesDialog(Dialog):
 
     current_input_function = first
     name = 'Неприятные лекарства'
-    keywords = ['лекарств', 'препарат', 'принят']
+    keywords = [('лекарств', 'принят'), ('препарат', 'принят')]
 
 
 class CommitMedicineDialog(Dialog):
@@ -96,4 +96,4 @@ class CommitMedicineDialog(Dialog):
 
     current_input_function = first
     name = 'Подтверждение лекарства'
-    keywords = ['подтверд', 'лекарств']
+    keywords = [('подтверд', 'лекарств')]

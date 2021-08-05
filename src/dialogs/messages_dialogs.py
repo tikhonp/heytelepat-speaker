@@ -64,6 +64,8 @@ class NewMessagesDialog(Dialog):
                 "Новых сообщений нет.", cache=True)
             return
 
+        morph = pymorphy2.MorphAnalyzer()
+
         for i in answer:
             date = parser.parse(i.get('date'))
             date_str = date.astimezone().strftime('%-d %B, %H:%M')

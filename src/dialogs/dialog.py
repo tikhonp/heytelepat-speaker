@@ -1,6 +1,7 @@
 import logging
 import time
 from collections import deque
+import functools
 
 import requests
 
@@ -174,6 +175,27 @@ class DialogEngine:
         self.time_delay = 50
         self.cur_dialog_time = None
 
+    @functools.cached_property
+    def _dialogs_keywords_list(self):
+        """Generate list: [(keyword, dialog)] for dialog choosing
+
+        :return: List with dialogs and keywords
+        :rtype: list
+        """
+
+        dialogs_list = list()
+        for dialog in self.dialogs:
+            for keyword in dialog.keywords:
+                if isinstance(keyword, str):
+                    keyword = keyword.strip().lower()
+                    dialogs_list.append((keyword, dialog,))
+                else:
+                    keyword = ' '.join(list(map(lambda x: x.strip().lower(), keyword)))
+                    dialogs_list.append((keyword, dialog,))
+
+        logging.debug("Dialog list: {}".format(dialogs_list))
+        return dialogs_list
+
     def _execute_next_dialog(self):
         if self.currentDialog is None and self.dialogQueue:
             logging.debug("Trying to get dialog from queue")
@@ -221,12 +243,42 @@ class DialogEngine:
 
         self._execute_next_dialog()
 
-    def _chose_dialog_processor(self, text: str):
-        text = text.lower()
-        for dialog in self.dialogs:
-            for keyword in dialog.keywords:
-                if keyword in text:
-                    logging.debug(
-                        "Chased dialog {}, with keyword ".format(dialog) +
-                        "'{}' in text '{}'".format(keyword, text))
-                    return dialog(self.objectStorage)
+    def _get_dialog_instance(self, dialog, keyword, text):
+        """Get dialog from instance
+
+        :param Dialog dialog: Dialog class
+        :param string keyword: Keyword that matched
+        :param string text: Given text
+        :return: Dialog instance
+        :rtype: Dialog
+        """
+
+        logging.debug(
+            "Chased dialog {}, with keyword ".format(dialog) +
+            "'{}' in text '{}'".format(keyword, text)
+        )
+        # noinspection PyCallingNonCallable
+        return dialog(self.objectStorage)
+
+    def _chose_dialog_processor(self, text):
+        """Chose dialog to execute by given text
+
+        :param string text: Text based on dialog executing
+        :return: Dialog instance or None
+        :rtype: Dialog | None
+        """
+
+        text = text.lower().strip()
+        if text == '':
+            logging.warning('Got empty text in `DialogEngine._chose_dialog_processor()`')
+            return
+
+        def k_in_text(k: str) -> bool:
+            return k in text
+
+        for keyword, dialog in self._dialogs_keywords_list:
+            if ' ' in keyword:
+                if all(map(k_in_text, keyword.split())):
+                    return self._get_dialog_instance(dialog, keyword, text)
+            elif keyword in text:
+                return self._get_dialog_instance(dialog, keyword, text)
