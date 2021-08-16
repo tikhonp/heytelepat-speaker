@@ -8,13 +8,13 @@ class SendMessageDialog(Dialog):
     message = None
 
     def first(self, _):
-        self.objectStorage.speakSpeech.play(
+        self.objectStorage.play_speech.play(
             "Какое сообщение вы хотите отправить?", cache=True)
         self.current_input_function = self.get_message
         self.need_permanent_answer = True
 
     def get_message(self, text):
-        self.objectStorage.speakSpeech.play(
+        self.objectStorage.play_speech.play(
             "Вы написали: " + text + ". Отправить сообщение?")
         self.current_input_function = self.submit
         self.message = text.title()
@@ -29,10 +29,10 @@ class SendMessageDialog(Dialog):
                         'token': self.objectStorage.token,
                         'message': self.message,
                     }):
-                self.objectStorage.speakSpeech.play(
+                self.objectStorage.play_speech.play(
                     "Сообщение успешно отправлено!", cache=True)
         else:
-            self.objectStorage.speakSpeech.play(
+            self.objectStorage.play_speech.play(
                 "Хотите продиктовать сообщение повторно?", cache=True)
             self.current_input_function = self.repeat
             self.need_permanent_answer = True
@@ -41,7 +41,7 @@ class SendMessageDialog(Dialog):
         if self.is_positive(text):
             return self.first(text)
         elif not self.is_negative(text):
-            self.objectStorage.speakSpeech.play(
+            self.objectStorage.play_speech.play(
                 "Извините, я вас не очень поняла", cashe=True
             )
 
@@ -61,7 +61,7 @@ class NewMessagesDialog(Dialog):
             return
 
         if not answer:
-            self.objectStorage.speakSpeech.play(
+            self.objectStorage.play_speech.play(
                 "Новых сообщений нет.", cache=True)
             return
 
@@ -77,7 +77,7 @@ class NewMessagesDialog(Dialog):
             text = "{sender} - в {week_day}, {date_str} - написал: - {text}".format(
                 sender=i.get('sender'), week_day=week_day, date_str=date_str, text=i.get('text')
             )
-            self.objectStorage.speakSpeech.play(text)
+            self.objectStorage.play_speech.play(text)
 
     current_input_function = first
     name = 'Непрочитанные сообщения'

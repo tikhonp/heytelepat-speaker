@@ -6,7 +6,7 @@ Input point for Telepat Speaker
 OOO Telepat, All Rights Reserved
 """
 
-__version__ = '0.2.9'
+__version__ = '0.2.10'
 __author__ = 'Tikhon Petrishchev'
 __credits__ = 'TelePat LLC'
 
@@ -66,27 +66,13 @@ try:
     from init_gates.connection_gate import cash_phrases
     from dialogs import DialogEngine, dialogs_list
     from events import EventsEngine, events_list
-    from core.soundProcessor import SoundProcessor
+    from core.sound_processor import SoundProcessor
 except ImportError as e:
     logging.error("Error with importing modules {}".format(e))
     raise e
 
 if args.systemd:
     from cysystemd.daemon import notify, Notification
-
-if not args.development:
-    try:
-        import alsaaudio
-    except ImportError:
-        logging.error(
-            "If you using development mode please turn it on '-d', or install"
-            " alsaaudio module.")
-        sys.exit()
-
-    m = alsaaudio.Mixer(control='Speaker', cardindex=1)
-    m.setvolume(90)
-else:
-    logging.warning("AlsaAudio is not used, development mode")
 
 if args.development and args.input_function == 'rpi_button':
     logging.error("Rpi Button can't be used with development mode")
@@ -103,11 +89,25 @@ objectStorage = config_gate(
 
 if args.store_cash:
     logging.info("Store cash active")
-    cash_phrases(objectStorage.speakSpeech)
+    cash_phrases(objectStorage.play_speech)
     sys.exit()
 
+if not args.development:
+    try:
+        import alsaaudio
+    except ImportError:
+        logging.error(
+            "If you using development mode please turn it on '-d', or install"
+            " alsaaudio module.")
+        sys.exit()
+
+    m = alsaaudio.Mixer(control='Speaker', cardindex=1)
+    m.setvolume(90)
+else:
+    logging.warning("AlsaAudio is not used, development mode")
+
 if objectStorage.token is None:
-    objectStorage.speakSpeech.play("Привет! Это колонка Telepat Medsenger.", cache=True)
+    objectStorage.play_speech.play("Привет! Это колонка Telepat Medsenger.", cache=True)
 
 if args.systemd:
     notify(Notification.READY)
@@ -141,6 +141,7 @@ async def main():
 
 
 async def stop(tasks_to_stop: list, objects_to_kill: list) -> None:
+    objectStorage.pixels.off()
     for obj in objects_to_kill:
         await obj.kill()
     await asyncio.gather(*tasks_to_stop)

@@ -35,7 +35,7 @@ class TimeDialog(Dialog):
         str_formatted_time = datetime.datetime.now().astimezone().strftime(
             "%A, %-d %B, %H:%M")
         str_formatted_time = "Сейчас " + str_formatted_time + "."
-        self.objectStorage.speakSpeech.play(str_formatted_time)
+        self.objectStorage.play_speech.play(str_formatted_time)
 
     current_input_function = first
     name = 'Время'
@@ -46,26 +46,26 @@ class SetVolumeDialog(Dialog):
     def first(self, _):
         if alsaaudio is None:
             return
-        self.objectStorage.speakSpeech.play(
+        self.objectStorage.play_speech.play(
             "Какую громкость вы хотите поставить?", cache=True)
         self.current_input_function = self.second
         self.need_permanent_answer = True
 
     def second(self, text):
         if not (value := self.to_integer(text)):
-            self.objectStorage.speakSpeech.play(
+            self.objectStorage.play_speech.play(
                 "Необходимо указать числовое значение", cache=True)
             return
 
         if value < 1 or value > 300:
-            self.objectStorage.speakSpeech.play(
+            self.objectStorage.play_speech.play(
                 "Необходимо значение в промежутке от 1 до 300", cache=True)
             return
 
         m = alsaaudio.Mixer(control='Speaker', cardindex=1)
         m.setvolume(value)
 
-        self.objectStorage.speakSpeech.play(
+        self.objectStorage.play_speech.play(
             "Громкость установлена", cache=True)
 
     current_input_function = first
@@ -75,7 +75,7 @@ class SetVolumeDialog(Dialog):
 
 class HelpDialog(Dialog):
     def first(self, _):
-        self.objectStorage.speakSpeech.play(
+        self.objectStorage.play_speech.play(
             "Я знаю очень много вещей, например 'который час' и умею общаться с вашим врачом. "
             "Попросите меня отправить сообщение врачу или спросите: "
             "'Расскажи о непрочитанных сообщениях', и я прочитаю новые сообщения от врача. "
@@ -109,7 +109,7 @@ class ResetDialog(Dialog):
             self.count_presses = 0
 
     def reset_speaker(self):
-        self.objectStorage.speakSpeech.play("Восстанавливаю заводские настройки.", cache=True)
+        self.objectStorage.play_speech.play("Восстанавливаю заводские настройки.", cache=True)
         if self.fetch_data(
                 'delete',
                 self.objectStorage.host_http + 'speaker/',
@@ -119,13 +119,13 @@ class ResetDialog(Dialog):
         config = self.objectStorage.config
         config['token'] = None
         save_config(config, self.objectStorage.config_filename)
-        self.objectStorage.speakSpeech.play("Успешно восстановлены заводские настройки.", cache=True)
+        self.objectStorage.play_speech.play("Успешно восстановлены заводские настройки.", cache=True)
         sys.exit()
 
     def first(self, _):
         if self.objectStorage.development:
             return self.reset_speaker()
-        self.objectStorage.speakSpeech.play(
+        self.objectStorage.play_speech.play(
             "Для поддтверждения сброса колонки нажмите трижды на кнопку или один раз для отмены.", cache=True
         )
         GPIO.setmode(GPIO.BCM)
@@ -137,7 +137,7 @@ class ResetDialog(Dialog):
             if self.last_time_pressed and self.count_presses == 1 and \
                     (int(time.time()) - self.last_time_pressed) > self.time_delay:
                 GPIO.remove_event_detect(self.button_pin)
-                self.objectStorage.speakSpeech.play(
+                self.objectStorage.play_speech.play(
                     "Отменено.", cache=True
                 )
                 return
@@ -159,9 +159,9 @@ class AnekDialog(Dialog):
 
     def first(self, _):
         if anek := self.get_anek():
-            self.objectStorage.speakSpeech.play(anek)
+            self.objectStorage.play_speech.play(anek)
         else:
-            self.objectStorage.speakSpeech.play("Ошибка соединения с сервером.", cache=True)
+            self.objectStorage.play_speech.play("Ошибка соединения с сервером.", cache=True)
 
     current_input_function = first
     name = "Анекдот"
@@ -197,9 +197,9 @@ class WeatherDialog(Dialog):
 
     def first(self, _):
         if phrase := self.generate_phrase():
-            self.objectStorage.speakSpeech.play(phrase)
+            self.objectStorage.play_speech.play(phrase)
         else:
-            self.objectStorage.speakSpeech.play("Ошибка соединения с сервером.", cache=True)
+            self.objectStorage.play_speech.play("Ошибка соединения с сервером.", cache=True)
 
     current_input_function = first
     name = "Погода"
@@ -240,7 +240,7 @@ class HowAreYouDialog(Dialog):
     ]
 
     def first(self, _):
-        self.objectStorage.speakSpeech.play(random.choice(self.answers), cache=True)
+        self.objectStorage.play_speech.play(random.choice(self.answers), cache=True)
 
     current_input_function = first
     name = "Как дела"

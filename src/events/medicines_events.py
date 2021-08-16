@@ -5,7 +5,7 @@ from events.event import Event, EventDialog
 
 class MedicineNotificationDialog(EventDialog):
     def first(self, _):
-        self.objectStorage.speakSpeech.play(
+        self.objectStorage.play_speech.play(
             "Вам необходимо принять препарат {}. {}. ".format(self.data['title'], self.data['rules']) +
             "Подтвердите, вы приняли препарат?"
         )
@@ -31,16 +31,16 @@ class MedicineNotificationDialog(EventDialog):
                 'request_type': 'is_done',
                 'measurement_id': self.data['id'],
             })
-            self.objectStorage.speakSpeech.play("Отлично!", cache=True)
+            self.objectStorage.play_speech.play("Отлично!", cache=True)
         elif self.is_negative(text):
-            self.objectStorage.speakSpeech.play("Хотите отложить напоминание на 15 минут?", cache=True)
+            self.objectStorage.play_speech.play("Хотите отложить напоминание на 15 минут?", cache=True)
             self.call_later_delay = 15
             self.call_later_yes_no_fail_text = "Подтвердите прием позже с помощью комманды 'какие лекарства " \
                                                "необходимо принять' "
             self.current_input_function = self.call_later_yes_no
             self.need_permanent_answer = True
         else:
-            self.objectStorage.speakSpeech.play("Извините, я вас не очень поняла", cashe=True)
+            self.objectStorage.play_speech.play("Извините, я вас не очень поняла", cashe=True)
 
     current_input_function = first
     name = 'Уведомление о принятии лекарства'

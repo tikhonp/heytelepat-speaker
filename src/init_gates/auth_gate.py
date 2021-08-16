@@ -21,7 +21,7 @@ async def web_socket_auth(host: str, token: str):
 
 
 def init(object_storage):
-    object_storage.speakSpeech.play(
+    object_storage.play_speech.play(
         "Колонка еще не авторизована. "
         "Сейчас я скажу тебе код из 6 цифр, "
         "его надо ввести в окне подключения колонки в medsenger. ",
@@ -35,7 +35,7 @@ def init(object_storage):
     config['token'] = answer.get('token')
     save_config(config, object_storage.config_filename)
 
-    object_storage.speakSpeech.play(
+    object_storage.play_speech.play(
         "Итак, твой код: {}".format(" - ".join(list(str(answer.get('code'))))))
 
     object_storage.pixels.think()
@@ -49,7 +49,7 @@ def init(object_storage):
         raise RuntimeError("Auth confirmation failed, '{}'".format(authed))
 
     logging.info("Authentication passed")
-    object_storage.speakSpeech.play(
+    object_storage.play_speech.play(
         "Отлично! Устройство настроено. Чтобы узнать, о моих возможностях, спросите, 'что ты умеешь?'",
         cache=True
     )

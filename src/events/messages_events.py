@@ -5,7 +5,7 @@ from events.event import Event, EventDialog
 
 class MessageNotificationDialog(EventDialog):
     def first(self, _):
-        self.objectStorage.speakSpeech.play(
+        self.objectStorage.play_speech.play(
             "{} вам, только что написал: {}.".format(
                 self.data.get('sender'), self.data.get('text'))
         )
@@ -14,7 +14,7 @@ class MessageNotificationDialog(EventDialog):
             "notified_message": True,
             "message_id": self.data.get('id')
         })
-        self.objectStorage.speakSpeech.play(
+        self.objectStorage.play_speech.play(
             "Пометить сообщение как прочитанное?", cache=True)
         self.current_input_function = self.second
         self.need_permanent_answer = True
@@ -29,13 +29,13 @@ class MessageNotificationDialog(EventDialog):
                 "red_message": True,
                 "message_id": self.data.get('id')
             })
-            self.objectStorage.speakSpeech.play(
+            self.objectStorage.play_speech.play(
                 "Отлично!", cache=True)
         elif self.is_negative(text):
-            self.objectStorage.speakSpeech.play(
+            self.objectStorage.play_speech.play(
                 "Сообщение не помечено как прочитанное", cache=True)
         else:
-            self.objectStorage.speakSpeech.play(
+            self.objectStorage.play_speech.play(
                 "Извините, я вас не очень поняла", cashe=True
             )
 

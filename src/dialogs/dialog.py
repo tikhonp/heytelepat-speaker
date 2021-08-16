@@ -84,7 +84,7 @@ class Dialog:
             except json.decoder.JSONDecodeError:
                 return list()
         else:
-            self.objectStorage.speakSpeech.play(
+            self.objectStorage.play_speech.play(
                 "Ошибка соединения с сетью.", cache=True)
             logging.error(
                 "Error in requests, status code: '{}', answer: '{}'".format(
@@ -231,7 +231,7 @@ class DialogEngine:
             self.currentDialog = self._chose_dialog_processor(text)
 
         if self.currentDialog is None:
-            self.objectStorage.speakSpeech.play("К сожалению, я не знаю что ответить", cache=True)
+            self.objectStorage.play_speech.play("К сожалению, я не знаю что ответить", cache=True)
             return
 
         logging.debug("Got text and chased dialog {}".format(self.currentDialog))

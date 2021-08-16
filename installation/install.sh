@@ -42,7 +42,7 @@ else
   if {
     sudo apt update
     sudo apt install portaudio19-dev libatlas-base-dev build-essential libssl-dev libffi-dev -y
-    sudo apt-get install libportaudio0 libportaudio2 libportaudiocpp0 -y
+    sudo apt install libportaudio0 libportaudio2 libportaudiocpp0 -y
   }; then
     echo -e "   ${GREEN}[ OK ]${NC}"
   else
@@ -75,7 +75,7 @@ else
     echo -e "   ${RED}[ FAILED ]${NC}"
   fi
 
-  sudo apt-get install libasound2-plugins
+  sudo apt install libasound2-plugins
 fi
 
 # Creating python venv and installing pip dependencies

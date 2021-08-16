@@ -101,8 +101,8 @@ class SoundProcessor:
         :rtype: None
         """
 
-        self.objectStorage = object_storage
-        self.dialogEngineInstance = dialog_engine_instance
+        self.object_storage = object_storage
+        self.dialog_engine_instance = dialog_engine_instance
 
         self.stop = False
 
@@ -113,20 +113,11 @@ class SoundProcessor:
 
         self.stop = True
 
-    def _get_voice_sr(self, duration=0.1):
-        self.objectStorage.speech.adjust_for_ambient_noise(
-            duration=duration)
+    def _get_voice_sr(self):
+        text = self.object_storage.listen_recognize_speech.listen()
 
-        recognize_speech = self.objectStorage.speech.read_audio()
-
-        if recognize_speech is None:
-            self.objectStorage.speakSpeech.play(
-                "Я не расслышал, повторите, пожалуйста еще.", cache=True)
-            return
-
-        text = recognize_speech.recognize()
         if text is None:
-            self.objectStorage.speakSpeech.play(
+            self.object_storage.play_speech.play(
                 "Я не расслышал, повторите, пожалуйста еще.", cache=True)
             return
 
@@ -135,14 +126,14 @@ class SoundProcessor:
     async def _run_item(self):
         """Process sound input"""
 
-        self.objectStorage.pixels.wakeup()
-        text = await self.objectStorage.event_loop.run_in_executor(
+        self.object_storage.pixels.wakeup()
+        text = await self.object_storage.event_loop.run_in_executor(
             None, self._get_voice_sr
         )
 
         if text is not None:
-            if await self.objectStorage.event_loop.run_in_executor(
-                    None, lambda t=text: self.dialogEngineInstance.process_input(t)
+            if await self.object_storage.event_loop.run_in_executor(
+                    None, lambda t=text: self.dialog_engine_instance.process_input(t)
             ):
                 await self._run_item()
 
@@ -151,18 +142,18 @@ class SoundProcessor:
 
         logging.info("Started soundProcessorInstance")
 
-        input_func_task = self.objectStorage.event_loop.create_task(
-            self.objectStorage.inputFunction(self.objectStorage.event_loop)
+        input_func_task = self.object_storage.event_loop.create_task(
+            self.object_storage.inputFunction(self.object_storage.event_loop)
         )
         run_item_task = None
 
         while True:
             if input_func_task and input_func_task.done():
-                run_item_task = self.objectStorage.event_loop.create_task(self._run_item())
+                run_item_task = self.object_storage.event_loop.create_task(self._run_item())
                 input_func_task = None
             if run_item_task and run_item_task.done():
-                input_func_task = self.objectStorage.event_loop.create_task(
-                    self.objectStorage.inputFunction(self.objectStorage.event_loop)
+                input_func_task = self.object_storage.event_loop.create_task(
+                    self.object_storage.inputFunction(self.object_storage.event_loop)
                 )
                 run_item_task = None
 

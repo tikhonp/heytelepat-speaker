@@ -8,7 +8,7 @@ class MeasurementNotificationDialog(AddValueDialog, EventDialog):
     category = None
 
     def first(self, text):
-        self.objectStorage.speakSpeech.play(
+        self.objectStorage.play_speech.play(
             self.data['patient_description']
             + " Вы готовы произнести ответ сейчас?")
         self.send_ws_data({
@@ -24,19 +24,19 @@ class MeasurementNotificationDialog(AddValueDialog, EventDialog):
         if self.is_positive(text):
             self.call_later_on_end = False
             self.category = self.data['fields'].pop(0)
-            self.objectStorage.speakSpeech.play(
+            self.objectStorage.play_speech.play(
                 "Произнесите значение {}".format(self.category.get('text')))
             self.current_input_function = self.third
             self.need_permanent_answer = True
             return
         elif self.is_negative(text):
-            self.objectStorage.speakSpeech.play("Хотите отложить напоминание на 15 минут?", cache=True)
+            self.objectStorage.play_speech.play("Хотите отложить напоминание на 15 минут?", cache=True)
             self.call_later_delay = 15
             self.call_later_yes_no_fail_text = "Введите значение позже с помощию команды 'заполнить опросники'."
             self.current_input_function = self.call_later_yes_no
             self.need_permanent_answer = True
         else:
-            self.objectStorage.speakSpeech.play(
+            self.objectStorage.play_speech.play(
                 "Извините, я вас не очень поняла", cashe=True
             )
 

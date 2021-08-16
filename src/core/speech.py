@@ -1,244 +1,225 @@
+"""
+Utils for using Yandex Speechkit with speechkit lib, listen phrases and synthesis.
+"""
+
 import logging
 import os
 import pickle
 
-import requests
-import simpleaudio as sa
-import speech_recognition as sr
-import speechkit
+import pyaudio
+from iterators import TimeoutIterator
+from speechkit import Session, SpeechSynthesis, DataStreamingRecognition
 
 
-def play_audio_function(io_vaw, num_channels=1, bytes_per_sample=2, sample_rate=48000):
+def default_play_audio_function(audio_data, num_channels=1, sample_rate=48000, chunk_size=4000):
     """
     Function to play audio, that can be changed on different devices
 
-    :param bytes io_vaw: byte array vaw audio
+    :param bytes audio_data: byte array vaw audio
     :param integer num_channels: Count of channels in audio, for stereo set `2`
-    :param integer bytes_per_sample: number of bytes per second (16 bit = 2 bytes)
-    :param integer sample_rate: Sample rate of audio, default `48000`
-
-    :return None:
+    :param integer sample_rate: The sampling frequency of the submitted audio, default `48000`
+    :param integer chunk_size: Size of one readable chunk, default `4000`
+    :rtype: None
     """
-    play_obj = sa.play_buffer(
-        io_vaw,
-        num_channels,
-        bytes_per_sample,
-        sample_rate,
+    p = pyaudio.PyAudio()
+    stream = p.open(
+        format=pyaudio.paInt16,
+        channels=num_channels,
+        rate=sample_rate,
+        output=True,
+        frames_per_buffer=chunk_size
     )
-    play_obj.wait_done()
+
+    try:
+        for i in range(0, len(audio_data), chunk_size):
+            stream.write(audio_data[i:i + chunk_size])
+    finally:
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
 
 
-class SynthesizedSpeech:
-    def __init__(self, text, speech_cls):
+def gen_audio_capture_function(sample_rate, chunk_size=4000, num_channels=1):
+    """
+    Generates audio for using streaming recognition
+
+    :param integer sample_rate: The sampling frequency of the submitted audio.
+    :param integer chunk_size: Size of one readable chunk, default `4000`
+    :param integer num_channels: Count of channels in audio, for stereo set `2`, default `1`
+    :return: Yields pcm data bytes format
+    :rtype: Iterator[bytes]
+    """
+
+    p = pyaudio.PyAudio()
+    stream = p.open(
+        format=pyaudio.paInt16,
+        channels=num_channels,
+        rate=sample_rate,
+        input=True,
+        frames_per_buffer=chunk_size
+    )
+    try:
+        while True:
+            yield stream.read(chunk_size)
+    finally:
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+
+
+class ListenRecognizeSpeech:
+    """Listen and recognize audio using speechkit."""
+
+    def __init__(
+            self, session, pixels, sample_rate=8000, timeout=15, generate_audio_function=gen_audio_capture_function
+    ):
         """
-        Creates one sentence with method to synthesize and play
-
-        :param string text: string text to synthesize
-        :param Speech speech_cls: object of Speech class
+        :param Session session: speechkit Session
+        :param core.pixels.Pixels pixels: Object to control LEDs
+        :param integer sample_rate: Sample rate of audio, default `8000`
+        :param integer timeout: Timeout in seconds, default `15`
+        :param function generate_audio_function: Function generates audio data
         """
-        self.synthesisSampleRateHertz = speech_cls.synthesisSampleRateHertz
-        self.synthesizeAudio = speech_cls.synthesizeAudio
-        self.play_audio_function = speech_cls.play_audio_function
-        self.text = text
-        self.audio_data = None
-        self.folderId = speech_cls.objectStorage.catalog
-
-    def synthesize(self):
-        """Creates buffer io wav file that next can be played"""
-
-        self.audio_data = self.synthesizeAudio.synthesize_stream(
-            text=self.text, voice='alena', format='lpcm',
-            sampleRateHertz=str(self.synthesisSampleRateHertz),
-            folderId=self.folderId)
-
-    def play(self):
-        """Plays created wav with speakers"""
-
-        logging.info("PLAYS TEXT '{}'".format(self.text))
-        if self.audio_data is None:
-            raise Exception(
-                "Audio did not synthesized, please run \"synthesize\" first.")
-        self.play_audio_function(
-            self.audio_data, sample_rate=self.synthesisSampleRateHertz)
-
-
-class RecognizeSpeech:
-    def __init__(self, io_vaw, speech, sample_rate):
-        """
-        Recognizes text from given bytesio vaw
-
-        :param io.BytesIO io_vaw: bytesio array with audio vaw
-        :param Speech speech: object of Speech class
-        :param integer sample_rate: Sample rate of audio
-        """
-
-        self.io_vaw = io_vaw
-        self.speech = speech
+        self.pixels = pixels
         self.sample_rate = sample_rate
+        self.timeout = timeout
+        self.generate_audio_function = generate_audio_function
 
-    def recognize(self) -> str:
-        """Starting streaming to yandex api and return recognize text"""
+        self.data_streaming_recognition = DataStreamingRecognition(
+            session,
+            language_code='ru-RU',
+            audio_encoding='LINEAR16_PCM',
+            sample_rate_hertz=sample_rate,
+            partial_results=False,
+            single_utterance=True,
+        )
 
-        self.speech.pixels.think()
-        logging.info("Got audio input, recognizing...")
-        text = self.speech.recognizeShortAudio.recognize(
-            self.io_vaw, folderId=self.speech.catalog, format='lpcm',
-            sampleRateHertz=str(self.sample_rate))
-        if text.strip() == '':
-            text = None
-        logging.info("RECOGNIZED TEXT '{}'".format(text))
-        self.speech.pixels.off()
-        return text
-
-
-class Speech:
-    """Class that realise speech recognition and synthesize methods"""
-
-    def __init__(self,
-                 object_storage,
-                 timeout_speech=10,
-                 phrase_time_limit=15,
-                 recognizing_sample_rate_hertz=16000,
-                 synthesis_sample_rate_hertz=16000):
+    def listen(self):
         """
-        :param ObjectStorage object_storage: ObjectStorage instance
-        :param integer timeout_speech: parameter is the maximum number of seconds that this will wait for a phrase
-        :param integer phrase_time_limit: parameter is the maximum seconds that this will allow a phrase to continue
-        :param integer recognizing_sample_rate_hertz: sample rate for recording audio
-        :param integer synthesis_sample_rate_hertz: sample rate for playing audio
+        Listen phrase and recognizes text from audio stream
+
+        :return: Recognized Text or None if timeout or empty string
+        :rtype: str | None
         """
+        self.pixels.listen()
+        logging.info("Listening audio input, recognizing...")
 
-        self.objectStorage = object_storage
-        try:
-            self.synthesizeAudio = speechkit.SynthesizeAudio(
-                object_storage.api_key)
-            self.recognizeShortAudio = speechkit.RecognizeShortAudio(
-                object_storage.api_key)
-        except requests.exceptions.ConnectionError:
-            logging.warning("Network is unavailable, speechkit is None")
+        for text, final, _ in TimeoutIterator(
+                self.data_streaming_recognition.recognize(self.generate_audio_function, self.sample_rate),
+                timeout=self.timeout, sentinel=([None], True, False)
+        ):
+            text = text[0]
+            if text.strip() == '':
+                text = None
 
-        self.recognizingSampleRateHertz = recognizing_sample_rate_hertz
-        self.synthesisSampleRateHertz = synthesis_sample_rate_hertz
-        self.play_audio_function = object_storage.play_audio_function
-        self.pixels = object_storage.pixels
-
-        self.recognizer = sr.Recognizer()
-
-        self.api_key = object_storage.api_key
-        self.catalog = object_storage.catalog
-        self.timeout_speech = timeout_speech
-        self.phrase_time_limit = phrase_time_limit
-
-    def init_speechkit(self):
-        """If speechkit was not initialized because network down, it init"""
-
-        self.synthesizeAudio = speechkit.SynthesizeAudio(
-            self.api_key)
-        self.recognizeShortAudio = speechkit.RecognizeShortAudio(
-            self.api_key)
-
-    def create_speech(self, text: str) -> SynthesizedSpeech:
-        """Creates instance of SynthesizedSpeech to be used for synth later"""
-
-        return SynthesizedSpeech(text, self)
-
-    def read_audio(self):
-        """Starting reading audio and if there is audio creates instance of RecognizeSpeech or None"""
-
-        try:
-            with sr.Microphone() as source:
-                self.pixels.listen()
-                data = self.recognizer.listen(
-                    source,
-                    timeout=self.timeout_speech,
-                    phrase_time_limit=self.phrase_time_limit,
-                )
-                self.pixels.off()
-                data_sound = data.get_raw_data(
-                    convert_rate=self.recognizingSampleRateHertz)
-                return RecognizeSpeech(
-                    data_sound, self, self.recognizingSampleRateHertz)
-        except sr.WaitTimeoutError:
-            return
-
-    def adjust_for_ambient_noise(self, duration=1):
-        with sr.Microphone() as source:
-            self.recognizer.adjust_for_ambient_noise(source, duration=duration)
+            logging.info("RECOGNIZED TEXT '{}'".format(text))
+            self.pixels.off()
+            return text
 
 
-class SpeakSpeech:
-    """Generates plays and cashes speech generated in Speech class"""
+class PlaySpeech:
+    """Generates plays and cashes speech"""
 
-    def __init__(self,
-                 speech_cls,
-                 cashed_data_filename,
-                 pixels_obj):
+    def __init__(
+            self,
+            session,
+            cashed_data_filename,
+            pixels,
+            play_audio_function=default_play_audio_function,
+            sample_rate_hertz=16000,
+    ):
         """
-        :param Speech speech_cls: object of Speech class
+        :param Session session: speechkit Session
         :param string cashed_data_filename: filename of pickle data
-        :param pixels.Pixels pixels_obj: Object to control LEDs
+        :param core.pixels.Pixels pixels: Object to control LEDs
+        :param function play_audio_function: Function that plays raw audio bytes
+        :param integer synthesis_sample_rate_hertz: sample rate for playing audio, default `16000`
         """
-        self.pixels = pixels_obj
-        self.speech = speech_cls
+        self.pixels = pixels
         self.cashed_data_filename = cashed_data_filename
-        self.sample_rate = speech_cls.synthesisSampleRateHertz
-        self.data = {}
-        self.__load_data__()
+        self.sample_rate = sample_rate_hertz
+        self.play_audio_function = play_audio_function
 
-    def __load_data__(self):
+        self.speech_synthesis = SpeechSynthesis(session) if session else None
+        self.data = {}
+        self._load_data()
+
+    def _load_data(self):
+        """Load data from file, and store it into `self.data`."""
+
         try:
             with open(self.cashed_data_filename, 'rb') as f:
                 self.data = pickle.load(f)
         except FileNotFoundError:
             self.data = {}
-            self.__store_data__()
+            self._store_data()
 
-    def __store_data__(self):
+    def _store_data(self):
+        """Store data to file or create it if file does not exists."""
+
         logging.debug("Storing data, data: {}".format(self.data))
         os.makedirs(os.path.dirname(self.cashed_data_filename), exist_ok=True)
         with open(self.cashed_data_filename, 'wb') as f:
             pickle.dump(self.data, f)
 
+    def _synthesize_data(self, text):
+        """
+        Synthesis bytes from given text
+
+        :param string text: Text to synthesize
+        :return: Bytes audio data
+        :rtype: bytes
+        """
+        return self.speech_synthesis.synthesize_stream(
+            text=text, voice='alena', format='lpcm', sampleRateHertz=str(self.sample_rate)
+        )
+
     def reset_cash(self):
+        """Clear all data stored in file."""
+
         self.data = {}
-        self.__store_data__()
+        self._store_data()
 
     def play(self, text, cache=False):
         """
         Generate and plays speech with text given
 
-        :param string text: text to play
-        :param boolean cache: if need cash it
-
-        :return none:
+        :param string text: Text to play
+        :param boolean cache: If need cash it
+        :rtype: None
         """
         self.pixels.think()
         if cache:
             if text in self.data:
                 logging.debug("Cashed data found, playing it")
-                synthesized_speech = self.data[text]
+                audio_data = self.data[text]
             else:
                 logging.debug("Cashed data was not found, synthesizing, "
                               "text: '{}', keywords: '{}'".format(text, self.data.keys()))
-                synthesized_speech = self.speech.create_speech(text)
-                synthesized_speech.synthesize()
-                self.data[text] = synthesized_speech
-                self.__store_data__()
+                audio_data = self.cash_only(text)
         else:
-            synthesized_speech = self.speech.create_speech(text)
-            synthesized_speech.synthesize()
+            audio_data = self._synthesize_data(text)
 
+        logging.info("PLAYS TEXT '{}'".format(text))
         self.pixels.speak()
-        synthesized_speech.play()
+        self.play_audio_function(audio_data, sample_rate=self.sample_rate)
         self.pixels.off()
 
-    def cash_only(self, text: str):
-        """Generate and store phrases without play it."""
+    def cash_only(self, text):
+        """
+        Generate and store phrases without play it.
+
+        :param string text: Text to synthesize
+        :return: Bytes audio data
+        :rtype: bytes
+        """
+        if not isinstance(text, str):
+            raise ValueError("`text` must be str, but got {}".format(type(text)))
 
         if text in self.data:
             return
 
-        synthesized_speech = self.speech.create_speech(text)
-        synthesized_speech.synthesize()
-        self.data[text] = synthesized_speech
-        self.__store_data__()
+        audio_data = self._synthesize_data(text)
+        self.data[text] = audio_data
+        self._store_data()
+        return audio_data

@@ -89,12 +89,12 @@ class EventDialog(Dialog):
         if self.is_positive(text):
             dialog = self.__class__(self.objectStorage, self.data, self.ws, self.dialog_engine_instance)
             self.call_dialog_later(self.call_later_delay, dialog)
-            self.objectStorage.speakSpeech.play("Напомню через {} минут.".format(self.call_later_delay))
+            self.objectStorage.play_speech.play("Напомню через {} минут.".format(self.call_later_delay))
             self.call_later_delay = False
         elif self.is_negative(text):
-            self.objectStorage.speakSpeech.play(self.call_later_yes_no_fail_text, cache=True)
+            self.objectStorage.play_speech.play(self.call_later_yes_no_fail_text, cache=True)
         else:
-            self.objectStorage.speakSpeech.play("Извините, я вас не очень поняла", cashe=True)
+            self.objectStorage.play_speech.play("Извините, я вас не очень поняла", cashe=True)
 
     def __del__(self):
         if self.call_later_on_end:

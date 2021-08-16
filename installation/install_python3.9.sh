@@ -2,7 +2,7 @@
 
 version="3.9.6"
 
-sudo apt-get install build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev python3 python3-dev python3-venv python3-pip libffi-dev libtiff-dev autoconf libopenjp2-7 -y
+sudo apt install build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev python3 python3-dev python3-venv python3-pip libffi-dev libtiff-dev autoconf libopenjp2-7 -y
 
 wget -O /tmp/Python-$version.tar.xz https://www.python.org/ftp/python/$version/Python-$version.tar.xz
 

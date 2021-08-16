@@ -7,8 +7,11 @@ import os
 from pathlib import Path
 
 import requests
+from speechkit import Session
+from speechkit.auth import generate_jwt
 
-from core import speech, pixels, soundProcessor
+from core import pixels, sound_processor
+from core.speech import PlaySpeech, ListenRecognizeSpeech
 
 
 class ObjectStorage:
@@ -24,10 +27,6 @@ class ObjectStorage:
         :param boolean development: If development mode, default `False`
         :param boolean debug_mode: Debug mode status, default `None`
         :param string cash_filename: File path of cash file, default get from config
-        :param pixels.Pixels pixels: Object of pixels class default initialises
-        :param function play_audio_function: Function to play audio BytesIO, default `speech.play_audio_function`
-        :param speech.Speech speech_cls: Object of Speech class, default initialises (`play_audio_function` required)
-        :param speech.SpeakSpeech speakSpeech_cls: Object of SpeakSpeech class, default initialises
         :param string version: Version of script like `major.minor.fix`, default `null`
 
         :return: __init__ should return None
@@ -37,26 +36,29 @@ class ObjectStorage:
         self.BASE_DIR = Path(__file__).resolve().parent.parent
         self.config = config
 
-        self.event_loop = kwargs.get('event_loop', asyncio.get_event_loop())
-        self.inputFunction = kwargs.get('input_function', lambda: input("Press enter."))
+        self.inputFunction = kwargs.get('input_function')
         self.config_filename = kwargs.get('config_filename', os.path.join(Path.home(), '.speaker/config.json'))
         self.development = kwargs.get('development', False)
         self.debug_mode = kwargs.get('debug_mode')
         self.cash_filename = kwargs.get('cash_filename', os.path.join(Path.home(), '.speaker/speech.cash'))
-        self.pixels = kwargs.get('pixels', pixels.Pixels(self.development))
-        self.play_audio_function = kwargs.get('play_audio_function', speech.play_audio_function)
         self.version = kwargs.get('version', 'null')
 
-        if 'speech_cls' in kwargs:
-            self.speech = kwargs['speech_cls']
-        else:
-            if self.play_audio_function is None:
-                raise Exception("You must provide play_audio_function")
-            self.speech = speech.Speech(self)
+        self.event_loop = asyncio.get_event_loop()
+        self.pixels = pixels.Pixels(self.development)
+        try:
+            self.session = Session.from_jwt(self.speechkit_jwt_token)
+        except requests.exceptions.ConnectionError:
+            self.session = None
 
-        self.speakSpeech = kwargs.get(
-            'speakSpeech_cls', speech.SpeakSpeech(self.speech, self.cash_filename, self.pixels)
-        )
+        self.play_speech = PlaySpeech(self.session, self.cash_filename, self.pixels)
+
+        if self.session:
+            self.listen_recognize_speech = ListenRecognizeSpeech(self.session, self.pixels)
+
+    def init_speechkit(self):
+        self.session = Session.from_jwt(self.speechkit_jwt_token)
+        self.play_speech = PlaySpeech(self.session, self.cash_filename, self.pixels, self.play_audio_function)
+        self.listen_recognize_speech = ListenRecognizeSpeech(self.session, self.pixels)
 
     @staticmethod
     def _get_location_data():
@@ -66,27 +68,36 @@ class ObjectStorage:
         else:
             return {}
 
-    @functools.cached_property
-    def api_key(self):
-        return self.config.get('api_key')
+    @property
+    def speechkit_jwt_token(self):
+        """
+        JWT token for speechkit
 
-    @functools.cached_property
-    def catalog(self):
-        return self.config.get('catalog')
+        :return: Jwt token or None if not found
+        :rtype: str | None
+        """
+        with open(self.config.get('speechkit_private_key_filename'), 'rb') as f:
+            private_key = f.read()
+        return generate_jwt(
+            self.config.get('speechkit_service_account_id'),
+            self.config.get('speechkit_key_id'),
+            private_key
+        )
 
     @functools.cached_property
     def host(self):
-        """Host of heytelepat-server
+        """
+        Host of heytelepat-server
 
         :return: Host in format domain only like 'google.com'
         :rtype: string | None
         """
-
         return self.config.get('host')
 
     @functools.cached_property
     def host_http(self, prefix='http://', postfix='/speaker/api/v1/'):
-        """URL for HTTP requests
+        """
+        URL for HTTP requests
 
         :param string prefix: HTTP prefix, default `http://`
         :param string postfix: Base API url, default `/speaker/api/v1/`
@@ -94,28 +105,27 @@ class ObjectStorage:
         if `ObjectStorage.host` is not None
         :rtype: string | None
         """
-
         return prefix + self.host + postfix if self.host else None
 
     @functools.cached_property
     def host_ws(self, prefix='ws://', postfix='/ws/speakerapi/'):
-        """URL for websockets requests
+        """
+        URL for websockets requests
 
         :param string prefix: HTTP prefix, default `ws://`
         :param string postfix: Base API url, default `/ws/speakerapi/`
         :return: Full URL for websocket request, like `ws://domain.com/`
         :rtype: string
         """
-
         return prefix + self.host + postfix if self.host else None
 
     @functools.cached_property
     def token(self):
-        """Token of heytelepat-speaker server, to reset cash call `del ObjectStorage.token`
+        """
+        Token of heytelepat-speaker server, to reset cash call `del ObjectStorage.token`
 
         :rtype: string | None
         """
-
         return self.config.get('token')
 
     @functools.cached_property
@@ -140,11 +150,11 @@ class ObjectStorage:
 
 
 def get_settings():
-    """Load ini config and generates dictionary
+    """
+    Load ini config and generates dictionary
 
     :rtype: dict
     """
-
     logging.info("First loading from `settings.ini`")
     settings_filename = os.path.join(Path(__file__).resolve().parent.parent, 'settings.ini')
 
@@ -155,8 +165,9 @@ def get_settings():
     config.read(settings_filename)
 
     return {
-        'api_key': config['SPEECHKIT']['API_KEY'],
-        'catalog': config['SPEECHKIT']['CATALOG'],
+        'speechkit_service_account_id': config['SPEECHKIT']['SERVICE_ACCOUNT_ID'],
+        'speechkit_key_id': config['SPEECHKIT']['KEY_ID'],
+        'speechkit_private_key_filename': config['SPEECHKIT']['PRIVATE_KEY_FILENAME'],
         'host': config['SERVER']['HOST'],
         'version': config['GLOBAL']['VERSION'],
         'weather_token': config['WEATHER']['TOKEN']
@@ -171,13 +182,13 @@ def save_config(config: dict, file_path: str):
 
 
 def load_config(file_path):
-    """Load config file if exists
+    """
+    Load config file if exists
 
     :param string file_path: Path to config file
     :return: Optional python dict with config
     :rtype: dict | None
     """
-
     try:
         with open(file_path) as f:
             config = json.load(f)
@@ -213,13 +224,13 @@ def config_gate(
 
     if input_function == 'rpi_button':
         logging.info("Setup input function as Button")
-        input_function = soundProcessor.raspberry_input_function
+        input_function = sound_processor.raspberry_input_function
     elif input_function == 'wake_up_word':
         logging.info("Setup wake_up_word input function")
-        input_function = soundProcessor.wakeup_word_input_function
+        input_function = sound_processor.wakeup_word_input_function
     elif input_function == 'simple':
         logging.info("Setup input simple input function")
-        input_function = soundProcessor.async_simple_input_function
+        input_function = sound_processor.async_simple_input_function
     else:
         raise ValueError(
             "Invalid input fiction '{}'. ".format(input_function) +
@@ -230,7 +241,6 @@ def config_gate(
         input_function=input_function,
         config_filename=config_file_path,
         development=development,
-        play_audio_function=speech.play_audio_function,
         debug_mode=debug_mode,
         version=version
     )
@@ -241,6 +251,6 @@ def config_gate(
 
     if clean_cash:
         logging.info("Cleanup cash")
-        object_storage.speakSpeech.reset_cash()
+        object_storage.play_speech.reset_cash()
 
     return object_storage

@@ -52,7 +52,7 @@ def wireless_network_init(object_storage, first=False):
 
     text = "Необходимо подключение к сети, для этого сгенерируйте аудиокод с паролем от Wi-Fi." if first \
         else "К сожалению, подключиться не удалось, попробуйте сгенерировать код еще раз."
-    object_storage.speakSpeech.play(text, cache=True)
+    object_storage.play_speech.play(text, cache=True)
 
     object_storage.pixels.think()
 
@@ -61,7 +61,7 @@ def wireless_network_init(object_storage, first=False):
 
     if not network.available:
         logging.info("Network is unavailable")
-        object_storage.speakSpeech.play("Пока что сеть недоступна, продолжается попытка подключения.", cache=True)
+        object_storage.play_speech.play("Пока что сеть недоступна, продолжается попытка подключения.", cache=True)
 
     network.create(data.get('psk'))
 
@@ -98,11 +98,13 @@ def connection_gate(object_storage, check_connection_function=check_connection_p
 
         first = False
 
-    object_storage.speech.init_speechkit()
+    if not object_storage.session:
+        object_storage.init_speechkit()
+
     logging.info("Successfully connected and initialized speechkit")
 
     if not first:
-        object_storage.speakSpeech.play("Подключение к беспроводной сети произошло успешно.", cache=True)
+        object_storage.play_speech.play("Подключение к беспроводной сети произошло успешно.", cache=True)
     else:
         logging.info("Connection exists")
         object_storage.pixels.off()

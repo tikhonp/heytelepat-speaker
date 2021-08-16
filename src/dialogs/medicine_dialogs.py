@@ -17,13 +17,13 @@ class CheckMedicinesDialog(Dialog):
             self.data = answer
             self.first_t(text)
         elif isinstance(answer, list):
-            self.objectStorage.speakSpeech.play(
+            self.objectStorage.play_speech.play(
                 "Нет препаратов которые необходимо принять", cache=True)
 
     def first_t(self, _):
         if self.data:
             self.current = self.data.pop(0)
-            self.objectStorage.speakSpeech.play(
+            self.objectStorage.play_speech.play(
                 "Вам необходимо принять препарат {}. {}. ".format(self.current['title'], self.current['rules']) +
                 "Подтвердите, вы приняли препарат?"
             )
@@ -32,7 +32,7 @@ class CheckMedicinesDialog(Dialog):
             self.current_input_function = self.yes_no
             self.need_permanent_answer = True
         else:
-            self.objectStorage.speakSpeech.play(
+            self.objectStorage.play_speech.play(
                 "Спасибо за заполнение уведомление о выпитых препаратах", cache=True
             )
 
@@ -57,14 +57,14 @@ class CheckMedicinesDialog(Dialog):
                 }
             )
             self.commit_medicine_status('is_done')
-            self.objectStorage.speakSpeech.play("Отлично!", cache=True)
+            self.objectStorage.play_speech.play("Отлично!", cache=True)
             return self.first_t(text)
         elif self.is_negative(text):
-            self.objectStorage.speakSpeech.play(
+            self.objectStorage.play_speech.play(
                 "Подтвердите прием позже с помощью комманды 'какие лекарства необходимо принять'", cache=True
             )
         else:
-            self.objectStorage.speakSpeech.play(
+            self.objectStorage.play_speech.play(
                 "Извините, я вас не очень поняла", cashe=True
             )
 
@@ -75,7 +75,7 @@ class CheckMedicinesDialog(Dialog):
 
 class CommitMedicineDialog(Dialog):
     def first(self, _):
-        self.objectStorage.speakSpeech.play(
+        self.objectStorage.play_speech.play(
             "Какое лекарство вы приняли?", cache=True
         )
         self.current_input_function = self.second
@@ -90,7 +90,7 @@ class CommitMedicineDialog(Dialog):
                     "token": self.objectStorage.token,
                     "medicine": value
                 }):
-            self.objectStorage.speakSpeech.play(
+            self.objectStorage.play_speech.play(
                 "Отлично, лекарство {} отмечено".format(value)
             )
 
