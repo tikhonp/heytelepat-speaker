@@ -9,3 +9,4 @@ beautifulsoup4==4.9.3
 iterators==0.0.2
 python_dateutil==2.8.2
 speechkit==2.0.2
+simpleaudio==1.0.4

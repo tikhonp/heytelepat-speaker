@@ -7,14 +7,14 @@ import os
 import pickle
 
 import pyaudio
+import simpleaudio as sa
 from iterators import TimeoutIterator
 from speechkit import Session, SpeechSynthesis, DataStreamingRecognition
 
 
-def default_play_audio_function(audio_data, num_channels=1, sample_rate=48000, chunk_size=4000):
+def pyaudio_play_audio_function(audio_data, num_channels=1, sample_rate=48000, chunk_size=4000):
     """
     Function to play audio, that can be changed on different devices
-
     :param bytes audio_data: byte array vaw audio
     :param integer num_channels: Count of channels in audio, for stereo set `2`
     :param integer sample_rate: The sampling frequency of the submitted audio, default `48000`
@@ -39,6 +39,35 @@ def default_play_audio_function(audio_data, num_channels=1, sample_rate=48000, c
         p.terminate()
 
 
+def simple_audio_play_audio_function(audio_data, num_channels=1, sample_rate=48000):
+    """
+    Function to play audio, that can be changed on different devices
+
+    :param bytes audio_data: byte array vaw audio
+    :param integer num_channels: Count of channels in audio, for stereo set `2`
+    :param integer sample_rate: The sampling frequency of the submitted audio, default `48000`
+    :rtype: None
+    """
+    """
+       Function to play audio, that can be changed on different devices
+       :param bytes io_vaw: byte array vaw audio
+       :param integer num_channels: Count of channels in audio, for stereo set `2`
+       :param integer bytes_per_sample: number of bytes per second (16 bit = 2 bytes)
+       :param integer sample_rate: Sample rate of audio, default `48000`
+       :return None:
+       """
+    play_obj = sa.play_buffer(
+        audio_data,
+        num_channels,
+        2,  # Number of bytes per second (16 bit = 2 bytes)
+        sample_rate,
+    )
+    play_obj.wait_done()
+
+
+default_play_audio_function = simple_audio_play_audio_function
+
+
 def gen_audio_capture_function(sample_rate, chunk_size=4000, num_channels=1):
     """
     Generates audio for using streaming recognition
@@ -60,7 +89,7 @@ def gen_audio_capture_function(sample_rate, chunk_size=4000, num_channels=1):
     )
     try:
         while True:
-            yield stream.read(chunk_size)
+            yield stream.read(chunk_size, exception_on_overflow=False)
     finally:
         stream.stop_stream()
         stream.close()
