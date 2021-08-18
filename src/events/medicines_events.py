@@ -40,7 +40,7 @@ class MedicineNotificationDialog(EventDialog):
             self.current_input_function = self.call_later_yes_no
             self.need_permanent_answer = True
         else:
-            self.objectStorage.play_speech.play("Извините, я вас не очень поняла", cashe=True)
+            self.objectStorage.play_speech.play("Извините, я вас не очень поняла", cache=True)
 
     current_input_function = first
     name = 'Уведомление о принятии лекарства'

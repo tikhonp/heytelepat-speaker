@@ -10,6 +10,10 @@ import pyaudio
 import simpleaudio as sa
 from iterators import TimeoutIterator
 from speechkit import Session, SpeechSynthesis, DataStreamingRecognition
+try:
+    import RPi.GPIO as GPIO
+except ImportError:
+    logging.warning("RPi.GPIO is not available, button is disabled")
 
 
 def pyaudio_play_audio_function(audio_data, num_channels=1, sample_rate=48000, chunk_size=4000):
@@ -39,6 +43,31 @@ def pyaudio_play_audio_function(audio_data, num_channels=1, sample_rate=48000, c
         p.terminate()
 
 
+def raspberry_simple_audio_play_audio_function(audio_data, num_channels=1, sample_rate=48000, gpio_pin=17):
+    """
+    Function to play audio, that can be changed on different devices
+
+    :param bytes audio_data: byte array vaw audio
+    :param integer num_channels: Count of channels in audio, for stereo set `2`
+    :param integer sample_rate: The sampling frequency of the submitted audio, default `48000`
+    :param integer gpio_pin: Pin which button connected to
+    :rtype: None
+    """
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(gpio_pin, GPIO.IN, GPIO.PUD_UP)
+
+    play_obj = sa.play_buffer(
+        audio_data,
+        num_channels,
+        2,  # Number of bytes per second (16 bit = 2 bytes)
+        sample_rate,
+    )
+    while play_obj.is_playing():
+        if GPIO.input(gpio_pin) == GPIO.LOW:
+            play_obj.stop()
+            break
+
+
 def simple_audio_play_audio_function(audio_data, num_channels=1, sample_rate=48000):
     """
     Function to play audio, that can be changed on different devices
@@ -48,14 +77,6 @@ def simple_audio_play_audio_function(audio_data, num_channels=1, sample_rate=480
     :param integer sample_rate: The sampling frequency of the submitted audio, default `48000`
     :rtype: None
     """
-    """
-       Function to play audio, that can be changed on different devices
-       :param bytes io_vaw: byte array vaw audio
-       :param integer num_channels: Count of channels in audio, for stereo set `2`
-       :param integer bytes_per_sample: number of bytes per second (16 bit = 2 bytes)
-       :param integer sample_rate: Sample rate of audio, default `48000`
-       :return None:
-       """
     play_obj = sa.play_buffer(
         audio_data,
         num_channels,
@@ -138,7 +159,7 @@ class ListenRecognizeSpeech:
                 timeout=self.timeout, sentinel=([None], True, False)
         ):
             text = text[0]
-            if text.strip() == '':
+            if text and text.strip() == '':
                 text = None
 
             logging.info("RECOGNIZED TEXT '{}'".format(text))

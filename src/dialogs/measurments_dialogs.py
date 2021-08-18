@@ -244,13 +244,16 @@ class AddValueDialog(Dialog):
 
     def first(self, text):
         self.objectStorage.play_speech.play(
-            "Какое значение вы хотите отправить?", cache=True)
+            "Какое измерение вы хотите отправить?", cache=True)
         self.current_input_function = self.second
         self.need_permanent_answer = True
 
     def second(self, text):
         self.category = None
         text = text.lower()
+
+        if 'давлен' in text:
+            return self.process_pressure_first(text)
 
         for i in categories:
             for phrase in i[0]:
@@ -282,6 +285,59 @@ class AddValueDialog(Dialog):
         self.current_input_function = self.third
         self.need_permanent_answer = True
 
+    def process_pressure_first(self, _):
+        self.objectStorage.play_speech.play(
+            "Пожалуйста, произнесите значение, диастолического (нижнего) артериальное давления.", cache=True
+        )
+        self.current_input_function = self.process_pressure_second
+        self.need_permanent_answer = True
+
+    def process_pressure_second(self, text):
+        value = self.to_integer(text)
+        if value is None:
+            self.objectStorage.play_speech.play(
+                "Значение не распознано, пожалуйста,"
+                " произнесите его еще раз", cache=True)
+            self.current_input_function = self.process_pressure_second
+            self.need_permanent_answer = True
+            return
+
+        if self.fetch_data(
+                'post',
+                self.objectStorage.host_http + 'measurement/push/',
+                json={
+                    'token': self.objectStorage.token,
+                    'values': [{'category_name': 'diastolic_pressure', 'value': value}]
+                }):
+            self.objectStorage.play_speech.play(
+                "Значение успешно отправлено.", cache=True)
+
+        self.objectStorage.play_speech.play(
+            "Пожалуйста, произнесите значение систолическое (верхнего) артериального давления в покое.", cache=True
+        )
+        self.current_input_function = self.process_pressure_third
+        self.need_permanent_answer = True
+
+    def process_pressure_third(self, text):
+        value = self.to_integer(text)
+        if value is None:
+            self.objectStorage.play_speech.play(
+                "Значение не распознано, пожалуйста,"
+                " произнесите его еще раз", cache=True)
+            self.current_input_function = self.process_pressure_third
+            self.need_permanent_answer = True
+            return
+
+        if self.fetch_data(
+                'post',
+                self.objectStorage.host_http + 'measurement/push/',
+                json={
+                    'token': self.objectStorage.token,
+                    'values': [{'category_name': 'systolic_pressure', 'value': value}]
+                }):
+            self.objectStorage.play_speech.play(
+                "Значение успешно отправлено.", cache=True)
+
     def third(self, text):
         type_m = self.category.get('request_type', '') \
                  + self.category.get('value_type', '')
@@ -304,6 +360,8 @@ class AddValueDialog(Dialog):
             self.objectStorage.play_speech.play(
                 "Значение не распознано, пожалуйста,"
                 " произнесите его еще раз", cache=True)
+            self.current_input_function = self.third
+            self.need_permanent_answer = True
             return
 
         if self.fetch_data(
@@ -331,7 +389,7 @@ class AddValueDialog(Dialog):
 
     current_input_function = first
     name = 'Отправить значение измерения'
-    keywords = ['измерени', 'значени']
+    keywords = ['измерени']
 
 
 class CommitFormsDialog(Dialog):
@@ -399,7 +457,7 @@ class CommitFormsDialog(Dialog):
                 " команды 'запистать значение'", cache=True)
         else:
             self.objectStorage.play_speech.play(
-                "Извините, я вас не очень поняла", cashe=True
+                "Извините, я вас не очень поняла", cache=True
             )
 
     def third(self, text):

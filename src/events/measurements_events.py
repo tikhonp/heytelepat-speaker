@@ -37,7 +37,7 @@ class MeasurementNotificationDialog(AddValueDialog, EventDialog):
             self.need_permanent_answer = True
         else:
             self.objectStorage.play_speech.play(
-                "Извините, я вас не очень поняла", cashe=True
+                "Извините, я вас не очень поняла", cache=True
             )
 
     current_input_function = first

@@ -99,6 +99,28 @@ echo -n "Installing python requirements from \`$REQUIREMENTS\`, may take a while
   env/bin/pip install -r "$REQUIREMENTS" || exit
 } >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
 
+# Compiling grpcio
+
+echo -n "Compiling gRPCio..."
+
+GRPC_RELEASE_TAG="v1.39.1"
+REPO_ROOT="grpc"
+{
+  env/bin/pip uninstall grpcio
+  git clone -b $GRPC_RELEASE_TAG https://github.com/grpc/grpc $REPO_ROOT
+  cd $REPO_ROOT || exit
+  git submodule update --init
+  ../env/bin/pip install -rrequirements.txt
+  GRPC_PYTHON_BUILD_WITH_CYTHON=1 ../env/bin/pip install .
+} >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
+
+# Linking libffi.so
+
+echo -n "Linking libffi.so from 6 to 7..."
+{
+  sudo ln -s /usr/lib/arm-linux-gnueabihf/libffi.so.6 /usr/lib/arm-linux-gnueabihf/libffi.so.7
+} >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
+
 # Creating systemd services --------
 
 echo -n "Creating systemd services..."

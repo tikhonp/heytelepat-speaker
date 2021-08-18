@@ -91,8 +91,14 @@ class Dialog:
                     answer.status_code, answer.text[:100]))
 
     @staticmethod
-    def to_integer(text: str) -> int:
-        """Validate raw input to integer"""
+    def to_integer(text):
+        """
+        Validate raw input to integer
+
+        :param integer text: Input text to parse
+        :return: Parsed number or None
+        :rtype: int | None
+        """
 
         if text.isdigit():
             return int(text)

@@ -11,7 +11,12 @@ from speechkit import Session
 from speechkit.auth import generate_jwt
 
 from core import pixels, sound_processor
-from core.speech import PlaySpeech, ListenRecognizeSpeech
+from core.speech import (
+    PlaySpeech,
+    ListenRecognizeSpeech,
+    raspberry_simple_audio_play_audio_function,
+    default_play_audio_function
+)
 
 
 class ObjectStorage:
@@ -57,7 +62,9 @@ class ObjectStorage:
 
     def init_speechkit(self):
         self.session = Session.from_jwt(self.speechkit_jwt_token)
-        self.play_speech = PlaySpeech(self.session, self.cash_filename, self.pixels, self.play_audio_function)
+        play_audio_function = default_play_audio_function if self.development else \
+            raspberry_simple_audio_play_audio_function
+        self.play_speech = PlaySpeech(self.session, self.cash_filename, self.pixels, play_audio_function)
         self.listen_recognize_speech = ListenRecognizeSpeech(self.session, self.pixels)
 
     @staticmethod

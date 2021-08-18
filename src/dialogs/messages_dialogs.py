@@ -42,12 +42,12 @@ class SendMessageDialog(Dialog):
             return self.first(text)
         elif not self.is_negative(text):
             self.objectStorage.play_speech.play(
-                "Извините, я вас не очень поняла", cashe=True
+                "Извините, я вас не очень поняла", cache=True
             )
 
     current_input_function = first
     name = 'Отправить Сообщение'
-    keywords = ['отправ', 'сообщение']
+    keywords = [('отправ', 'сообщение'), 'сообщение']
 
 
 class NewMessagesDialog(Dialog):

@@ -65,7 +65,7 @@ class CheckMedicinesDialog(Dialog):
             )
         else:
             self.objectStorage.play_speech.play(
-                "Извините, я вас не очень поняла", cashe=True
+                "Извините, я вас не очень поняла", cache=True
             )
 
     current_input_function = first
