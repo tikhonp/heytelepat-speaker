@@ -83,7 +83,10 @@ class ObjectStorage:
         :return: Jwt token or None if not found
         :rtype: str | None
         """
-        with open(self.config.get('speechkit_private_key_filename'), 'rb') as f:
+        private_key_filename = os.path.join(
+            self.BASE_DIR, self.config.get('speechkit_private_key_filename')
+        )
+        with open(private_key_filename, 'rb') as f:
             private_key = f.read()
         return generate_jwt(
             self.config.get('speechkit_service_account_id'),
