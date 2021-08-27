@@ -60,6 +60,9 @@ class ObjectStorage:
         if self.session:
             self.listen_recognize_speech = ListenRecognizeSpeech(self.session, self.pixels)
 
+        self.auth_code = None
+        """Stores code if first authentication."""
+
     def init_speechkit(self):
         self.session = Session.from_jwt(self.speechkit_jwt_token)
         play_audio_function = default_play_audio_function if self.development else \

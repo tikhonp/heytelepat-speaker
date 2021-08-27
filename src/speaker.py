@@ -113,7 +113,7 @@ if args.systemd:
     notify(Notification.READY)
     notify(Notification.STATUS, "Connection Gate...")
 
-connection_gate(objectStorage)
+objectStorage.auth_code = connection_gate(objectStorage)
 
 if args.systemd:
     notify(Notification.STATUS, "Auth Gate...")

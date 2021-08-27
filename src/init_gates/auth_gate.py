@@ -1,52 +1,31 @@
-import asyncio
-import json
 import logging
+import sys
+import json
 
 import requests
-import websockets
 
 from init_gates.config_gate import save_config
-
-
-async def web_socket_auth(host: str, token: str):
-    url = host + 'init/checkauth/'
-
-    try:
-        async with websockets.connect(url) as ws:
-            await ws.send(json.dumps({'token': token}))
-            msg = await ws.recv()
-            return msg
-    except websockets.exceptions.ConnectionClosedError:
-        return None
+from init_gates.connection_gate import get_ggwave_input
 
 
 def init(object_storage):
-    object_storage.play_speech.play(
-        "Колонка еще не авторизована. "
-        "Сейчас я скажу тебе код из 6 цифр, "
-        "его надо ввести в окне подключения колонки в medsenger. ",
-        cache=True)
+    """
+    Exchange auth code to token
 
-    answer = requests.post(object_storage.host_http + 'speaker/',
-                           json={'version': object_storage.version})
+    :param init_gates.ObjectStorage object_storage: Object Storage instance
+    :return: Config dictionary
+    :rtype: dict
+    """
+    object_storage.pixels.think()
+
+    answer = requests.get(
+        object_storage.host_http + 'speaker/init/', json={'code': object_storage.auth_code}
+    )
     answer.raise_for_status()
     answer = answer.json()
     config = object_storage.config
     config['token'] = answer.get('token')
     save_config(config, object_storage.config_filename)
-
-    object_storage.play_speech.play(
-        "Итак, твой код: {}".format(" - ".join(list(str(answer.get('code'))))))
-
-    object_storage.pixels.think()
-
-    authed = None
-    while authed is None:
-        authed = asyncio.get_event_loop().run_until_complete(
-            web_socket_auth(object_storage.host_ws, config['token']))
-
-    if authed != 'OK':
-        raise RuntimeError("Auth confirmation failed, '{}'".format(authed))
 
     logging.info("Authentication passed")
     object_storage.play_speech.play(
@@ -58,7 +37,23 @@ def init(object_storage):
 
 
 def auth_gate(object_storage):
+    """
+    Provides getting token if it does not exists
+
+    :param init_gates.ObjectStorage object_storage: Object Storage instance
+    :return: Updated object storage instance
+    :rtype: init_gates.ObjectStorage
+    """
     if not object_storage.token:
+        if object_storage.auth_code is None:
+            logging.warning("auth code is None")
+
+            object_storage.play_speech.play(
+                "Токен не найден. Воспроизведите аудиокод.", cache=True
+            )
+            data = json.loads(get_ggwave_input())
+            object_storage.auth_code = data.get('code')
+
         logging.info("Token does not exist, authentication")
         object_storage.config = init(object_storage)
         del object_storage.token

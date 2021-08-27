@@ -46,8 +46,8 @@ def wireless_network_init(object_storage, first=False):
 
     :param init_gates.ObjectStorage object_storage: ObjectStorage instance
     :param boolean first: True if it the first iteration of wireless network, default `false`
-    :return: Connection success result
-    :rtype: boolean
+    :return: Integer auth code given from audio
+    :rtype: integer | None
     """
 
     text = "Необходимо подключение к сети, для этого сгенерируйте аудиокод с паролем от Wi-Fi." if first \
@@ -65,12 +65,12 @@ def wireless_network_init(object_storage, first=False):
 
     network.create(data.get('psk'))
 
-    if not (result := network.connect()):
+    if not network.connect():
         logging.error("Connection error when reconfigure")
 
     time.sleep(5)
 
-    return result
+    return data.get('code')
 
 
 def connection_gate(object_storage, check_connection_function=check_connection_ping, check_connection_retries=8):
@@ -80,12 +80,14 @@ def connection_gate(object_storage, check_connection_function=check_connection_p
     :param function check_connection_function: function that provides checking connection,
     default `check_connection_ping`
     :param integer check_connection_retries: Number of reties to call check_connection func
-    :return: None
-    :rtype: None
+    :return: Integer auth code given from audio
+    :rtype: integer | None
     """
 
     object_storage.pixels.wakeup()
     first = True
+    code = None
+
     while not check_connection_function(object_storage.host):
         logging.info("Network unavailable, connection gate active.")
         for i in range(check_connection_retries):
@@ -94,7 +96,7 @@ def connection_gate(object_storage, check_connection_function=check_connection_p
             time.sleep(1)
         else:
             logging.warning("No connection detected")
-            wireless_network_init(object_storage, first)
+            code = wireless_network_init(object_storage, first)
 
         first = False
 
@@ -108,6 +110,8 @@ def connection_gate(object_storage, check_connection_function=check_connection_p
     else:
         logging.info("Connection exists")
         object_storage.pixels.off()
+
+    return code
 
 
 def cash_phrases(speak_speech):
