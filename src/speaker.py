@@ -6,7 +6,7 @@ Input point for Telepat Speaker
 OOO Telepat, All Rights Reserved
 """
 
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 __author__ = 'Tikhon Petrishchev'
 __credits__ = 'TelePat LLC'
 
@@ -136,6 +136,8 @@ async def main():
 
     if args.systemd:
         notify(Notification.STATUS, "Loaded all processes, running...")
+
+    objectStorage.pixels.wakeup()
 
     return (sound_processor_task, events_engine_task), (sound_processor_instance, events_engine_instance)
 
