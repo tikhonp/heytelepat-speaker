@@ -63,7 +63,7 @@ logging.info("Started! OOO Telepat, all rights reserved. [{}]".format(__version_
 
 try:
     from init_gates import auth_gate, connection_gate, config_gate
-    from init_gates.connection_gate import cash_phrases
+    from init_gates.connection_gate import cash_phrases, BasePhrases
     from dialogs import DialogEngine, dialogs_list
     from events import EventsEngine, events_list
     from core.sound_processor import SoundProcessor
@@ -107,7 +107,7 @@ else:
     logging.warning("AlsaAudio is not used, development mode")
 
 if objectStorage.token is None:
-    objectStorage.play_speech.play("Привет! Это колонка Telepat Medsenger.", cache=True)
+    objectStorage.play_speech.play(BasePhrases.hello, cache=True)
 
 if args.systemd:
     notify(Notification.READY)

@@ -8,6 +8,15 @@ import pyaudio
 from network import Network, check_connection_ping
 
 
+class BasePhrases:
+    hello = "Привет! Это колонка Telepat Medsenger."
+    need_connection = "Необходимо подключение к сети, если беспроводная сеть Wi-Fi включена сгенерируйте аудиокод"\
+                      " в приложении. В случае, если беспроводная сеть не активна, включите ее и переподключите"\
+                      " питание заново."
+    connection_error = "К сожалению, подключиться не удалось, попробуйте сгенерировать код еще раз."
+    network_unavailable = "Пока что сеть недоступна, продолжается попытка подключения."
+
+
 def get_ggwave_input():
     """Listen audio and decode it to string if audio encoding got
 
@@ -49,10 +58,7 @@ def wireless_network_init(object_storage, first=False):
     :return: Integer auth code given from audio
     :rtype: integer | None
     """
-
-    text = "Необходимо подключение к сети, если беспроводная сеть Wi-Fi включена сгенерируйте аудиокод в приложении. "\
-        "В случае, если беспроводная сеть не активна, включите ее и переподключите питеание заново." if first \
-        else "К сожалению, подключиться не удалось, попробуйте сгенерировать код еще раз."
+    text = BasePhrases.need_connection if first else BasePhrases.connection_error
     object_storage.play_speech.play(text, cache=True)
 
     object_storage.pixels.think()
@@ -62,7 +68,7 @@ def wireless_network_init(object_storage, first=False):
 
     if not network.available:
         logging.info("Network is unavailable")
-        object_storage.play_speech.play("Пока что сеть недоступна, продолжается попытка подключения.", cache=True)
+        object_storage.play_speech.play(BasePhrases.network_unavailable, cache=True)
 
     network.create(data.get('psk'))
 
@@ -84,7 +90,6 @@ def connection_gate(object_storage, check_connection_function=check_connection_p
     :return: Integer auth code given from audio
     :rtype: integer | None
     """
-
     object_storage.pixels.wakeup()
     first = True
     code = None
@@ -116,12 +121,7 @@ def connection_gate(object_storage, check_connection_function=check_connection_p
 
 
 def cash_phrases(speak_speech):
-    data = [
-        "Привет! Это колонка Telepat Medsenger.",
-        "Необходимо подключение к сети, для этого сгенерируйте аудиокод с паролем от Wi-Fi.",
-        "К сожалению, подключиться не удалось, попробуйте сгенерировать код еще раз.",
-        "Пока что сеть недоступна, продолжается попытка подключения.",
-    ]
+    attrs = filter(lambda a: not a.startswith('__'), dir(BasePhrases))
 
-    for phrase in data:
-        speak_speech.cash_only(phrase)
+    for phrase in attrs:
+        speak_speech.cash_only(getattr(BasePhrases, phrase))
