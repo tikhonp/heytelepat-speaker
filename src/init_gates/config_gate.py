@@ -70,6 +70,17 @@ class ObjectStorage:
         self.play_speech = PlaySpeech(self.session, self.cash_filename, self.pixels, play_audio_function)
         self.listen_recognize_speech = ListenRecognizeSpeech(self.session, self.pixels)
 
+    def save_config(self):
+        """Save config property to json file."""
+
+        save_config(self.config, self.config_filename)
+
+    def reset_token(self):
+        """Puts token to null and saves config"""
+
+        self.config['token'] = None
+        self.save_config()
+
     @staticmethod
     def _get_location_data():
         answer = requests.get('http://ipinfo.io/json')

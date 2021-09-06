@@ -57,16 +57,21 @@ def auth_gate(object_storage):
         logging.info("Token does not exist, authentication")
         object_storage.config = init(object_storage)
         del object_storage.token
-    else:
-        answer = requests.get(object_storage.host_http + 'speaker/', json={'token': object_storage.token})
-        answer.raise_for_status()
-        if (server_version := answer.json().get('version')) != object_storage.version:
-            logging.info("Updating server version `{}` -> `{}`".format(server_version, object_storage.version))
-            answer = requests.put(object_storage.host_http + 'speaker/',
-                                  json={'token': object_storage.token,
-                                        'version': object_storage.version})
-            if not answer.ok:
-                logging.error(
-                    "Error updating version: status code `{}`, text `{}`".format(answer.status_code, answer.text[:100]))
+
+    answer = requests.get(object_storage.host_http + 'speaker/', json={'token': object_storage.token})
+    if answer.status_code == 404:
+        logging.error("Token invalid, got 404, resetting token...")
+        object_storage.reset_token()
+        raise
+    answer.raise_for_status()
+
+    if (server_version := answer.json().get('version')) != object_storage.version:
+        logging.info("Updating server version `{}` -> `{}`".format(server_version, object_storage.version))
+        answer = requests.put(object_storage.host_http + 'speaker/',
+                              json={'token': object_storage.token,
+                                    'version': object_storage.version})
+        if not answer.ok:
+            logging.error(
+                "Error updating version: status code `{}`, text `{}`".format(answer.status_code, answer.text[:100]))
 
     return object_storage
