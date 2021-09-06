@@ -15,7 +15,7 @@ class MessageNotificationDialog(EventDialog):
             "message_id": self.data.get('id')
         })
         self.objectStorage.play_speech.play(
-            "Пометить сообщение как прочитанное?", cache=True)
+            "Пометить сообщение как прочитанное? Перед ответом нажмите на кнопку.", cache=True)
         self.current_input_function = self.second
         self.need_permanent_answer = True
         self.call_later_delay = 15

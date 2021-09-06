@@ -7,7 +7,7 @@ class MedicineNotificationDialog(EventDialog):
     def first(self, _):
         self.objectStorage.play_speech.play(
             "Вам необходимо принять препарат {}. {}. ".format(self.data['title'], self.data['rules']) +
-            "Подтвердите, вы приняли препарат?"
+            "Подтвердите, вы приняли препарат?  Перед ответом нажмите на кнопку."
         )
         self.send_ws_data({
             'token': self.objectStorage.token,

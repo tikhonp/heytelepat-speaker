@@ -10,7 +10,7 @@ class MeasurementNotificationDialog(AddValueDialog, EventDialog):
     def first(self, text):
         self.objectStorage.play_speech.play(
             self.data['patient_description']
-            + " Вы готовы произнести ответ сейчас?")
+            + " Вы готовы произнести ответ сейчас? Перед ответом нажмите на кнопку.")
         self.send_ws_data({
             'token': self.objectStorage.token,
             'request_type': 'is_sent',

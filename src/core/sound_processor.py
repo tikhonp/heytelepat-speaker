@@ -118,7 +118,7 @@ class SoundProcessor:
 
         if text is None:
             self.object_storage.play_speech.play(
-                "Я не расслышал, повторите, пожалуйста еще.", cache=True)
+                "Я не расслышал, повторите, пожалуйста еще. Перед ответом нажмите на кнопку.", cache=True)
             return
 
         return text

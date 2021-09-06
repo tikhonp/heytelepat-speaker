@@ -6,7 +6,7 @@ Input point for Telepat Speaker
 OOO Telepat, All Rights Reserved
 """
 
-__version__ = '0.3.2'
+__version__ = '0.3.3'
 __author__ = 'Tikhon Petrishchev'
 __credits__ = 'TelePat LLC'
 
@@ -138,7 +138,6 @@ async def main():
         notify(Notification.STATUS, "Loaded all processes, running...")
 
     objectStorage.pixels.wakeup()
-
     return (sound_processor_task, events_engine_task), (sound_processor_instance, events_engine_instance)
 
 
@@ -151,6 +150,9 @@ async def stop(tasks_to_stop: list, objects_to_kill: list) -> None:
 
 tasks, objects = objectStorage.event_loop.run_until_complete(main())
 logging.info("Loaded all processes, running...")
+
+objectStorage.play_speech.play("Я готов. Для того, чтобы задать вопрос нажмите на кнопку.")
+
 try:
     objectStorage.event_loop.run_until_complete(asyncio.gather(*tasks))
 except KeyboardInterrupt:
