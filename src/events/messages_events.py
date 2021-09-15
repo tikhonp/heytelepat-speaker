@@ -33,10 +33,10 @@ class MessageNotificationDialog(EventDialog):
                 "Отлично!", cache=True)
         elif self.is_negative(text):
             self.objectStorage.play_speech.play(
-                "Сообщение не помечено как прочитанное", cache=True)
+                "Сообщение не помечено как прочитанное.", cache=True)
         else:
             self.objectStorage.play_speech.play(
-                "Извините, я вас не очень поняла", cache=True
+                "Извините, я вас не очень понял.", cache=True
             )
 
     current_input_function = first

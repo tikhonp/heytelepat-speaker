@@ -4,6 +4,7 @@ import functools
 import json
 import logging
 import os
+import traceback
 from pathlib import Path
 
 import requests
@@ -49,6 +50,8 @@ class ObjectStorage:
         self.version = kwargs.get('version', 'null')
 
         self.event_loop = asyncio.get_event_loop()
+        self.event_loop.set_exception_handler(self.handle_exception)
+
         self.pixels = pixels.Pixels(self.development)
         try:
             self.session = Session.from_jwt(self.speechkit_jwt_token)
@@ -80,6 +83,28 @@ class ObjectStorage:
 
         self.config['token'] = None
         self.save_config()
+
+    def handle_exception(self, loop, context):
+        """Loop exception handler."""
+
+        loop.default_exception_handler(context)
+
+        exception = context.get('exception')
+
+        if self.development:
+            answer = requests.post(self.host_http + 'exception/', json={
+                'token': self.token,
+                'traceback': str(context) + '\n\nException:\n' + str(
+                    context.get('exception')) + '\nTraceback:\n' + traceback.format_exc()
+            })
+
+            if not answer.ok:
+                logging.error("Failed to push error to server, {}, {}".format(
+                    answer.status_code, answer.text
+                ))
+
+        logging.error("Handling exception... {}".format(context))
+        loop.stop()
 
     @staticmethod
     def _get_location_data():

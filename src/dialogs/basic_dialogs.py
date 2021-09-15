@@ -54,19 +54,19 @@ class SetVolumeDialog(Dialog):
     def second(self, text):
         if not (value := self.to_integer(text)):
             self.objectStorage.play_speech.play(
-                "Необходимо указать числовое значение", cache=True)
+                "Необходимо указать числовое значение.", cache=True)
             return
 
         if value < 1 or value > 300:
             self.objectStorage.play_speech.play(
-                "Необходимо значение в промежутке от 1 до 300", cache=True)
+                "Необходимо значение в промежутке от 1 до 300.", cache=True)
             return
 
         m = alsaaudio.Mixer(control='Speaker', cardindex=1)
         m.setvolume(value)
 
         self.objectStorage.play_speech.play(
-            "Громкость установлена", cache=True)
+            "Громкость установлена.", cache=True)
 
     current_input_function = first
     name = 'Громкость'

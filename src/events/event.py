@@ -94,7 +94,7 @@ class EventDialog(Dialog):
         elif self.is_negative(text):
             self.objectStorage.play_speech.play(self.call_later_yes_no_fail_text, cache=True)
         else:
-            self.objectStorage.play_speech.play("Извините, я вас не очень поняла", cache=True)
+            self.objectStorage.play_speech.play("Извините, я вас не очень понял.", cache=True)
 
     def __del__(self):
         if self.call_later_on_end:

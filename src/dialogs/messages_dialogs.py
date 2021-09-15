@@ -42,7 +42,7 @@ class SendMessageDialog(Dialog):
             return self.first(text)
         elif not self.is_negative(text):
             self.objectStorage.play_speech.play(
-                "Извините, я вас не очень поняла", cache=True
+                "Извините, я вас не очень понял.", cache=True
             )
 
     current_input_function = first

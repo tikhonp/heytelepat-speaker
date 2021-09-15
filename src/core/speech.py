@@ -10,6 +10,7 @@ import pyaudio
 import simpleaudio as sa
 from iterators import TimeoutIterator
 from speechkit import Session, SpeechSynthesis, DataStreamingRecognition
+
 try:
     import RPi.GPIO as GPIO
 except ImportError:
@@ -169,6 +170,7 @@ class ListenRecognizeSpeech:
 
 class PlaySpeech:
     """Generates plays and cashes speech"""
+    voice = 'filipp'  # 'alena'
 
     def __init__(
             self,
@@ -221,7 +223,7 @@ class PlaySpeech:
         :rtype: bytes
         """
         return self.speech_synthesis.synthesize_stream(
-            text=text, voice='alena', format='lpcm', sampleRateHertz=str(self.sample_rate)
+            text=text, voice=self.voice, format='lpcm', sampleRateHertz=str(self.sample_rate)
         )
 
     def reset_cash(self):

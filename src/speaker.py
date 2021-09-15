@@ -6,7 +6,7 @@ Input point for Telepat Speaker
 OOO Telepat, All Rights Reserved
 """
 
-__version__ = '0.3.3'
+__version__ = '0.4.0'
 __author__ = 'Tikhon Petrishchev'
 __credits__ = 'TelePat LLC'
 
@@ -66,7 +66,7 @@ try:
     from init_gates.connection_gate import cash_phrases, BasePhrases
     from dialogs import DialogEngine, dialogs_list
     from events import EventsEngine, events_list
-    from core.sound_processor import SoundProcessor
+    from core import SoundProcessor
 except ImportError as e:
     logging.error("Error with importing modules {}".format(e))
     raise e
@@ -141,23 +141,29 @@ async def main():
     return (sound_processor_task, events_engine_task), (sound_processor_instance, events_engine_instance)
 
 
-async def stop(tasks_to_stop: list, objects_to_kill: list) -> None:
+async def shutdown(tasks_to_stop: list, objects_to_kill: list) -> None:
     objectStorage.pixels.off()
     for obj in objects_to_kill:
         await obj.kill()
     await asyncio.gather(*tasks_to_stop)
 
+    # pending = asyncio.Task.all_tasks()
+    # for task in pending:
+    #     await task.kill()
+    # await asyncio.gather(*pending)
+
 
 tasks, objects = objectStorage.event_loop.run_until_complete(main())
 logging.info("Loaded all processes, running...")
 
-objectStorage.play_speech.play("Я готов. Для того, чтобы задать вопрос нажмите на кнопку.")
+if not args.development:
+    objectStorage.play_speech.play("Я готов. Для того, чтобы задать вопрос нажмите на кнопку.")
 
 try:
     objectStorage.event_loop.run_until_complete(asyncio.gather(*tasks))
 except KeyboardInterrupt:
     logging.info("Stopping...")
 finally:
-    objectStorage.event_loop.run_until_complete(stop(tasks, objects))
+    objectStorage.event_loop.run_until_complete(shutdown(tasks, objects))
     objectStorage.event_loop.close()
     sys.exit()
