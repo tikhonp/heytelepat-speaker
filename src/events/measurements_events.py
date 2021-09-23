@@ -8,9 +8,12 @@ class MeasurementNotificationDialog(AddValueDialog, EventDialog):
     category = None
 
     def first(self, text):
+        measurement_description = str(
+            self.data.get('custom_text') or self.data.get('patient_description') or
+            'Пожалуйста, произведите измерение ' + self.data.get('title')
+        )
         self.objectStorage.play_speech.play(
-            self.data['patient_description']
-            + " Вы готовы произнести ответ сейчас? Перед ответом нажмите на кнопку.")
+            measurement_description + " Вы готовы произнести ответ сейчас? Перед ответом нажмите на кнопку.")
         self.send_ws_data({
             'token': self.objectStorage.token,
             'request_type': 'is_sent',
@@ -36,9 +39,15 @@ class MeasurementNotificationDialog(AddValueDialog, EventDialog):
             self.current_input_function = self.call_later_yes_no
             self.need_permanent_answer = True
         else:
-            self.objectStorage.play_speech.play(
-                "Извините, я вас не очень понял.", cache=True
+            measurement_description = str(
+                self.data.get('custom_text') or self.data.get('patient_description') or
+                'Пожалуйста, произведите измерение ' + self.data.get('title')
             )
+            self.objectStorage.play_speech.play(
+                "Извините, я вас не очень понял. " + measurement_description + " Вы готовы произнести ответ сейчас?"
+            )
+            self.current_input_function = self.yes_no
+            self.need_permanent_answer = True
 
     current_input_function = first
 

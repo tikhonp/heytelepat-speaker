@@ -26,7 +26,7 @@ class Dialog:
 
     def __init__(self, object_storage):
         """
-        :param ObjectStorage object_storage: ObjectStorage instance
+        :param init_gates.ObjectStorage object_storage: ObjectStorage instance
         """
         if not isinstance(self.name, str):
             raise TypeError("Name must be string")

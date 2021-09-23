@@ -274,14 +274,14 @@ class AddValueDialog(Dialog):
                     break
 
         if self.category is None:
-            self.objectStorage.speakSpeach.play(
-                "Категория нераспознана, "
-                "пожалуйста, назовите категорию еще раз", cache=True)
+            self.objectStorage.play_speech.play(
+                "Категория нераспознана, пожалуйста, назовите категорию еще раз", cache=True
+            )
             self.current_input_function = self.second
             return
 
         self.objectStorage.play_speech.play(
-            "Произнесите значение.", cache=True)
+            "Произнесите значение", cache=True)
         self.current_input_function = self.third
         self.need_permanent_answer = True
 
@@ -297,7 +297,7 @@ class AddValueDialog(Dialog):
         if value is None:
             self.objectStorage.play_speech.play(
                 "Значение не распознано, пожалуйста,"
-                " произнесите его еще раз.", cache=True)
+                " произнесите его еще раз", cache=True)
             self.current_input_function = self.process_pressure_second
             self.need_permanent_answer = True
             return
@@ -323,7 +323,7 @@ class AddValueDialog(Dialog):
         if value is None:
             self.objectStorage.play_speech.play(
                 "Значение не распознано, пожалуйста,"
-                " произнесите его еще раз.", cache=True)
+                " произнесите его еще раз", cache=True)
             self.current_input_function = self.process_pressure_third
             self.need_permanent_answer = True
             return
@@ -359,7 +359,7 @@ class AddValueDialog(Dialog):
         if value is None:
             self.objectStorage.play_speech.play(
                 "Значение не распознано, пожалуйста,"
-                " произнесите его еще раз.", cache=True)
+                " произнесите его еще раз", cache=True)
             self.current_input_function = self.third
             self.need_permanent_answer = True
             return
@@ -410,7 +410,7 @@ class CommitFormsDialog(Dialog):
             self.first_t(text)
         elif isinstance(answer, list):
             self.objectStorage.play_speech.play(
-                "Вы уже заполнили все опросники.", cache=True)
+                "Нет незаплоненных опросников", cache=True)
 
     def first_t(self, _):
         if self.current is not None:
@@ -425,10 +425,13 @@ class CommitFormsDialog(Dialog):
 
         if self.data:
             self.current = self.data.pop(0)
-            self.objectStorage.play_speech.play(
-                self.current['patient_description']
-                + " Вы готовы произнести ответ сейчас?")
-            if not self.current['is_sent']:
+            measurement_description = str(
+                self.current.get('custom_text') or self.current.get('patient_description') or
+                'Пожалуйста, произведите измерение ' + self.current.get('title')
+            )
+            self.objectStorage.play_speech.play(measurement_description + " Вы готовы произнести ответ сейчас?")
+
+            if not self.current.get('is_sent'):
                 self.fetch_data(
                     'patch',
                     self.objectStorage.host_http + 'measurement/',
@@ -441,7 +444,7 @@ class CommitFormsDialog(Dialog):
             self.need_permanent_answer = True
         else:
             self.objectStorage.play_speech.play(
-                "Спасибо за заполнение опросника!", cache=True)
+                "Спасибо за заполнение опросника", cache=True)
 
     def yes_no(self, text):
         if self.is_positive(text):
@@ -454,11 +457,14 @@ class CommitFormsDialog(Dialog):
         elif self.is_negative(text):
             self.objectStorage.play_speech.play(
                 "Введите значение позже с помощию"
-                " команды 'запистать значение'.", cache=True)
+                " команды 'запистать значение'", cache=True)
         else:
             self.objectStorage.play_speech.play(
-                "Извините, я вас не очень понял.", cache=True
+                "Извините, я вас не очень понял", cache=True
             )
+            self.current_input_function = self.yes_no
+            self.need_permanent_answer = True
+            return
 
     def third(self, text):
         type_m = self.category.get('request_type', '') \
@@ -481,7 +487,7 @@ class CommitFormsDialog(Dialog):
         if value is None:
             self.objectStorage.play_speech.play(
                 "Значение не распознано, пожалуйста,"
-                " произнесите его еще раз.", cache=True)
+                " произнесите его еще раз", cache=True)
             return
 
         if self.fetch_data(
