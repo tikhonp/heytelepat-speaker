@@ -96,4 +96,4 @@ class CommitMedicineDialog(Dialog):
 
     current_input_function = first
     name = 'Подтверждение лекарства'
-    keywords = [('подтверд', 'лекарств')]
+    keywords = [('подтверд', 'лекарств'), ('приня')]

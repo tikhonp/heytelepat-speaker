@@ -6,7 +6,7 @@ Input point for Telepat Speaker
 OOO Telepat, All Rights Reserved
 """
 
-__version__ = '0.4.1'
+__version__ = '0.4.3'
 __author__ = 'Tikhon Petrishchev'
 __credits__ = 'TelePat LLC'
 
