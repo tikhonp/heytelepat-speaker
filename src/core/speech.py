@@ -171,6 +171,7 @@ class ListenRecognizeSpeech:
 class PlaySpeech:
     """Generates plays and cashes speech"""
     voice = 'filipp'  # 'alena'
+    speed = 1.15
 
     def __init__(
             self,
@@ -223,7 +224,7 @@ class PlaySpeech:
         :rtype: bytes
         """
         return self.speech_synthesis.synthesize_stream(
-            text=text, voice=self.voice, format='lpcm', sampleRateHertz=str(self.sample_rate)
+            text=text, voice=self.voice, format='lpcm', sampleRateHertz=str(self.sample_rate), speed=self.speed
         )
 
     def reset_cash(self):

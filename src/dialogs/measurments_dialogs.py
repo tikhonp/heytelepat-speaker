@@ -4,7 +4,7 @@ import logging
 from dialogs import Dialog
 
 categories = [
-    [['пульс'], {
+    [['пульс', 'средеч'], {
         "id": 1,
         "name": "pulse",
         "description": "Пульс в покое",
@@ -287,7 +287,7 @@ class AddValueDialog(Dialog):
 
     def process_pressure_first(self, _):
         self.objectStorage.play_speech.play(
-            "Пожалуйста, произнесите значение, диастолического (нижнего) артериальное давления.", cache=True
+            "Пожалуйста, произнесите значение систолическое (верхнего) артериального давления в покое.", cache=True
         )
         self.current_input_function = self.process_pressure_second
         self.need_permanent_answer = True
@@ -307,13 +307,13 @@ class AddValueDialog(Dialog):
                 self.objectStorage.host_http + 'measurement/push/',
                 json={
                     'token': self.objectStorage.token,
-                    'values': [{'category_name': 'diastolic_pressure', 'value': value}]
+                    'values': [{'category_name': 'systolic_pressure', 'value': value}]
                 }):
             self.objectStorage.play_speech.play(
                 "Значение успешно отправлено.", cache=True)
 
         self.objectStorage.play_speech.play(
-            "Пожалуйста, произнесите значение систолическое (верхнего) артериального давления в покое.", cache=True
+            "Пожалуйста, произнесите значение, диастолического (нижнего) артериальное давления.", cache=True
         )
         self.current_input_function = self.process_pressure_third
         self.need_permanent_answer = True
@@ -333,7 +333,7 @@ class AddValueDialog(Dialog):
                 self.objectStorage.host_http + 'measurement/push/',
                 json={
                     'token': self.objectStorage.token,
-                    'values': [{'category_name': 'systolic_pressure', 'value': value}]
+                    'values': [{'category_name': 'diastolic_pressure', 'value': value}]
                 }):
             self.objectStorage.play_speech.play(
                 "Значение успешно отправлено.", cache=True)
