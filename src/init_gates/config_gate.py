@@ -89,7 +89,7 @@ class ObjectStorage:
 
         loop.default_exception_handler(context)
 
-        exception = context.get('exception')
+        _ = context.get('exception')
 
         if self.development:
             answer = requests.post(self.host_http + 'exception/', json={
@@ -108,7 +108,7 @@ class ObjectStorage:
 
     @staticmethod
     def _get_location_data():
-        answer = requests.get('http://ipinfo.io/json')
+        answer = requests.get('https://ipinfo.io/json')
         if answer.ok:
             return answer.json()
         else:
@@ -144,26 +144,26 @@ class ObjectStorage:
         return self.config.get('host')
 
     @functools.cached_property
-    def host_http(self, prefix='http://', postfix='/speaker/api/v1/'):
+    def host_http(self, prefix='https://', postfix='/speaker/api/v1/'):
         """
         URL for HTTP requests
 
-        :param string prefix: HTTP prefix, default `http://`
+        :param string prefix: HTTP prefix, default `https://`
         :param string postfix: Base API url, default `/speaker/api/v1/`
-        :return: Full URL for http request, like `http://domain.com/speaker/api/v1/`,
+        :return: Full URL for http request, like `https://domain.com/speaker/api/v1/`,
         if `ObjectStorage.host` is not None
         :rtype: string | None
         """
         return prefix + self.host + postfix if self.host else None
 
     @functools.cached_property
-    def host_ws(self, prefix='ws://', postfix='/ws/speakerapi/'):
+    def host_ws(self, prefix='wss://', postfix='/ws/speakerapi/'):
         """
         URL for websockets requests
 
-        :param string prefix: HTTP prefix, default `ws://`
+        :param string prefix: HTTP prefix, default `wss://`
         :param string postfix: Base API url, default `/ws/speakerapi/`
-        :return: Full URL for websocket request, like `ws://domain.com/`
+        :return: Full URL for websocket request, like `wss://domain.com/`
         :rtype: string
         """
         return prefix + self.host + postfix if self.host else None

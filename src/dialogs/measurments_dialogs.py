@@ -241,6 +241,7 @@ dry_categories = [
 
 class AddValueDialog(Dialog):
     category = None
+    value = None
 
     def first(self, text):
         self.objectStorage.play_speech.play(
@@ -350,6 +351,8 @@ class AddValueDialog(Dialog):
             if self.category.get('category', '') == 'information':
                 if text.strip().lower() == 'нет':
                     value = ''
+                    self.value = value
+                    return self.fourth('')
             if prefix := self.category.get('prefix', False):
                 value = prefix + ' ' + value
         else:
@@ -364,28 +367,45 @@ class AddValueDialog(Dialog):
             self.need_permanent_answer = True
             return
 
-        if self.fetch_data(
-                'post',
-                self.objectStorage.host_http + 'measurement/push/',
-                json={
-                    'token': self.objectStorage.token,
-                    'values': [{
-                        'category_name': self.category.get('name', '') + self.category.get('category', ''),
-                        'value': value
-                    }]
-                }):
-            self.objectStorage.play_speech.play(
-                "Значение успешно отправлено.", cache=True)
+        self.objectStorage.play_speech.play("Вы ввели - " + str(value) + ". Отправить значение?")
+        self.value = value
+        self.current_input_function = self.fourth
+        self.need_permanent_answer = True
 
-        if hasattr(self, 'data') and len(self.data['fields']) > 0:
-            return self.yes_no('да')
-        if hasattr(self, 'ws'):
-            self.objectStorage.event_loop.create_task(
-                self.ws.send(json.dumps({
-                    'token': self.objectStorage.token,
-                    'request_type': 'is_done',
-                    'measurement_id': self.data['id'],
-                })))
+    def fourth(self, text):
+        if self.is_positive(text):
+            if self.fetch_data(
+                    'post',
+                    self.objectStorage.host_http + 'measurement/push/',
+                    json={
+                        'token': self.objectStorage.token,
+                        'values': [{
+                            'category_name': self.category.get('name', '') + self.category.get('category', ''),
+                            'value': self.value
+                        }]
+                    }):
+                self.objectStorage.play_speech.play(
+                    "Значение успешно отправлено.", cache=True)
+
+            if hasattr(self, 'data') and len(self.data['fields']) > 0:
+                return self.yes_no('да')
+            if hasattr(self, 'ws'):
+                self.objectStorage.event_loop.create_task(
+                    self.ws.send(json.dumps({
+                        'token': self.objectStorage.token,
+                        'request_type': 'is_done',
+                        'measurement_id': self.data['id'],
+                    })))
+        elif self.is_negative(text):
+            self.objectStorage.play_speech.play("Произнесите значение еще раз.", cache=True)
+            self.value = None
+            self.current_input_function = self.third
+            self.need_permanent_answer = True
+        else:
+            self.objectStorage.play_speech.play(
+                "Изивините, я вас не очень понял. Записать значение {}?".format(str(self.value)), сache=True)
+            self.current_input_function = self.fourth
+            self.need_permanent_answer = True
 
     current_input_function = first
     name = 'Отправить значение измерения'

@@ -80,7 +80,7 @@ def check_if_new_version_available():
     version = settings['GLOBAL']['VERSION']
     host = settings['SERVER']['HOST']
 
-    answer = requests.get('http://' + host + '/speaker/api/v1/speaker/', json={'token': token})
+    answer = requests.get('https://' + host + '/speaker/api/v1/speaker/', json={'token': token})
     answer.raise_for_status()
     server_version = answer.json().get('version')
     if server_version != version:
@@ -88,7 +88,7 @@ def check_if_new_version_available():
             "Version on server ({}) and settings.ini ({}) don't match.".format(server_version, version))
     logging.info("Current version detected `{}`.".format(version))
 
-    answer = requests.post('http://' + host + '/speaker/api/v1/firmware/', json={'token': token})
+    answer = requests.post('https://' + host + '/speaker/api/v1/firmware/', json={'token': token})
     answer.raise_for_status()
     return answer.json().get('new_firmware')
 
@@ -98,10 +98,10 @@ def update_firmware(version: str):
     token = get_token()
     host = get_settings()['SERVER']['HOST']
 
-    answer = requests.get('http://' + host + '/speaker/api/v1/firmware/', json={'token': token, 'version': version})
+    answer = requests.get('https://' + host + '/speaker/api/v1/firmware/', json={'token': token, 'version': version})
     answer.raise_for_status()
 
-    url = 'http://' + host + answer.json().get('data')
+    url = 'https://' + host + answer.json().get('data')
     with requests.get(url, stream=True) as answer:
         answer.raise_for_status()
 
