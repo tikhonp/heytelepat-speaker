@@ -8,6 +8,7 @@ import traceback
 from pathlib import Path
 
 import requests
+import speechkit.exceptions
 from speechkit import Session
 from speechkit.auth import generate_jwt
 
@@ -57,6 +58,9 @@ class ObjectStorage:
             self.session = Session.from_jwt(self.speechkit_jwt_token)
         except requests.exceptions.ConnectionError:
             self.session = None
+        except speechkit.exceptions.RequestError:
+            del self.__dict__['speechkit_jwt_token']
+            self.session = Session.from_jwt(self.speechkit_jwt_token)
 
         self.play_speech = PlaySpeech(self.session, self.cash_filename, self.pixels)
 

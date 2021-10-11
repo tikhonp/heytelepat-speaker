@@ -74,12 +74,18 @@ class CheckMedicinesDialog(Dialog):
 
 
 class CommitMedicineDialog(Dialog):
-    def first(self, _):
-        self.objectStorage.play_speech.play(
-            "Какое лекарство вы приняли?", cache=True
-        )
-        self.current_input_function = self.second
-        self.need_permanent_answer = True
+    medicine = None
+
+    def first(self, text):
+        if text != '':
+            self.medicine = text
+            self.objectStorage.play_speech.play("Вы приняли лекарство {}, верно?".format(text))
+            self.current_input_function = self.yes_no
+            self.need_permanent_answer = True
+        else:
+            self.objectStorage.play_speech.play("Какое лекарство вы приняли?", cache=True)
+            self.current_input_function = self.first
+            self.need_permanent_answer = True
 
     def second(self, text):
         value = text
@@ -90,9 +96,17 @@ class CommitMedicineDialog(Dialog):
                     "token": self.objectStorage.token,
                     "medicine": value
                 }):
-            self.objectStorage.play_speech.play(
-                "Отлично, лекарство {} отмечено.".format(value)
-            )
+            self.objectStorage.play_speech.play("Отлично, лекарство {} отмечено.".format(value))
+
+    def yes_no(self, text):
+        if self.is_positive(text):
+            return self.second(self.medicine)
+        elif self.is_negative(text):
+            return self.first('')
+        else:
+            self.objectStorage.play_speech.play("Извините, я вас не очень понял.")
+            self.current_input_function = self.yes_no
+            self.need_permanent_answer = True
 
     current_input_function = first
     name = 'Подтверждение лекарства'

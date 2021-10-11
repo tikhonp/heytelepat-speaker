@@ -243,19 +243,7 @@ class AddValueDialog(Dialog):
     category = None
     value = None
 
-    def first(self, text):
-        self.objectStorage.play_speech.play(
-            "Какое измерение вы хотите отправить?", cache=True)
-        self.current_input_function = self.second
-        self.need_permanent_answer = True
-
-    def second(self, text):
-        self.category = None
-        text = text.lower()
-
-        if 'давлен' in text:
-            return self.process_pressure_first(text)
-
+    def choose_category(self, text) -> bool:
         for i in categories:
             for phrase in i[0]:
                 if phrase in text:
@@ -275,21 +263,45 @@ class AddValueDialog(Dialog):
                     break
 
         if self.category is None:
+            return False
+
+        return True
+
+    def first(self, text):
+        if 'давлен' in text:
+            return self.process_pressure_first(text)
+
+        if self.choose_category(text):
             self.objectStorage.play_speech.play(
-                "Категория нераспознана, пожалуйста, назовите категорию еще раз", cache=True
-            )
+                "Произнесите значение", cache=True)
+            self.current_input_function = self.third
+        else:
+            self.objectStorage.play_speech.play(
+                "Какое измерение вы хотите отправить?", cache=True)
+            self.current_input_function = self.second
+
+        self.need_permanent_answer = True
+
+    def second(self, text):
+        self.category = None
+
+        if 'давлен' in text:
+            return self.process_pressure_first(text)
+
+        if self.choose_category(text):
+            self.objectStorage.play_speech.play(
+                "Произнесите значение", cache=True)
+            self.current_input_function = self.third
+            self.need_permanent_answer = True
+        else:
+            self.objectStorage.play_speech.play(
+                "Категория нераспознана, пожалуйста, назовите категорию еще раз", cache=True)
             self.current_input_function = self.second
             return
 
-        self.objectStorage.play_speech.play(
-            "Произнесите значение", cache=True)
-        self.current_input_function = self.third
-        self.need_permanent_answer = True
-
     def process_pressure_first(self, _):
         self.objectStorage.play_speech.play(
-            "Пожалуйста, произнесите значение систолическое (верхнего) артериального давления в покое.", cache=True
-        )
+            "Пожалуйста, произнесите значение систолическое (верхнего) артериального давления в покое.", cache=True)
         self.current_input_function = self.process_pressure_second
         self.need_permanent_answer = True
 

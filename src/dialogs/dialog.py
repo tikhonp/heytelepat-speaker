@@ -157,7 +157,7 @@ class Dialog:
         positive_keywords = [
             'да', 'разумеется', 'ага', 'безусловно', 'конечно', 'несомненно', 'действительно',
             'плюс', 'так', 'точно', 'угу', 'как же', 'так', 'йес', 'легко', 'ладно', 'согласен',
-            'хорошо', 'приня', 'подтвержд', 'ага', 'ок', 'хоккей', 'естественно',
+            'хорошо', 'приня', 'подтвержд', 'ага', 'ок', 'хоккей', 'естественно', 'верно',
         ]
 
         return any(word in text.lower() for word in positive_keywords)
@@ -189,7 +189,8 @@ class DialogEngine:
 
     @functools.cached_property
     def _dialogs_keywords_list(self):
-        """Generate list: [(keyword, dialog)] for dialog choosing
+        """
+        Generate list: [(keyword, dialog)] for dialog choosing
 
         :return: List with dialogs and keywords
         :rtype: list
@@ -234,9 +235,12 @@ class DialogEngine:
             self.currentDialog = None
 
         if self.currentDialog is None:
-            self.currentDialog = self._chose_dialog_processor(text)
+            current_dialog = self._chose_dialog_processor(text)
+            if current_dialog is not None:
+                self.currentDialog, text = current_dialog
 
         if self.currentDialog is None:
+            self.currentDialog = None
             self.objectStorage.play_speech.play("К сожалению, я не знаю что ответить", cache=True)
             return
 
@@ -256,28 +260,37 @@ class DialogEngine:
         self._execute_next_dialog()
 
     def _get_dialog_instance(self, dialog, keyword, text):
-        """Get dialog from instance
+        """
+        Get dialog from instance and returned cleaned user query
 
         :param Dialog dialog: Dialog class
         :param string keyword: Keyword that matched
         :param string text: Given text
-        :return: Dialog instance
-        :rtype: Dialog
+        :return: Dialog instance and text cleaned from keywords
+        :rtype: tuple[Dialog, str]
         """
 
         logging.debug(
             "Chased dialog {}, with keyword ".format(dialog) +
             "'{}' in text '{}'".format(keyword, text)
         )
+
+        if ' ' in keyword:
+            for k in keyword.split():
+                text = ' '.join([i for i in text.split() if k not in i])
+        else:
+            text = ' '.join([i for i in text.split() if keyword not in i])
         # noinspection PyCallingNonCallable
-        return dialog(self.objectStorage)
+
+        return dialog(self.objectStorage), text
 
     def _chose_dialog_processor(self, text):
-        """Chose dialog to execute by given text
+        """
+        Chose dialog to execute by given text
 
         :param string text: Text based on dialog executing
         :return: Dialog instance or None
-        :rtype: Dialog | None
+        :rtype: tuple[Dialog, str] | None
         """
 
         text = text.lower().strip()

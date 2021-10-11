@@ -56,7 +56,7 @@ def auth_gate(object_storage):
 
         logging.info("Token does not exist, authentication")
         object_storage.config = init(object_storage)
-        del object_storage.token
+        del object_storage.__dict__['token']
 
     answer = requests.get(object_storage.host_http + 'speaker/', json={'token': object_storage.token})
     if answer.status_code == 404:
