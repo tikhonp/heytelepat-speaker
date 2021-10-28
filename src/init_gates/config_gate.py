@@ -58,9 +58,13 @@ class ObjectStorage:
             self.session = Session.from_jwt(self.speechkit_jwt_token)
         except requests.exceptions.ConnectionError:
             self.session = None
-        except speechkit.exceptions.RequestError:
-            del self.__dict__['speechkit_jwt_token']
-            self.session = Session.from_jwt(self.speechkit_jwt_token)
+        except speechkit.exceptions.RequestError as e:
+            logging.error(e)
+            try:
+                del self.__dict__['speechkit_jwt_token']
+                self.session = Session.from_jwt(self.speechkit_jwt_token)
+            except KeyError:
+                pass
 
         self.play_speech = PlaySpeech(self.session, self.cash_filename, self.pixels)
 

@@ -415,7 +415,7 @@ class AddValueDialog(Dialog):
             self.need_permanent_answer = True
         else:
             self.objectStorage.play_speech.play(
-                "Изивините, я вас не очень понял. Записать значение {}?".format(str(self.value)), сache=True)
+                "Извините, я вас не очень понял. Записать значение {}?".format(str(self.value)), cache=True)
             self.current_input_function = self.fourth
             self.need_permanent_answer = True
 
