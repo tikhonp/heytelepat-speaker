@@ -24,20 +24,6 @@ class Network:
         result = subprocess.run(command, stdout=subprocess.PIPE)
         return result.stdout.decode('utf-8')
 
-    # DEPRECATED:
-    # @staticmethod
-    # def _parse_iw_scan(iw_data: str) -> list:
-    #     networks = list()
-    #     for line in iw_data.split('\n'):
-    #         if line[:3] == 'BSS':
-    #             networks.append({'bssid', line.split()[1].split('(')[0]})
-    #         elif 'SSID' in line:
-    #             networks[-1]['ssid'] = line.strip().split[1]
-    #         elif 'Pairwise ciphers' in line:
-    #             networks[-1]['pairwise'] = line.split(':')[1].strip()
-    #
-    #     return networks
-
     @property
     def available(self) -> bool:
         networks = self._call_iw_scan()
@@ -91,7 +77,8 @@ class Network:
 
 
 def check_connection_ping(host='google.com'):
-    """Ping to host and if success return True else False
+    """
+    Ping to host and if success return True else False
 
     :param string host: Host to ping, default 'google.com'
     :return: Connection exist or not
@@ -103,11 +90,12 @@ def check_connection_ping(host='google.com'):
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL
     )
-    return True if subprocess_return.returncode == 0 else False
+    return subprocess_return.returncode == 0
 
 
 def check_connection_get_request(host='https://google.com'):
-    """Requests to host and if error return False else True
+    """
+    Requests to host and if error return False else True
 
     :param string host: Host to request, default 'google.com'
     :return: Connection exist or not

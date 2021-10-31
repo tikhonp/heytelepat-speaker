@@ -55,16 +55,9 @@ class ObjectStorage:
 
         self.pixels = pixels.Pixels(self.development)
         try:
-            self.session = Session.from_jwt(self.speechkit_jwt_token)
+            self.session = Session.from_jwt(self.speechkit_jwt_token())
         except requests.exceptions.ConnectionError:
             self.session = None
-        except speechkit.exceptions.RequestError as e:
-            logging.error(e)
-            try:
-                del self.__dict__['speechkit_jwt_token']
-                self.session = Session.from_jwt(self.speechkit_jwt_token)
-            except KeyError:
-                pass
 
         self.play_speech = PlaySpeech(self.session, self.cash_filename, self.pixels)
 
@@ -75,7 +68,7 @@ class ObjectStorage:
         """Stores code if first authentication."""
 
     def init_speechkit(self):
-        self.session = Session.from_jwt(self.speechkit_jwt_token)
+        self.session = Session.from_jwt(self.speechkit_jwt_token())
         play_audio_function = default_play_audio_function if self.development else \
             raspberry_simple_audio_play_audio_function
         self.play_speech = PlaySpeech(self.session, self.cash_filename, self.pixels, play_audio_function)
@@ -122,7 +115,6 @@ class ObjectStorage:
         else:
             return {}
 
-    @property
     def speechkit_jwt_token(self):
         """
         JWT token for speechkit
