@@ -60,7 +60,28 @@ def render_speaker_updater():
         f.write(speaker_updater_timer)
 
 
+def render_issue_manager():
+    global BASE_DIR, SERVICES_PATH, USER
+
+    issue_manager_service_name = 'speaker_issue_manager'
+    with open(os.path.join(BASE_DIR, issue_manager_service_name + '.service')) as f:
+        issue_manager_template = Template(f.read())
+
+    context = {
+        'working_directory': os.path.join(BASE_DIR.parent, 'issue_manager'),
+        'user': USER,
+        'python_env_path': os.path.join(BASE_DIR.parent, 'env', 'bin', 'python'),
+        'script': os.path.join(BASE_DIR.parent, 'issue_manager', 'issue_manager.py'),
+        'args': '',
+    }
+    issue_manager = issue_manager_template.render(**context)
+
+    with open(os.path.join(SERVICES_PATH, issue_manager_service_name + '.service'), 'w') as f:
+        f.write(issue_manager)
+
+
 if __name__ == '__main__':
     _, USER, SERVICES_PATH = sys.argv
     render_speaker()
     render_speaker_updater()
+    # render_issue_manager()

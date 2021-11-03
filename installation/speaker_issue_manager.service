@@ -1,0 +1,15 @@
+[Unit]
+Description = Heytelepat Speaker Issue Manager
+After = network.target
+
+[Service]
+Type = notify
+WorkingDirectory = {{ working_directory }}
+
+User = {{ user }}
+
+ExecStart = {{ python_env_path }} {{ script }} {{ args }}
+Restart = on-failure
+
+[Install]
+WantedBy = multi-user.target
