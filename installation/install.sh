@@ -100,18 +100,22 @@ env/bin/pip install -r "$REQUIREMENTS" && echo -e "   ${GREEN}[ OK ]${NC}" || ec
 
 # Compiling grpcio
 
-echo -n "Compiling gRPCio..."
+if ((SKIP_DEPENDENCIES == 1)); then
+  echo -e "${YELLOW}Skipping grpcio building...${NC}"
+else
+  echo -n "Compiling gRPCio..."
 
-GRPC_RELEASE_TAG="v1.39.1"
-REPO_ROOT="grpc"
-{
-  env/bin/pip uninstall grpcio
-  git clone -b $GRPC_RELEASE_TAG https://github.com/grpc/grpc $REPO_ROOT
-  cd $REPO_ROOT || exit
-  git submodule update --init
-  ../env/bin/pip install -rrequirements.txt
-  GRPC_PYTHON_BUILD_WITH_CYTHON=1 ../env/bin/pip install .
-} >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
+  GRPC_RELEASE_TAG="v1.39.1"
+  REPO_ROOT="grpc"
+  {
+    env/bin/pip uninstall grpcio
+    git clone -b $GRPC_RELEASE_TAG https://github.com/grpc/grpc $REPO_ROOT
+    cd $REPO_ROOT || exit
+    git submodule update --init
+    ../env/bin/pip install -rrequirements.txt
+    GRPC_PYTHON_BUILD_WITH_CYTHON=1 ../env/bin/pip install .
+  } >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
+fi
 
 # Linking libffi.so
 
@@ -181,16 +185,14 @@ cd ..
 echo -n "Enabling speaker service..."
 sudo systemctl enable speaker >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
 
-echo -n "Enabling speaker_updater service and timer..."
+echo -n "Enabling speaker_updater service and timer and speaker_issue_manager..."
 {
-  sudo systemctl enable speaker_updater
-  sudo systemctl enable speaker_updater.timer
+  sudo systemctl enable speaker_issue_manager.service speaker_updater.service speaker_updater.timer
 } >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
 
-echo -n "Starting speaker_updater service and timer..."
+echo -n "Starting speaker_updater service and timer and speaker_issue_manager..."
 {
-  sudo systemctl start speaker_updater
-  sudo systemctl start speaker_updater.timer
+  sudo systemctl start speaker_issue_manager.service speaker_updater.service speaker_updater.timer
 } >/dev/null && echo -e "   ${GREEN}[ OK ]${NC}" || echo -e "   ${RED}[ FAILED ]${NC}"
 
 # shellcheck disable=SC1073

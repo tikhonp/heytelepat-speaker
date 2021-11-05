@@ -84,4 +84,4 @@ if __name__ == '__main__':
     _, USER, SERVICES_PATH = sys.argv
     render_speaker()
     render_speaker_updater()
-    # render_issue_manager()
+    render_issue_manager()

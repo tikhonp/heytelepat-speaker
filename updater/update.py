@@ -6,7 +6,7 @@ Update speaker firmware util
 OOO Telepat, All Rights Reserved
 """
 
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 __author__ = 'Tikhon Petrishchev'
 __credits__ = 'TelePat LLC'
 
@@ -56,11 +56,11 @@ def get_token():
 
     global CONFIG_FILENAME
     try:
-        with open(config_filename) as f:
+        with open(CONFIG_FILENAME) as f:
             config = json.load(f)
             return config.get('token')
     except FileNotFoundError:
-        logging.warning("Config not found in `{}`.".format(config_filename))
+        logging.warning("Config not found in `{}`.".format(CONFIG_FILENAME))
         return
 
 

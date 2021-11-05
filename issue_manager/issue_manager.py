@@ -6,7 +6,7 @@ Commit speaker log util
 OOO Telepat, All Rights Reserved
 """
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 __author__ = 'Tikhon Petrishchev'
 __credits__ = 'TelePat LLC'
 
@@ -61,9 +61,10 @@ async def on_message(host: str, issue_id: int, token: str):
     global BASE_DIR
 
     file_path = os.path.join(BASE_DIR, 'issue_manager', f'issue_{issue_id}.log')
+    logging.info("Got issue ({}), dumping log -> `{}`".format(issue_id, file_path))
 
     subprocess.run(
-        ['sudo', 'journalctl', '-u', 'speaker', '>', file_path],
+        [os.path.join(BASE_DIR, 'issue_manager', 'dump_log.sh'), file_path],
         stdout=subprocess.PIPE
     )
 
@@ -75,6 +76,7 @@ async def on_message(host: str, issue_id: int, token: str):
     answer.raise_for_status()
 
     os.remove(file_path)
+    logging.info("Successfully sent log and removed file.")
 
 
 async def websocket_connect(host: str, token: str):
@@ -84,10 +86,12 @@ async def websocket_connect(host: str, token: str):
     try:
         async with websockets.connect(url) as ws:
             await ws.send(json.dumps(init_message))
+            logging.info("Connected to websocket, listening")
             while True:
                 if message := json.loads(await ws.recv()):
                     await on_message(host, message.get('id'), token)
     except websockets.exceptions.ConnectionClosedError:
+        logging.warning("Broke connection with socket, retrying to connect...")
         return
 
 
