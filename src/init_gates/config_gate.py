@@ -8,7 +8,6 @@ import traceback
 from pathlib import Path
 
 import requests
-import speechkit.exceptions
 from speechkit import Session
 from speechkit.auth import generate_jwt
 
@@ -30,7 +29,7 @@ class ObjectStorage:
         :param string config_filename: File path to config
 
         :param function input_function: Function that captures voice action, default `lambda: input("Press enter.")`
-        :param string config_filename: Path to config file, default `~/.speaker/config.json`
+        :param string CONFIG_FILENAME: Path to config file, default `~/.speaker/config.json`
         :param boolean development: If development mode, default `False`
         :param boolean debug_mode: Debug mode status, default `None`
         :param string cash_filename: File path of cash file, default get from config
@@ -44,11 +43,12 @@ class ObjectStorage:
         self.config = config
 
         self.inputFunction = kwargs.get('input_function')
-        self.config_filename = kwargs.get('config_filename', os.path.join(Path.home(), '.speaker/config.json'))
+        self.config_filename = kwargs.get('CONFIG_FILENAME', os.path.join(Path.home(), '.speaker/config.json'))
         self.development = kwargs.get('development', False)
         self.debug_mode = kwargs.get('debug_mode')
         self.cash_filename = kwargs.get('cash_filename', os.path.join(Path.home(), '.speaker/speech.cash'))
         self.version = kwargs.get('version', 'null')
+        self.serial_no = get_serial_no()
 
         self.event_loop = asyncio.get_event_loop()
         self.event_loop.set_exception_handler(self.handle_exception)
@@ -244,6 +244,29 @@ def load_config(file_path):
         logging.info("Loaded config with filename `{}`".format(file_path))
         return config
     except FileNotFoundError:
+        return
+
+
+def get_serial_no():
+    """
+    Get serial number stored in file in root
+
+    :return: serial number
+    :rtype: str | None
+    """
+
+    # TODO проверить имя файла
+
+    file_path = os.path.join(Path.home(), '.serial_no')
+    try:
+        with open(file_path) as f:
+            serial_no = f.read().strip()
+        logging.info("Loaded serial no ({}) with filename `{}`".format(
+            serial_no, file_path
+        ))
+        return serial_no
+    except FileNotFoundError:
+        logging.error("Serial no not found in `{}`".format(file_path))
         return
 
 

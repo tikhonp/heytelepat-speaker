@@ -6,7 +6,7 @@ Update speaker firmware util
 OOO Telepat, All Rights Reserved
 """
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 __author__ = 'Tikhon Petrishchev'
 __credits__ = 'TelePat LLC'
 
@@ -25,8 +25,8 @@ import requests
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-settings_filename = os.path.join(BASE_DIR, 'src/settings.ini')
-config_filename = os.path.join(Path.home(), '.speaker/config.json')
+SETTINGS_FILENAME = os.path.join(BASE_DIR, 'src/settings.ini')
+CONFIG_FILENAME = os.path.join(Path.home(), '.speaker/config.json')
 
 
 def install_pip_req(requirements_file):
@@ -36,14 +36,14 @@ def install_pip_req(requirements_file):
 
 def get_settings():
     """Load ini config and generates dictionary"""
-    global settings_filename
+    global SETTINGS_FILENAME
 
-    with open(settings_filename):
+    with open(SETTINGS_FILENAME):
         pass
 
     config = configparser.ConfigParser()
-    config.read(settings_filename)
-    logging.info("Loaded settings from `{}`.".format(settings_filename))
+    config.read(SETTINGS_FILENAME)
+    logging.info("Loaded settings from `{}`.".format(SETTINGS_FILENAME))
     return config
 
 
@@ -54,7 +54,7 @@ def get_token():
     :rtype: str | None
     """
 
-    global config_filename
+    global CONFIG_FILENAME
     try:
         with open(config_filename) as f:
             config = json.load(f)

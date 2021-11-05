@@ -3,7 +3,7 @@ Description = Heytelepat Speaker Issue Manager
 After = network.target
 
 [Service]
-Type = notify
+Type = simple
 WorkingDirectory = {{ working_directory }}
 
 User = {{ user }}

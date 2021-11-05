@@ -1,6 +1,5 @@
-import logging
-import sys
 import json
+import logging
 
 import requests
 
@@ -36,6 +35,42 @@ def init(object_storage):
     return config
 
 
+def update_server_data(object_storage):
+    """
+    Update server version of speaker and serial number if exists
+
+    :param init_gates.ObjectStorage object_storage: Object Storage instance
+    :return: Updated object storage instance
+    :rtype: init_gates.ObjectStorage
+    """
+
+    answer = requests.get(object_storage.host_http + 'speaker/', json={'token': object_storage.token})
+    if answer.status_code == 404:
+        logging.error("Token invalid, got 404, resetting token...")
+        object_storage.reset_token()
+        raise
+    answer.raise_for_status()
+
+    update_speaker_data_body = {}
+    if (server_version := answer.json().get('version')) != object_storage.version:
+        logging.info("Updating server version `{}` -> `{}`".format(server_version, object_storage.version))
+        update_speaker_data_body['version'] = object_storage.version
+
+    if (server_serial_no := answer.json().get('serial_no')) != object_storage.serial_no:
+        logging.info("Updating server serial no `{}` -> `{}`".format(server_serial_no, object_storage.serial_no))
+        update_speaker_data_body['serial_no'] = object_storage.serial_no
+
+    if update_speaker_data_body:
+        update_speaker_data_body['token'] = object_storage.token
+        answer = requests.put(object_storage.host_http + 'speaker/', json=update_speaker_data_body)
+        if not answer.ok:
+            logging.error("Error updating speaker data: status code `{}`, text `{}`".format(
+                answer.status_code, answer.text[:100]
+            ))
+
+    return object_storage
+
+
 def auth_gate(object_storage):
     """
     Provides getting token if it does not exists
@@ -58,20 +93,6 @@ def auth_gate(object_storage):
         object_storage.config = init(object_storage)
         del object_storage.__dict__['token']
 
-    answer = requests.get(object_storage.host_http + 'speaker/', json={'token': object_storage.token})
-    if answer.status_code == 404:
-        logging.error("Token invalid, got 404, resetting token...")
-        object_storage.reset_token()
-        raise
-    answer.raise_for_status()
-
-    if (server_version := answer.json().get('version')) != object_storage.version:
-        logging.info("Updating server version `{}` -> `{}`".format(server_version, object_storage.version))
-        answer = requests.put(object_storage.host_http + 'speaker/',
-                              json={'token': object_storage.token,
-                                    'version': object_storage.version})
-        if not answer.ok:
-            logging.error(
-                "Error updating version: status code `{}`, text `{}`".format(answer.status_code, answer.text[:100]))
+    update_server_data(object_storage)
 
     return object_storage

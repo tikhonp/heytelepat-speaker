@@ -6,23 +6,24 @@ Commit speaker log util
 OOO Telepat, All Rights Reserved
 """
 
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 __author__ = 'Tikhon Petrishchev'
 __credits__ = 'TelePat LLC'
 
+import asyncio
 import configparser
 import json
 import logging
+import os
 import subprocess
 from pathlib import Path
 
 import requests
 import websockets
-from cysystemd.daemon import notify, Notification
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SETTINGS_FILENAME = os.path.join(BASE_DIR, 'src/settings.ini')
-config_filename = os.path.join(Path.home(), '.speaker/config.json')
+CONFIG_FILENAME = os.path.join(Path.home(), '.speaker/config.json')
 
 
 def get_settings():
@@ -30,12 +31,12 @@ def get_settings():
 
     global SETTINGS_FILENAME
 
-    with open(settings_filename):
+    with open(SETTINGS_FILENAME):
         pass
 
     config = configparser.ConfigParser()
-    config.read(settings_filename)
-    logging.info("Loaded settings from `{}`.".format(settings_filename))
+    config.read(SETTINGS_FILENAME)
+    logging.info("Loaded settings from `{}`.".format(SETTINGS_FILENAME))
     return config
 
 
@@ -46,13 +47,13 @@ def get_token():
     :rtype: str | None
     """
 
-    global config_filename
+    global CONFIG_FILENAME
     try:
-        with open(config_filename) as f:
+        with open(CONFIG_FILENAME) as f:
             config = json.load(f)
             return config.get('token')
     except FileNotFoundError:
-        logging.warning("Config not found in `{}`.".format(config_filename))
+        logging.warning("Config not found in `{}`.".format(CONFIG_FILENAME))
         return
 
 
@@ -73,6 +74,8 @@ async def on_message(host: str, issue_id: int, token: str):
 
     answer.raise_for_status()
 
+    os.remove(file_path)
+
 
 async def websocket_connect(host: str, token: str):
     url = f'wss://{host}/ws/staff/issue/'
@@ -82,7 +85,7 @@ async def websocket_connect(host: str, token: str):
         async with websockets.connect(url) as ws:
             await ws.send(json.dumps(init_message))
             while True:
-                if message := self.decode_json(await ws.recv()):
+                if message := json.loads(await ws.recv()):
                     await on_message(host, message.get('id'), token)
     except websockets.exceptions.ConnectionClosedError:
         return
@@ -91,8 +94,14 @@ async def websocket_connect(host: str, token: str):
 async def main():
     settings = get_settings()
     while True:
-        await websocket_connect(settings.get('SERVER').get('HOST'), get_token())
+        await websocket_connect(settings['SERVER']['HOST'], get_token())
 
 
-notify(Notification.READY)
-asyncio.run(main())
+if __name__ == '__main__':
+    logging.basicConfig(
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        level=logging.INFO
+    )
+    logging.info("Issue manager speaker firmware util [{}]. `OOO Telepat` All Rights Reserved.".format(__version__))
+    asyncio.run(main())
