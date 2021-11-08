@@ -82,7 +82,17 @@ class ObjectStorage:
     def reset_token(self):
         """Puts token to null and saves config"""
 
+        logging.info("Resetting token...")
+
+        if self.token is None:
+            logging.warning("Token don't exist")
+            return
+
+        requests.delete(self.host_http + 'speaker/', json={'token': self.token}).raise_for_status()
+
         self.config['token'] = None
+        if 'token' in self.__dict__:
+            del self.__dict__['token']
         self.save_config()
 
     def handle_exception(self, loop, context):
@@ -288,10 +298,6 @@ def config_gate(
     else:
         config.update(get_settings())
 
-    if reset:
-        logging.info("Resetting token")
-        config['token'] = None
-
     save_config(config, config_file_path)
 
     if input_function == 'rpi_button':
@@ -316,6 +322,9 @@ def config_gate(
         debug_mode=debug_mode,
         version=version
     )
+
+    if reset:
+        object_storage.reset_token()
 
     if object_storage.version != config.get('version'):
         raise ValueError("Main file version ({}) and config version ({}) didn't match!".format(

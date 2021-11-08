@@ -110,15 +110,7 @@ class ResetDialog(Dialog):
 
     def reset_speaker(self):
         self.objectStorage.play_speech.play("Восстанавливаю заводские настройки.", cache=True)
-        if self.fetch_data(
-                'delete',
-                self.objectStorage.host_http + 'speaker/',
-                json={'token': self.objectStorage.token}
-        ) is None:
-            return
-        config = self.objectStorage.config
-        config['token'] = None
-        save_config(config, self.objectStorage.config_filename)
+        self.objectStorage.reset_token()
         self.objectStorage.play_speech.play("Успешно восстановлены заводские настройки.", cache=True)
         sys.exit()
 

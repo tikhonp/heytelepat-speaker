@@ -84,7 +84,7 @@ def auth_gate(object_storage):
             logging.warning("auth code is None")
 
             object_storage.play_speech.play(
-                "Токен не найден. Cгенерируйте и воспроизведите аудиокод.", cache=True
+                "Устройство не настроено. Cгенерируйте и воспроизведите аудиокод в мобильном приложении.", cache=True
             )
             data = json.loads(get_ggwave_input())
             object_storage.auth_code = data.get('code')

@@ -6,7 +6,7 @@ Commit speaker log util
 OOO Telepat, All Rights Reserved
 """
 
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 __author__ = 'Tikhon Petrishchev'
 __credits__ = 'TelePat LLC'
 
@@ -17,6 +17,7 @@ import logging
 import os
 import subprocess
 from pathlib import Path
+import time
 
 import requests
 import websockets
@@ -55,6 +56,23 @@ def get_token():
     except FileNotFoundError:
         logging.warning("Config not found in `{}`.".format(CONFIG_FILENAME))
         return
+
+
+def check_connection_ping(host='google.com'):
+    """
+    Ping to host and if success return True else False
+
+    :param string host: Host to ping, default 'google.com'
+    :return: Connection exist or not
+    :rtype: boolean
+    """
+
+    subprocess_return = subprocess.run(
+        ['timeout', '1.5', 'ping', '-c', '1', host],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
+    return subprocess_return.returncode == 0
 
 
 async def on_message(host: str, issue_id: int, token: str):
@@ -96,9 +114,20 @@ async def websocket_connect(host: str, token: str):
 
 
 async def main():
+    while not check_connection_ping():
+        logging.error("Network unavilible waiting...")
+        time.sleep(5)
+
     settings = get_settings()
+
+    token = get_token()
+    while token is None:
+        logging.error("Token unavailible waiting...")
+        time.sleep(5)
+        token = get_token()
+
     while True:
-        await websocket_connect(settings['SERVER']['HOST'], get_token())
+        await websocket_connect(settings['SERVER']['HOST'], token)
 
 
 if __name__ == '__main__':
