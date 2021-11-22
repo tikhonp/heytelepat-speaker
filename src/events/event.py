@@ -1,7 +1,7 @@
 import asyncio
 import json
 import logging
-
+from collections import deque
 import websockets
 
 from dialogs.dialog import Dialog
@@ -113,6 +113,8 @@ class EventDialog(Dialog):
 class Event:
     """Provides attributes and methods for event using in event engine."""
 
+    name = 'Base Event'
+
     def __init__(self, object_storage):
         """
         :param init_gates.ObjectStorage object_storage: ObjectStorage instance
@@ -126,8 +128,7 @@ class Event:
         self.dialog_class = None
         self.ws = None
         self.stop = False
-        self.data = None
-        self.name = 'Base Event'
+        self.data = deque()
 
         self.run_task = self.object_storage.event_loop.create_task(self.run())
 
@@ -141,7 +142,7 @@ class Event:
         """
 
         logging.debug("Default websocket message handler handled '{}'".format(message))
-        self.data = message
+        self.data.append(message)
         self.event_happened = True
 
     async def kill(self):
@@ -213,6 +214,15 @@ class Event:
             raise NotImplementedError("You must provide dialog class")
 
         return self.dialog_class(*args, **kwargs)
+
+    def get_data(self):
+        """Get data from data queue
+
+        :return: dict data instance
+        :rtype: dict
+        """
+
+        return self.data.popleft()
 
     async def return_dialog(self, dialog_engine_instance):
         """Get complete dialog instance
@@ -288,7 +298,8 @@ class EventsEngine:
             if event.event_happened:
                 self.dialog_engine_instance.add_dialog_to_queue(
                     await event.return_dialog(self.dialog_engine_instance))
-                event.event_happened = False
+                if not event.data:
+                    event.event_happened = False
 
     async def _stop_events(self):
         """Run kill() on all events."""

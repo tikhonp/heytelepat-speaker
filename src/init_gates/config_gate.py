@@ -51,7 +51,7 @@ class ObjectStorage:
         self.serial_no = get_serial_no()
 
         self.event_loop = asyncio.get_event_loop()
-        self.event_loop.set_exception_handler(self.handle_exception)
+        # self.event_loop.set_exception_handler(self.handle_exception)
 
         self.pixels = pixels.Pixels(self.development)
         try:

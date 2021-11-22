@@ -1,8 +1,9 @@
+import asyncio
+import functools
+import json
 import logging
 import time
 from collections import deque
-import functools
-import json
 
 import requests
 
@@ -95,7 +96,7 @@ class Dialog:
         """
         Validate raw input to integer
 
-        :param integer text: Input text to parse
+        :param str text: Input text to parse
         :return: Parsed number or None
         :rtype: int | None
         """
@@ -186,6 +187,15 @@ class DialogEngine:
         self.currentDialog = None
         self.time_delay = 50
         self.cur_dialog_time = None
+        self.execute_dialog_task = self.objectStorage.event_loop.create_task(self._check_if_task_is_out())
+
+    async def _check_if_task_is_out(self):
+        """Execute next dialog every 60 seconds"""
+
+        while True:
+            logging.debug("Check if dialog is done.")
+            self._execute_next_dialog()
+            await asyncio.sleep(60)
 
     @functools.cached_property
     def _dialogs_keywords_list(self):
@@ -210,15 +220,35 @@ class DialogEngine:
         return dialogs_list
 
     def _execute_next_dialog(self):
-        if self.currentDialog is None and self.dialogQueue:
+        if self._is_current_dialog_none() and self.dialogQueue:
             logging.debug("Trying to get dialog from queue")
             self.currentDialog, text = self.dialogQueue.popleft()
             logging.debug("Got dialog from queue")
             self.cur_dialog_time = time.time()
             self.process_input(text)
 
-    def add_dialog_to_queue(self, dialog, text=''):
+    def _is_current_dialog_none(self):
+        """if current dialog None or timed out with `self.time_delay` return True
+
+        :rtype: bool
+        """
+
         if self.currentDialog is None:
+            return True
+        else:
+            if (time.time() - self.cur_dialog_time) > self.time_delay:
+                self.currentDialog = None
+                return True
+            else:
+                return False
+
+    def add_dialog_to_queue(self, dialog, text=''):
+        """If there is current dialog, inputted dialog will be executed later, else immediately
+
+        :rtype: None
+        """
+
+        if self._is_current_dialog_none():
             self.cur_dialog_time = time.time()
             self.currentDialog = dialog
             self.process_input(text)
@@ -230,21 +260,18 @@ class DialogEngine:
 
     def process_input(self, text: str):
         logging.debug("Processing input in DialogEngine")
-        if self.currentDialog is not None and \
-                (time.time() - self.cur_dialog_time) > self.time_delay:
-            self.currentDialog = None
 
-        if self.currentDialog is None:
+        if self._is_current_dialog_none():
             current_dialog = self._chose_dialog_processor(text)
             if current_dialog is not None:
                 self.currentDialog, text = current_dialog
+                self.cur_dialog_time = time.time()
 
-        if self.currentDialog is None:
-            self.currentDialog = None
+        if self._is_current_dialog_none():
             self.objectStorage.play_speech.play("К сожалению, я не знаю что ответить", cache=True)
             return
 
-        logging.debug("Got text and chased dialog {}".format(self.currentDialog))
+        logging.debug("Got text and chose dialog {}".format(self.currentDialog))
         self.currentDialog.process_input(text)
 
         logging.debug("Current dialog {} is done {}".format(

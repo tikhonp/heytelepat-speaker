@@ -364,7 +364,7 @@ class AddValueDialog(Dialog):
                 if text.strip().lower() == 'нет':
                     value = ''
                     self.value = value
-                    return self.fourth('')
+                    return
             if prefix := self.category.get('prefix', False):
                 value = prefix + ' ' + value
         else:

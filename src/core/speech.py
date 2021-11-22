@@ -87,7 +87,7 @@ def simple_audio_play_audio_function(audio_data, num_channels=1, sample_rate=480
     play_obj.wait_done()
 
 
-default_play_audio_function = simple_audio_play_audio_function
+default_play_audio_function = pyaudio_play_audio_function
 
 
 def gen_audio_capture_function(sample_rate, chunk_size=4000, num_channels=1):
@@ -210,7 +210,7 @@ class PlaySpeech:
     def _store_data(self):
         """Store data to file or create it if file does not exists."""
 
-        logging.debug("Storing data, data: {}".format(self.data))
+        logging.debug("Storing data, data: {data_keys}".format(data_keys=self.data.keys()))
         os.makedirs(os.path.dirname(self.cashed_data_filename), exist_ok=True)
         with open(self.cashed_data_filename, 'wb') as f:
             pickle.dump(self.data, f)
@@ -248,7 +248,7 @@ class PlaySpeech:
                 audio_data = self.data[text]
             else:
                 logging.debug("Cashed data was not found, synthesizing, "
-                              "text: '{}', keywords: '{}'".format(text, self.data.keys()))
+                              "text: '{text}', keywords: '{data_keys}'".format(text=text, data_keys=self.data.keys()))
                 audio_data = self.cash_only(text)
         else:
             audio_data = self._synthesize_data(text)

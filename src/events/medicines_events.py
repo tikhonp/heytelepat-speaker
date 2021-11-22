@@ -6,7 +6,11 @@ from events.event import Event, EventDialog
 class MedicineNotificationDialog(EventDialog):
     def first(self, _):
         self.objectStorage.play_speech.play(
-            "Вам необходимо принять препарат {}. {}. ".format(self.data['title'], self.data['rules']) +
+            "Вам необходимо принять препарат {title} {dose}. {rules} ".format(
+                title=self.data.get('title'),
+                dose=self.data.get('dose') if self.data.get('dose') else '',
+                rules=self.data.get('rules') if self.data.get('rules') else ''
+            ) +
             "Подтвердите, вы приняли препарат?  Перед ответом нажмите на кнопку."
         )
         self.send_ws_data({
@@ -60,4 +64,4 @@ class MedicineNotificationEvent(Event, ABC):
 
     async def return_dialog(self, dialog_engine_instance):
         self.dialog_class = MedicineNotificationDialog
-        return await self.get_dialog(self.object_storage, self.data, self.ws, dialog_engine_instance)
+        return await self.get_dialog(self.object_storage, self.get_data(), self.ws, dialog_engine_instance)

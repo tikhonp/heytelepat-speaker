@@ -6,7 +6,7 @@ Input point for Telepat Speaker
 OOO Telepat, All Rights Reserved
 """
 
-__version__ = '0.5.4'
+__version__ = '0.5.5'
 __author__ = 'Tikhon Petrishchev'
 __credits__ = 'TelePat LLC'
 
@@ -14,6 +14,7 @@ import argparse
 import asyncio
 import logging
 import sys
+import sentry_sdk
 
 parser = argparse.ArgumentParser(description="Speaker for telepat.")
 parser.add_argument('-r', '--reset', help="reset speaker token and init",
@@ -40,10 +41,10 @@ parser.add_argument(
 parser.add_argument(
     '-log',
     '--loglevel',
-    default='warning',
+    default='info',
     help=(
         "Provide logging level. "
-        "Example -log=debug, default='warning'"
+        "Example -log=debug, default='info'"
     ),
 )
 args = parser.parse_args()
@@ -58,6 +59,18 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S',
     level=numeric_level
 )
+logging.getLogger('websockets.protocol').setLevel(logging.ERROR)
+logging.getLogger('websockets.server').setLevel(logging.ERROR)
+
+if not args.development:
+    sentry_sdk.init(
+        "https://ae5c11fbf94a4e23837a1785eb98dd16@o1075119.ingest.sentry.io/6075676",
+
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        # We recommend adjusting this value in production.
+        traces_sample_rate=1.0
+    )
 
 logging.info("Started! OOO Telepat, all rights reserved. [{}]".format(__version__))
 

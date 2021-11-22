@@ -15,7 +15,7 @@ except ImportError:
     logging.warning("pvporcupine is not available, required -d mode")
 
 
-async def wakeup_word_input_function(_, k=2, sensitivity=0.6, async_delay=0.1):
+async def wakeup_word_input_function(_, k=2, sensitivity=0.6, async_delay=0.02):
     keywords = [
         'alexa', 'bumblebee', 'computer', 'hey google', 'hey siri',
         'jarvis', 'picovoice', 'porcupine', 'terminator'
