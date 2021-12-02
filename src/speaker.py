@@ -15,6 +15,7 @@ import asyncio
 import logging
 import sys
 import sentry_sdk
+from core.speaker_logging import get_logger, BaseLoglevel
 
 parser = argparse.ArgumentParser(description="Speaker for telepat.")
 parser.add_argument('-r', '--reset', help="reset speaker token and init",
@@ -53,12 +54,9 @@ numeric_level = getattr(logging, args.loglevel.upper(), None)
 if not isinstance(numeric_level, int):
     raise ValueError('Invalid log level: %s' % args.loglevel)
 
-logging.basicConfig(
-    format='%(asctime)s - %(levelname)s - '
-           '[%(filename)s:%(lineno)d] - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
-    level=numeric_level
-)
+BaseLoglevel.level = numeric_level
+logger = get_logger()
+
 logging.getLogger('websockets.protocol').setLevel(logging.ERROR)
 logging.getLogger('websockets.server').setLevel(logging.ERROR)
 
@@ -72,7 +70,7 @@ if not args.development:
         traces_sample_rate=1.0
     )
 
-logging.info("Started! OOO Telepat, all rights reserved. [{}]".format(__version__))
+logger.info("Started! OOO Telepat, all rights reserved. [{}]".format(__version__))
 
 try:
     from init_gates import auth_gate, connection_gate, config_gate
@@ -81,14 +79,14 @@ try:
     from events import EventsEngine, events_list
     from core import SoundProcessor
 except ImportError as e:
-    logging.error("Error with importing modules {}".format(e))
+    logger.error("Error with importing modules {}".format(e))
     raise e
 
 if args.systemd:
     from cysystemd.daemon import notify, Notification
 
 if args.development and args.input_function == 'rpi_button':
-    logging.error("Rpi Button can't be used with development mode")
+    logger.error("Rpi Button can't be used with development mode")
     sys.exit()
 
 objectStorage = config_gate(
@@ -101,7 +99,7 @@ objectStorage = config_gate(
 )
 
 if args.store_cash:
-    logging.info("Store cash active")
+    logger.info("Store cash active")
     cash_phrases(objectStorage.play_speech)
     sys.exit()
 
@@ -109,7 +107,7 @@ if not args.development:
     try:
         import alsaaudio
     except ImportError:
-        logging.error(
+        logger.error(
             "If you using development mode please turn it on '-d', or install"
             " alsaaudio module.")
         sys.exit()
@@ -117,7 +115,7 @@ if not args.development:
     m = alsaaudio.Mixer(control='Speaker', cardindex=1)
     m.setvolume(90)
 else:
-    logging.warning("AlsaAudio is not used, development mode")
+    logger.warning("AlsaAudio is not used, development mode")
 
 if objectStorage.token is None:
     objectStorage.play_speech.play(BasePhrases.hello, cache=True)
@@ -167,7 +165,7 @@ async def shutdown(tasks_to_stop: list, objects_to_kill: list) -> None:
 
 
 tasks, objects = objectStorage.event_loop.run_until_complete(main())
-logging.info("Loaded all processes, running...")
+logger.info("Loaded all processes, running...")
 
 if not args.development:
     objectStorage.play_speech.play("Я готов. Для того, чтобы задать вопрос нажмите на кнопку.")
@@ -175,7 +173,7 @@ if not args.development:
 try:
     objectStorage.event_loop.run_until_complete(asyncio.gather(*tasks))
 except KeyboardInterrupt:
-    logging.info("Stopping...")
+    logger.info("Stopping...")
 finally:
     objectStorage.event_loop.run_until_complete(shutdown(tasks, objects))
     objectStorage.event_loop.close()

@@ -2,7 +2,6 @@ import asyncio
 import configparser
 import functools
 import json
-import logging
 import os
 import traceback
 from pathlib import Path
@@ -18,6 +17,9 @@ from core.speech import (
     raspberry_simple_audio_play_audio_function,
     default_play_audio_function
 )
+from core.speaker_logging import get_logger
+
+logger = get_logger()
 
 
 class ObjectStorage:
@@ -82,10 +84,10 @@ class ObjectStorage:
     def reset_token(self):
         """Puts token to null and saves config"""
 
-        logging.info("Resetting token...")
+        logger.info("Resetting token...")
 
         if self.token is None:
-            logging.warning("Token don't exist")
+            logger.warning("Token don't exist")
             return
 
         requests.delete(self.host_http + 'speaker/', json={'token': self.token}).raise_for_status()
@@ -110,11 +112,11 @@ class ObjectStorage:
             })
 
             if not answer.ok:
-                logging.error("Failed to push error to server, {}, {}".format(
+                logger.error("Failed to push error to server, {}, {}".format(
                     answer.status_code, answer.text
                 ))
 
-        logging.error("Handling exception... {}".format(context))
+        logger.error("Handling exception... {}".format(context))
         loop.stop()
 
     @staticmethod
@@ -214,7 +216,7 @@ def get_settings():
 
     :rtype: dict
     """
-    logging.info("First loading from `settings.ini`")
+    logger.info("First loading from `settings.ini`")
     settings_filename = os.path.join(Path(__file__).resolve().parent.parent, 'settings.ini')
 
     if not Path(settings_filename).resolve().is_file():
@@ -234,7 +236,7 @@ def get_settings():
 
 
 def save_config(config: dict, file_path: str):
-    logging.info("Saving config to `{}`".format(file_path))
+    logger.info("Saving config to `{}`".format(file_path))
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, 'w') as f:
         json.dump(config, f)
@@ -251,7 +253,7 @@ def load_config(file_path):
     try:
         with open(file_path) as f:
             config = json.load(f)
-        logging.info("Loaded config with filename `{}`".format(file_path))
+        logger.info("Loaded config with filename `{}`".format(file_path))
         return config
     except FileNotFoundError:
         return
@@ -271,12 +273,12 @@ def get_serial_no():
     try:
         with open(file_path) as f:
             serial_no = f.read().strip()
-        logging.info("Loaded serial no ({}) with filename `{}`".format(
+        logger.info("Loaded serial no ({}) with filename `{}`".format(
             serial_no, file_path
         ))
         return serial_no
     except FileNotFoundError:
-        logging.error("Serial no not found in `{}`".format(file_path))
+        logger.error("Serial no not found in `{}`".format(file_path))
         return
 
 
@@ -301,13 +303,13 @@ def config_gate(
     save_config(config, config_file_path)
 
     if input_function == 'rpi_button':
-        logging.info("Setup input function as Button")
+        logger.info("Setup input function as Button")
         input_function = sound_processor.raspberry_input_function
     elif input_function == 'wake_up_word':
-        logging.info("Setup wake_up_word input function")
+        logger.info("Setup wake_up_word input function")
         input_function = sound_processor.wakeup_word_input_function
     elif input_function == 'simple':
-        logging.info("Setup input simple input function")
+        logger.info("Setup input simple input function")
         input_function = sound_processor.async_simple_input_function
     else:
         raise ValueError(
@@ -331,7 +333,7 @@ def config_gate(
             object_storage.version, config.get('version')))
 
     if clean_cash:
-        logging.info("Cleanup cash")
+        logger.info("Cleanup cash")
         object_storage.play_speech.reset_cash()
 
     return object_storage

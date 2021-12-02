@@ -1,10 +1,13 @@
 import asyncio
 import json
-import logging
 from collections import deque
+
 import websockets
 
+from core.speaker_logging import get_logger
 from dialogs.dialog import Dialog
+
+logger = get_logger()
 
 
 class EventDialog(Dialog):
@@ -132,7 +135,7 @@ class Event:
 
         self.run_task = self.object_storage.event_loop.create_task(self.run())
 
-        logging.debug("Creating Event '{}'".format(self.name))
+        logger.debug("Creating Event '{}'".format(self.name))
 
     async def on_message(self, message):
         """Default async message handler
@@ -141,7 +144,7 @@ class Event:
         :rtype: None
         """
 
-        logging.debug("Default websocket message handler handled '{}'".format(message))
+        logger.debug("Default websocket message handler handled '{}'".format(message))
         self.data.append(message)
         self.event_happened = True
 
@@ -183,7 +186,7 @@ class Event:
     async def run(self):
         """Default async run method for asyncio_loop running `.loop_item()`"""
 
-        logging.debug("Running EventDialog '{}'".format(self.name))
+        logger.debug("Running EventDialog '{}'".format(self.name))
 
         loop_item_task = self.object_storage.event_loop.create_task(self.loop_item())
 
@@ -246,7 +249,7 @@ class Event:
         try:
             return json.loads(data)
         except json.decoder.JSONDecodeError:
-            logging.error("Error decoding message '%s'", data)
+            logger.error("Error decoding message '%s'", data)
             return
 
 
@@ -269,7 +272,7 @@ class EventsEngine:
         self.stop = False
         self.running_events = list()  # list of Events [`Event instance`]
 
-        logging.info("Creating events engine with %d events", len(events_dialog_list))
+        logger.info("Creating events engine with %d events", len(events_dialog_list))
 
     async def kill(self):
         """Kill event async"""
@@ -314,7 +317,7 @@ class EventsEngine:
     async def run(self):
         """Async method runs events engine initialises events and provides it's lifecycle."""
 
-        logging.info("Starting events engine.")
+        logger.info("Starting events engine.")
         await self._first_run()
 
         while True:

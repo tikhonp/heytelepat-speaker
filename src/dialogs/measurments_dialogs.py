@@ -1,7 +1,9 @@
 import json
-import logging
 
+from core.speaker_logging import get_logger
 from dialogs import Dialog
+
+logger = get_logger()
 
 categories = [
     [['пульс', 'средеч'], {
@@ -368,7 +370,7 @@ class AddValueDialog(Dialog):
             if prefix := self.category.get('prefix', False):
                 value = prefix + ' ' + value
         else:
-            logging.error("Unknown request_type %s" % self.category["request_type"])
+            logger.error("Unknown request_type %s" % self.category["request_type"])
             return
 
         if value is None:
@@ -513,7 +515,7 @@ class CommitFormsDialog(Dialog):
             if prefix := self.category.get('prefix', False):
                 value = prefix + ' ' + value
         else:
-            logging.error("Unknown request_type %s" % self.category["request_type"])
+            logger.error("Unknown request_type %s" % self.category["request_type"])
             return
 
         if value is None:

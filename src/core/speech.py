@@ -2,7 +2,6 @@
 Utils for using Yandex Speechkit with speechkit lib, listen phrases and synthesis.
 """
 
-import logging
 import os
 import pickle
 
@@ -11,10 +10,14 @@ import simpleaudio as sa
 from iterators import TimeoutIterator
 from speechkit import Session, SpeechSynthesis, DataStreamingRecognition
 
+from core.speaker_logging import get_logger
+
+logger = get_logger()
+
 try:
     import RPi.GPIO as GPIO
 except ImportError:
-    logging.warning("RPi.GPIO is not available, button is disabled")
+    logger.warning("RPi.GPIO is not available, button is disabled")
 
 
 def pyaudio_play_audio_function(audio_data, num_channels=1, sample_rate=48000, chunk_size=4000):
@@ -153,7 +156,7 @@ class ListenRecognizeSpeech:
         :rtype: str | None
         """
         self.pixels.listen()
-        logging.info("Listening audio input, recognizing...")
+        logger.info("Listening audio input, recognizing...")
 
         for text, final, _ in TimeoutIterator(
                 self.data_streaming_recognition.recognize(self.generate_audio_function, self.sample_rate),
@@ -163,7 +166,7 @@ class ListenRecognizeSpeech:
             if text and text.strip() == '':
                 text = None
 
-            logging.info("RECOGNIZED TEXT '{}'".format(text))
+            logger.info("RECOGNIZED TEXT '{}'".format(text))
             self.pixels.off()
             return text
 
@@ -210,7 +213,7 @@ class PlaySpeech:
     def _store_data(self):
         """Store data to file or create it if file does not exists."""
 
-        logging.debug("Storing data, data: {data_keys}".format(data_keys=self.data.keys()))
+        logger.debug("Storing data, data: {data_keys}".format(data_keys=self.data.keys()))
         os.makedirs(os.path.dirname(self.cashed_data_filename), exist_ok=True)
         with open(self.cashed_data_filename, 'wb') as f:
             pickle.dump(self.data, f)
@@ -244,16 +247,16 @@ class PlaySpeech:
         self.pixels.think()
         if cache:
             if text in self.data:
-                logging.debug("Cashed data found, playing it")
+                logger.debug("Cashed data found, playing it")
                 audio_data = self.data[text]
             else:
-                logging.debug("Cashed data was not found, synthesizing, "
-                              "text: '{text}', keywords: '{data_keys}'".format(text=text, data_keys=self.data.keys()))
+                logger.debug("Cashed data was not found, synthesizing, "
+                             "text: '{text}', keywords: '{data_keys}'".format(text=text, data_keys=self.data.keys()))
                 audio_data = self.cash_only(text)
         else:
             audio_data = self._synthesize_data(text)
 
-        logging.info("PLAYS TEXT '{}'".format(text))
+        logger.info("PLAYS TEXT '{}'".format(text))
         self.pixels.speak()
         self.play_audio_function(audio_data, sample_rate=self.sample_rate)
         self.pixels.off()

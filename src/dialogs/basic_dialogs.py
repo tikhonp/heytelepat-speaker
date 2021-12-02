@@ -1,6 +1,5 @@
 import datetime
 import locale
-import logging
 import random
 import sys
 import time
@@ -9,18 +8,20 @@ import pymorphy2
 import requests
 from bs4 import BeautifulSoup
 
+from core.speaker_logging import get_logger
+from dialogs import Dialog
+
+logger = get_logger()
+
 try:
     import RPi.GPIO as GPIO
 except ImportError:
-    logging.warning("RPi.GPIO is not available, button is disabled")
-
-from dialogs import Dialog
-from init_gates.config_gate import save_config
+    logger.warning("RPi.GPIO is not available, button is disabled")
 
 try:
     import alsaaudio
 except ImportError:
-    logging.warning(
+    logger.warning(
         "AlsaAudio import error, make sure development mode is active")
     alsaaudio = None
 
@@ -144,7 +145,7 @@ class AnekDialog(Dialog):
     def get_anek():
         answer = requests.get('https://baneks.ru/random')
         if not answer.ok:
-            logging.error("Error load anek connection, {}, {}".format(answer.status_code, answer.text[:100]))
+            logger.error("Error load anek connection, {}, {}".format(answer.status_code, answer.text[:100]))
             return
 
         return BeautifulSoup(answer.text, 'html.parser').find_all('meta', attrs={'name': 'description'})[0]["content"]

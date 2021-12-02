@@ -1,11 +1,14 @@
 import asyncio
 import functools
 import json
-import logging
 import time
 from collections import deque
 
 import requests
+
+from core.speaker_logging import get_logger
+
+logger = get_logger()
 
 
 class Dialog:
@@ -51,7 +54,7 @@ class Dialog:
             self.current_input_function = None
             return
 
-        logging.debug(
+        logger.debug(
             "Processing input in dialog {}, with input {}".format(
                 self.__str__(), text))
 
@@ -87,7 +90,7 @@ class Dialog:
         else:
             self.objectStorage.play_speech.play(
                 "Ошибка соединения с сетью.", cache=True)
-            logging.error(
+            logger.error(
                 "Error in requests, status code: '{}', answer: '{}'".format(
                     answer.status_code, answer.text[:100]))
 
@@ -180,7 +183,7 @@ class DialogEngine:
         :param object_storage: ObjectStorage instance
         :param dialogs: list of dialog Instances
         """
-        logging.info("Creating DialogEngine, with %d dialogs", len(dialogs))
+        logger.info("Creating DialogEngine, with %d dialogs", len(dialogs))
         self.objectStorage = object_storage
         self.dialogs = dialogs
         self.dialogQueue = deque()
@@ -193,7 +196,7 @@ class DialogEngine:
         """Execute next dialog every 60 seconds"""
 
         while True:
-            logging.debug("Check if dialog is done.")
+            logger.debug("Check if dialog is done.")
             self._execute_next_dialog()
             await asyncio.sleep(60)
 
@@ -216,14 +219,14 @@ class DialogEngine:
                     keyword = ' '.join(list(map(lambda x: x.strip().lower(), keyword)))
                     dialogs_list.append((keyword, dialog,))
 
-        logging.debug("Dialog list: {}".format(dialogs_list))
+        logger.debug("Dialog list: {}".format(dialogs_list))
         return dialogs_list
 
     def _execute_next_dialog(self):
         if self._is_current_dialog_none() and self.dialogQueue:
-            logging.debug("Trying to get dialog from queue")
+            logger.debug("Trying to get dialog from queue")
             self.currentDialog, text = self.dialogQueue.popleft()
-            logging.debug("Got dialog from queue")
+            logger.debug("Got dialog from queue")
             self.cur_dialog_time = time.time()
             self.process_input(text)
 
@@ -253,13 +256,13 @@ class DialogEngine:
             self.currentDialog = dialog
             self.process_input(text)
         else:
-            logging.debug("Putting dialog {} into queue".format(dialog))
+            logger.debug("Putting dialog {} into queue".format(dialog))
             self.dialogQueue.append((dialog, text))
-            logging.debug("Put dialog {} into queue".format(dialog))
+            logger.debug("Put dialog {} into queue".format(dialog))
             self._execute_next_dialog()
 
     def process_input(self, text: str):
-        logging.debug("Processing input in DialogEngine")
+        logger.debug("Processing input in DialogEngine")
 
         if self._is_current_dialog_none():
             current_dialog = self._chose_dialog_processor(text)
@@ -271,10 +274,10 @@ class DialogEngine:
             self.objectStorage.play_speech.play("К сожалению, я не знаю что ответить", cache=True)
             return
 
-        logging.debug("Got text and chose dialog {}".format(self.currentDialog))
+        logger.debug("Got text and chose dialog {}".format(self.currentDialog))
         self.currentDialog.process_input(text)
 
-        logging.debug("Current dialog {} is done {}".format(
+        logger.debug("Current dialog {} is done {}".format(
             self.currentDialog, self.currentDialog.is_done))
 
         if self.currentDialog.is_done:
@@ -297,7 +300,7 @@ class DialogEngine:
         :rtype: tuple[Dialog, str]
         """
 
-        logging.debug(
+        logger.debug(
             "Chased dialog {}, with keyword ".format(dialog) +
             "'{}' in text '{}'".format(keyword, text)
         )
@@ -322,7 +325,7 @@ class DialogEngine:
 
         text = text.lower().strip()
         if text == '':
-            logging.warning('Got empty text in `DialogEngine._chose_dialog_processor()`')
+            logger.warning('Got empty text in `DialogEngine._chose_dialog_processor()`')
             return
 
         def k_in_text(k: str) -> bool:

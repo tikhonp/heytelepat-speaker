@@ -2,15 +2,18 @@
 LED light pattern like Google Home
 """
 
-import logging
 import threading
 import time
 from queue import Queue
 
+from core.speaker_logging import get_logger
+
+logger = get_logger()
+
 try:
     from core import apa102
 except ImportError:
-    logging.warning("Pixels unavailable spi_dev error")
+    logger.warning("Pixels unavailable spi_dev error")
     apa102 = None
 
 
@@ -20,7 +23,7 @@ class Pixels:
     def __init__(self, development=False):
         self.development = development
         if development:
-            logging.info("Pixels in development mode")
+            logger.info("Pixels in development mode")
             return
 
         self.basis = [0] * 3 * self.PIXELS_N
@@ -40,7 +43,7 @@ class Pixels:
 
     def wakeup(self):
         if self.development:
-            logging.info("Pixels in development mode, WAKEUP")
+            logger.info("Pixels in development mode, WAKEUP")
             return
 
         def f():
@@ -51,28 +54,28 @@ class Pixels:
 
     def listen(self):
         if self.development:
-            logging.info("Pixels in development mode, LISTEN")
+            logger.info("Pixels in development mode, LISTEN")
             return
         self.next.set()
         self.queue.put(self._listen)
 
     def think(self):
         if self.development:
-            logging.info("Pixels in development mode, THINK")
+            logger.info("Pixels in development mode, THINK")
             return
         self.next.set()
         self.queue.put(self._think)
 
     def speak(self):
         if self.development:
-            logging.info("Pixels in development mode, SPEAK")
+            logger.info("Pixels in development mode, SPEAK")
             return
         self.next.set()
         self.queue.put(self._speak)
 
     def off(self):
         if self.development:
-            logging.info("Pixels in development mode, OFF")
+            logger.info("Pixels in development mode, OFF")
             return
         self.next.set()
         self.queue.put(self._off)
@@ -148,7 +151,7 @@ class Pixels:
 
     def write(self, colors):
         if self.development:
-            logging.info("Pixels in development mode, WRITE {}".format(colors))
+            logger.info("Pixels in development mode, WRITE {}".format(colors))
             return
         for i in range(self.PIXELS_N):
             self.dev.set_pixel(

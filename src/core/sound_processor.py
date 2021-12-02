@@ -1,18 +1,21 @@
 import asyncio
-import logging
 import struct
 
 import aioconsole
 import pyaudio
 
+from core.speaker_logging import get_logger
+
+logger = get_logger()
+
 try:
     import RPi.GPIO as GPIO
 except ImportError:
-    logging.warning("RPi.GPIO is not available, button is disabled")
+    logger.warning("RPi.GPIO is not available, button is disabled")
 try:
     import pvporcupine
 except ImportError:
-    logging.warning("pvporcupine is not available, required -d mode")
+    logger.warning("pvporcupine is not available, required -d mode")
 
 
 async def wakeup_word_input_function(_, k=2, sensitivity=0.6, async_delay=0.02):
@@ -37,7 +40,7 @@ async def wakeup_word_input_function(_, k=2, sensitivity=0.6, async_delay=0.02):
             input=True,
             frames_per_buffer=porcupine.frame_length)
 
-        logging.info("Listening wake up word '{}'...".format(keyword))
+        logger.info("Listening wake up word '{}'...".format(keyword))
 
         while True:
             pcm = audio_stream.read(porcupine.frame_length)
@@ -69,10 +72,10 @@ async def raspberry_input_function(loop, gpio_pin=17, async_delay=0.1):
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(gpio_pin, GPIO.IN, GPIO.PUD_UP)
 
-    logging.info("Waiting button...")
+    logger.info("Waiting button...")
     while True:
         if GPIO.input(gpio_pin) == GPIO.LOW:
-            logging.info("Button was pushed!")
+            logger.info("Button was pushed!")
             return
         await asyncio.sleep(async_delay)
 
@@ -106,7 +109,7 @@ class SoundProcessor:
 
         self.stop = False
 
-        logging.info("Created SoundProcessor engine")
+        logger.info("Created SoundProcessor engine")
 
     async def kill(self):
         """Kill event async"""
@@ -140,7 +143,7 @@ class SoundProcessor:
     async def run(self):
         """Main async run function provides waiting for user input and handles voice."""
 
-        logging.info("Started soundProcessorInstance")
+        logger.info("Started soundProcessorInstance")
 
         input_func_task = self.object_storage.event_loop.create_task(
             self.object_storage.inputFunction(self.object_storage.event_loop)
