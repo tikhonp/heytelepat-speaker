@@ -19,9 +19,9 @@ class Pixels:
 
     def __init__(self, development=False):
         self.development = development
-        if development:
-            logging.info("Pixels in development mode")
-            return
+
+        self.SLEEP = 0
+        """time in seconds to sleep before run animation default 0"""
 
         self.basis = [0] * 3 * self.PIXELS_N
         self.basis[0] = 2
@@ -30,7 +30,10 @@ class Pixels:
         self.basis[7] = 2
 
         self.colors = [0] * 3 * self.PIXELS_N
-        self.dev = apa102.APA102(num_led=self.PIXELS_N)
+        if development:
+            logging.info("Pixels in development mode")
+        else:
+            self.dev = apa102.APA102(num_led=self.PIXELS_N)
 
         self.next = threading.Event()
         self.queue = Queue()
@@ -38,51 +41,48 @@ class Pixels:
         self.thread.daemon = True
         self.thread.start()
 
-    def wakeup(self):
-        if self.development:
-            logging.info("Pixels in development mode, WAKEUP")
-            return
-
+    def wakeup(self, sleep=0):
+        """
+        param float sleep: time in seconds to sleep before run animation
+        """
         def f():
             self._wakeup()
 
+        self.SLEEP = sleep
         self.next.set()
         self.queue.put(f)
 
-    def listen(self):
-        if self.development:
-            logging.info("Pixels in development mode, LISTEN")
-            return
+    def listen(self, sleep=0):
+        """
+        :param float sleep: time in seconds to sleep before run animation
+        """
+        self.SLEEP = sleep
         self.next.set()
         self.queue.put(self._listen)
 
     def think(self):
-        if self.development:
-            logging.info("Pixels in development mode, THINK")
-            return
         self.next.set()
         self.queue.put(self._think)
 
     def speak(self):
-        if self.development:
-            logging.info("Pixels in development mode, SPEAK")
-            return
         self.next.set()
         self.queue.put(self._speak)
 
     def off(self):
-        if self.development:
-            logging.info("Pixels in development mode, OFF")
-            return
         self.next.set()
         self.queue.put(self._off)
 
     def _run(self):
         while True:
             func = self.queue.get()
+            time.sleep(self.SLEEP)
+            self.SLEEP = 0
             func()
 
     def _wakeup(self):
+        if self.development:
+            logging.info("Pixels in development mode, WAKEUP")
+            return
         colors = [0] * 3 * self.PIXELS_N
         for i in range(1, 25):
             colors = [i * v for v in self.basis]
@@ -92,6 +92,10 @@ class Pixels:
         self.colors = colors
 
     def _listen(self):
+        if self.development:
+            logging.info("Pixels in development mode, LISTEN")
+            return
+
         colors = [0] * 3 * self.PIXELS_N
         for i in range(1, 25):
             colors = [i * v for v in self.basis]
@@ -101,6 +105,10 @@ class Pixels:
         self.colors = colors
 
     def _think(self):
+        if self.development:
+            logging.info("Pixels in development mode, THINK")
+            return
+
         colors = self.colors
 
         self.next.clear()
@@ -121,6 +129,10 @@ class Pixels:
         self.colors = colors
 
     def _speak(self):
+        if self.development:
+            logging.info("Pixels in development mode, SPEAK")
+            return
+
         colors = self.colors
         gradient = -1
         position = 24
@@ -144,6 +156,10 @@ class Pixels:
         # self._off()
 
     def _off(self):
+        if self.development:
+            logging.info("Pixels in development mode, OFF")
+            return
+
         self.write([0] * 3 * self.PIXELS_N)
 
     def write(self, colors):

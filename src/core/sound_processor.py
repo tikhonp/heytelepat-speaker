@@ -126,7 +126,7 @@ class SoundProcessor:
     async def _run_item(self):
         """Process sound input"""
 
-        self.object_storage.pixels.wakeup()
+        # self.object_storage.pixels.wakeup()
         text = await self.object_storage.event_loop.run_in_executor(
             None, self._get_voice_sr
         )

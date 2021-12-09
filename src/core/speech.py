@@ -87,7 +87,7 @@ def simple_audio_play_audio_function(audio_data, num_channels=1, sample_rate=480
     play_obj.wait_done()
 
 
-default_play_audio_function = pyaudio_play_audio_function
+default_play_audio_function = simple_audio_play_audio_function
 
 
 def gen_audio_capture_function(sample_rate, chunk_size=4000, num_channels=1):
@@ -121,6 +121,8 @@ def gen_audio_capture_function(sample_rate, chunk_size=4000, num_channels=1):
 class ListenRecognizeSpeech:
     """Listen and recognize audio using speechkit."""
 
+    PRE_LIGHT_TURN_DELAY = 0.7
+
     def __init__(
             self, session, pixels, sample_rate=8000, timeout=15, generate_audio_function=gen_audio_capture_function
     ):
@@ -152,7 +154,8 @@ class ListenRecognizeSpeech:
         :return: Recognized Text or None if timeout or empty string
         :rtype: str | None
         """
-        self.pixels.listen()
+        self.pixels.wakeup(sleep=self.PRE_LIGHT_TURN_DELAY)
+        self.pixels.listen(sleep=self.PRE_LIGHT_TURN_DELAY)
         logging.info("Listening audio input, recognizing...")
 
         for text, final, _ in TimeoutIterator(
