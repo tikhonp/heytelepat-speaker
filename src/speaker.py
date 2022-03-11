@@ -114,8 +114,8 @@ if not args.development:
             " alsaaudio module.")
         sys.exit()
 
-    m = alsaaudio.Mixer(control='Speaker', cardindex=1)
-    m.setvolume(90)
+    m = alsaaudio.Mixer(control='Speaker', cardindex=objectStorage.mixer_card_index)
+    m.setvolume(objectStorage.volume)
 else:
     logging.warning("AlsaAudio is not used, development mode")
 

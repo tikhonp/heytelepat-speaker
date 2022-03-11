@@ -62,8 +62,9 @@ class SetVolumeDialog(Dialog):
                 "Необходимо значение в промежутке от 1 до 300.", cache=True)
             return
 
-        m = alsaaudio.Mixer(control='Speaker', cardindex=1)
-        m.setvolume(value)
+        m = alsaaudio.Mixer(control='Speaker', cardindex=self.objectStorage.mixer_card_index)
+        self.objectStorage.set_volume(value)
+        m.setvolume(self.objectStorage.volume)
 
         self.objectStorage.play_speech.play(
             "Громкость установлена.", cache=True)

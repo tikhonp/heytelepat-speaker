@@ -50,6 +50,8 @@ class ObjectStorage:
         self.version = kwargs.get('version', 'null')
         self.serial_no = get_serial_no()
 
+        self.mixer_card_index = kwargs.get('mixer_card_index', 1)
+
         self.event_loop = asyncio.get_event_loop()
         # self.event_loop.set_exception_handler(self.handle_exception)
 
@@ -206,6 +208,20 @@ class ObjectStorage:
     @functools.cached_property
     def timezone(self):
         return self._get_location_data().get('timezone')
+
+    @property
+    def volume(self):
+        volume = self.config.get('volume')
+        if volume is None:
+            volume = 90
+            self.set_volume(volume)
+        return volume
+
+    def set_volume(self, volume: int):
+        """Gets int volume and saves it to speaker.config json file"""
+
+        self.config['volume'] = volume
+        self.save_config()
 
 
 def get_settings():

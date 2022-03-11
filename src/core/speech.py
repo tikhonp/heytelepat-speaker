@@ -87,7 +87,7 @@ def simple_audio_play_audio_function(audio_data, num_channels=1, sample_rate=480
     play_obj.wait_done()
 
 
-default_play_audio_function = simple_audio_play_audio_function
+default_play_audio_function = pyaudio_play_audio_function
 
 
 def gen_audio_capture_function(sample_rate, chunk_size=4000, num_channels=1):
