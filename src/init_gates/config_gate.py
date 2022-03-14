@@ -34,6 +34,7 @@ class ObjectStorage:
         :param boolean debug_mode: Debug mode status, default `None`
         :param string cash_filename: File path of cash file, default get from config
         :param string version: Version of script like `major.minor.fix`, default `null`
+        :param int chunk_size: chunk size for audio playing, default 4000
 
         :return: __init__ should return None
         :rtype: None
@@ -49,6 +50,7 @@ class ObjectStorage:
         self.cash_filename = kwargs.get('cash_filename', os.path.join(Path.home(), '.speaker/speech.cash'))
         self.version = kwargs.get('version', 'null')
         self.serial_no = get_serial_no()
+        self.chunk_size = kwargs.get('chunk_size', 4000)
 
         self.mixer_card_index = kwargs.get('mixer_card_index', 1)
 
@@ -61,10 +63,10 @@ class ObjectStorage:
         except requests.exceptions.ConnectionError:
             self.session = None
 
-        self.play_speech = PlaySpeech(self.session, self.cash_filename, self.pixels)
+        self.play_speech = PlaySpeech(self.session, self.cash_filename, self.pixels, chunk_size=self.chunk_size)
 
         if self.session:
-            self.listen_recognize_speech = ListenRecognizeSpeech(self.session, self.pixels)
+            self.listen_recognize_speech = ListenRecognizeSpeech(self.session, self.pixels, chunk_size=self.chunk_size)
 
         self.auth_code = None
         """Stores code if first authentication."""
@@ -73,8 +75,9 @@ class ObjectStorage:
         self.session = Session.from_jwt(self.speechkit_jwt_token())
         play_audio_function = default_play_audio_function if self.development else \
             raspberry_simple_audio_play_audio_function
-        self.play_speech = PlaySpeech(self.session, self.cash_filename, self.pixels, play_audio_function)
-        self.listen_recognize_speech = ListenRecognizeSpeech(self.session, self.pixels)
+        self.play_speech = PlaySpeech(
+            self.session, self.cash_filename, self.pixels, play_audio_function, chunk_size=self.chunk_size)
+        self.listen_recognize_speech = ListenRecognizeSpeech(self.session, self.pixels, chunk_size=self.chunk_size)
 
     def save_config(self):
         """Save config property to json file."""
@@ -302,7 +305,8 @@ def config_gate(
         reset=False,
         clean_cash=False,
         development=False,
-        version=None
+        version=None,
+        **kwargs
 ):
     """Default config file stores in ~/.speaker/config.json"""
 
@@ -336,7 +340,8 @@ def config_gate(
         config_filename=config_file_path,
         development=development,
         debug_mode=debug_mode,
-        version=version
+        version=version,
+        **kwargs
     )
 
     if reset:

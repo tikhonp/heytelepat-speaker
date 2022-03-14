@@ -69,7 +69,7 @@ def raspberry_simple_audio_play_audio_function(audio_data, num_channels=1, sampl
             break
 
 
-def simple_audio_play_audio_function(audio_data, num_channels=1, sample_rate=48000):
+def simple_audio_play_audio_function(audio_data, num_channels=1, sample_rate=48000, **kwargs):
     """
     Function to play audio, that can be changed on different devices
 
@@ -124,7 +124,13 @@ class ListenRecognizeSpeech:
     PRE_LIGHT_TURN_DELAY = 0.7
 
     def __init__(
-            self, session, pixels, sample_rate=8000, timeout=15, generate_audio_function=gen_audio_capture_function
+            self,
+            session,
+            pixels,
+            sample_rate=8000,
+            timeout=15,
+            generate_audio_function=gen_audio_capture_function,
+            chunk_size=4000
     ):
         """
         :param Session session: speechkit Session
@@ -132,11 +138,13 @@ class ListenRecognizeSpeech:
         :param integer sample_rate: Sample rate of audio, default `8000`
         :param integer timeout: Timeout in seconds, default `15`
         :param function generate_audio_function: Function generates audio data
+        :param int chunk_size: chunk size for audio playing, default 4000
         """
         self.pixels = pixels
         self.sample_rate = sample_rate
         self.timeout = timeout
         self.generate_audio_function = generate_audio_function
+        self.chunk_size = chunk_size
 
         self.data_streaming_recognition = DataStreamingRecognition(
             session,
@@ -159,7 +167,8 @@ class ListenRecognizeSpeech:
         logging.info("Listening audio input, recognizing...")
 
         for text, final, _ in TimeoutIterator(
-                self.data_streaming_recognition.recognize(self.generate_audio_function, self.sample_rate),
+                self.data_streaming_recognition.recognize(
+                    self.generate_audio_function, self.sample_rate, chunk_size=self.chunk_size),
                 timeout=self.timeout, sentinel=([None], True, False)
         ):
             text = text[0]
@@ -183,6 +192,7 @@ class PlaySpeech:
             pixels,
             play_audio_function=default_play_audio_function,
             sample_rate_hertz=16000,
+            chunk_size=4000
     ):
         """
         :param Session session: speechkit Session
@@ -190,11 +200,13 @@ class PlaySpeech:
         :param core.pixels.Pixels pixels: Object to control LEDs
         :param function play_audio_function: Function that plays raw audio bytes
         :param integer synthesis_sample_rate_hertz: sample rate for playing audio, default `16000`
+        :param int chunk_size: chunk size for audio playing, default 4000
         """
         self.pixels = pixels
         self.cashed_data_filename = cashed_data_filename
         self.sample_rate = sample_rate_hertz
         self.play_audio_function = play_audio_function
+        self.chunk_size = chunk_size
 
         self.speech_synthesis = SpeechSynthesis(session) if session else None
         self.data = {}
@@ -258,7 +270,7 @@ class PlaySpeech:
 
         logging.info("PLAYS TEXT '{}'".format(text))
         self.pixels.speak()
-        self.play_audio_function(audio_data, sample_rate=self.sample_rate)
+        self.play_audio_function(audio_data, sample_rate=self.sample_rate, chunk_size=self.chunk_size)
         self.pixels.off()
 
     def cash_only(self, text):

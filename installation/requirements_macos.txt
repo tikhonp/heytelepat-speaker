@@ -8,7 +8,7 @@ aioconsole==0.3.1 # 0.4.1
 beautifulsoup4==4.9.3 # 4.10.0
 iterators==0.0.2
 python_dateutil==2.8.2
-speechkit==2.0.2
+speechkit==2.0.3
 simpleaudio==1.0.4
-sentry_sdk==1.5.5 #
+sentry_sdk==1.5.7
 pathlib2==2.3.7

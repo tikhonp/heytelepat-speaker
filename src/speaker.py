@@ -6,7 +6,7 @@ Input point for Telepat Speaker
 OOO Telepat, All Rights Reserved
 """
 
-__version__ = '0.5.7'
+__version__ = '0.5.8'
 __author__ = 'Tikhon Petrishchev'
 __credits__ = 'TelePat LLC'
 
@@ -30,6 +30,7 @@ parser.add_argument('-s', '--store_cash',
 parser.add_argument('-symd', '--systemd',
                     help="Option for running as systemd service",
                     action='store_true')
+parser.add_argument('--chunk_size', help="Chunk size for testing. Default=1024", default=1024, type=int)
 parser.add_argument(
     '-in_func', '--input_function', default='simple',
     help=(
@@ -98,6 +99,7 @@ objectStorage = config_gate(
     clean_cash=args.clean_cash,
     development=args.development,
     version=__version__,
+    chunk_size=args.chunk_size
 )
 
 if args.store_cash:
