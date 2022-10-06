@@ -1,7 +1,7 @@
 # heytelepat
-Hey Telepat - project with voice assistant for teleport messenger integration
+Hey Telepat - project with voice assistant for Telepat Medsenger integration
 
-> Warning! `python3.8` or grater required!
+> Warning! `python3.8` or greater required!
 
 # Getting started
 Raspberry Pi full installation ([Seeedstudio ReSpeaker 2-Mics Pi HAT](https://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/) required):
