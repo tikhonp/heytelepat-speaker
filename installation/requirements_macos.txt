@@ -10,5 +10,5 @@ iterators==0.0.2
 python_dateutil==2.8.2
 speechkit==2.0.3
 simpleaudio==1.0.4
-sentry_sdk==1.5.7
+sentry_sdk==1.14.0
 pathlib2==2.3.7
